@@ -1,7 +1,6 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class MyInAppBrowser extends InAppBrowser {
-
   // @override
   // Future onLoadStart(String url) async {
   //   print("\n\nStarted $url\n\n");
@@ -21,20 +20,17 @@ class MyInAppBrowser extends InAppBrowser {
   void onExit() {
     print("\n\nBrowser closed!\n\n");
   }
-
 }
 
-
 class MyChromeSafariBrowser extends ChromeSafariBrowser {
-
-  MyChromeSafariBrowser(browserFallback) : super(); //TODO  super(bFallback: browserFallback);
+  MyChromeSafariBrowser(browserFallback) : super();
 
   @override
   void onOpened() {
     print("ChromeSafari browser opened");
   }
 
-@override
+  @override
   void onCompletedInitialLoad(bool? isRedirect) {
     // Your implementation here
     print('Completed initial load. Redirected: $isRedirect');

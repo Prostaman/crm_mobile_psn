@@ -28,17 +28,21 @@ import 'choose_category_bottom_sheet.dart';
 class AddFilesAndInformationScreen extends StatefulWidget {
   final VoidCallback saveCallback;
 
-  AddFilesAndInformationScreen({Key? key, required this.saveCallback}) : super(key: key);
+  AddFilesAndInformationScreen({Key? key, required this.saveCallback})
+      : super(key: key);
 
   @override
-  _AddFilesAndInformationScreenState createState() => _AddFilesAndInformationScreenState();
+  _AddFilesAndInformationScreenState createState() =>
+      _AddFilesAndInformationScreenState();
 }
 
-class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScreen> {
+class _AddFilesAndInformationScreenState
+    extends State<AddFilesAndInformationScreen> {
   StreamSubscription? subscriptionSinc;
   late bool isSyncing;
 
-  Future<void>? futureGetAll; // because TextField doesnt work correctly in FutureBuilder
+  Future<void>?
+      futureGetAll; // because TextField doesnt work correctly in FutureBuilder
 
   List<FileModel> initialFiles = [];
   _AddFilesAndInformationScreenState();
@@ -61,7 +65,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
     initialIdCategory = _cubit.locationModel.idCategory;
 
     isSyncing = _cubit.services.sinkService.isSyncing;
-    subscriptionSinc = _cubit.services.sinkService.isSyncingObserver.stream.listen((item) {
+    subscriptionSinc =
+        _cubit.services.sinkService.isSyncingObserver.stream.listen((item) {
       setState(() {
         isSyncing = item;
       });
@@ -86,7 +91,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
     return BlocProvider.of<PermissionsCubit>(context);
   }
 
-  Function deepEq = const DeepCollectionEquality().equals; //сравнение изначальны файлов и последних файлов в cubit по ссылкам
+  Function deepEq = const DeepCollectionEquality()
+      .equals; //сравнение изначальны файлов и последних файлов в cubit по ссылкам
   bool isExistsEditedFiles() {
     for (var file in _cubit.files) {
       if (file.isEdited) {
@@ -103,7 +109,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
     // Проходим по каждому несинхронизированному файлу
     for (FileModel notSyncedFile in notSyncedInitialFiles) {
       // Пытаемся найти файл с таким же именем в _cubit.files
-      FileModel? modifiedAndNotSyncedFile = _cubit.files.firstWhereOrNull((file) => (file.isEdited == true && file.name == notSyncedFile.name));
+      FileModel? modifiedAndNotSyncedFile = _cubit.files.firstWhereOrNull(
+          (file) => (file.isEdited == true && file.name == notSyncedFile.name));
       if (modifiedAndNotSyncedFile != null) {
         return false;
       }
@@ -133,20 +140,29 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
     bool wasChanging = false;
     if (!deepEq(initialFiles, _cubit.files) ||
         isExistsEditedFiles() || //сравнение файлов изначальных и окончательных
-        currentName != _cubit.locationModel.name || //сравнение текущего имени локации и изначального
-        currentDescription != _cubit.locationModel.description || //сравнение текущего описания и изначального
-        initialProfilePhotoOfLocation != _cubit.locationModel.pathOfProfilePhoto ||
+        currentName !=
+            _cubit.locationModel
+                .name || //сравнение текущего имени локации и изначального
+        currentDescription !=
+            _cubit.locationModel
+                .description || //сравнение текущего описания и изначального
+        initialProfilePhotoOfLocation !=
+            _cubit.locationModel.pathOfProfilePhoto ||
         initialIdCategory != _cubit.category.id) {
       _cubit.locationModel.name = currentName;
       _cubit.locationModel.description = currentDescription;
       await _cubit.addAndUpdateLocationWithFiles(_cubit.files);
       wasChanging = true;
-    } else if (currentName.isEmpty && currentDescription.isEmpty && _cubit.locationModel.name.isEmpty && _cubit.locationModel.description.isEmpty) {
+    } else if (currentName.isEmpty &&
+        currentDescription.isEmpty &&
+        _cubit.locationModel.name.isEmpty &&
+        _cubit.locationModel.description.isEmpty) {
       //для возможности создания пустой локации
       await _cubit.addAndUpdateLocationWithFiles(_cubit.files);
       wasChanging = true;
     }
-    if (initialProfilePhotoOfMyHotel != _cubit.myHotelModel.pathOfProfilePhoto) {
+    if (initialProfilePhotoOfMyHotel !=
+        _cubit.myHotelModel.pathOfProfilePhoto) {
       await _cubit.saveProfileImageOfMyHotel();
       wasChanging = true;
     }
@@ -157,89 +173,121 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
   }
 
   @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      // PopScope doesn't work for ios, so leave it
-      onWillPop: () async {
-        // widget.saveCallback();
-        bool checkingChanging = ((!deepEq(initialFiles, _cubit.files)) ||
-            isExistsEditedFiles() || //сравнение файлов изначальных и окончательных
-            currentName != _cubit.locationModel.name || //сравнение текущего имени локации и изначального
-            currentDescription != _cubit.locationModel.description || //сравнение текущего описания и изначального
-            initialProfilePhotoOfMyHotel != _cubit.myHotelModel.pathOfProfilePhoto || //есть ли изменение в профильном фото моего отеля
-            initialProfilePhotoOfLocation != _cubit.locationModel.pathOfProfilePhoto ||
-            initialIdCategory != _cubit.locationModel.idCategory); //есть ли изменение в профильном фото локации
+  Widget build(BuildContext contextWidget) {
+    return PopScope(
+      canPop: false, // отключаем автоматический pop
+      onPopInvokedWithResult: (didPop, result) {
+        // предотвращаем повторный pop
+        if (didPop) return;
+        Future.microtask(() async {
+          // проверка, что экран еще "жив"
+          if (!mounted) return false; //if (!mounted) return;
 
-        debugPrint('Были ли изменения? $checkingChanging');
-        debugPrint(' initialIdCategory:$initialIdCategory, _cubit.locationModel.idCategory:${_cubit.locationModel.idCategory}');
-        if (checkingChanging) {
-          debugPrint('Прошло проверку на изменения');
-          bool? result = await showDialog<bool>(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                  surfaceTintColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  titlePadding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 0),
-                  title: Text(
-                    "Вы уверены что хотите выйти без сохранения?",
-                    style: textStyle(size: 18, weight: FontWeight.w300, color: ColorTextBlackAlertDialog),
-                    textAlign: TextAlign.center,
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        // List<FileModel> filesThatWillDelete = [];
-                        // //deleteting not saved files from memory of application
-                        // for (final file in _cubit.files) {
-                        //   if (!initialFiles.contains(file)) {
-                        //     filesThatWillDelete.add(file);
-                        //     FileUtility.deleteFile(file.localPath);
-                        //   } else if (file.isEdited) {
-                        //     FileUtility.deleteFile(file.localPath);
-                        //     file.localPath = file.oldLocalPath;
-                        //   }
-                        // }
-                        // _cubit.files.removeWhere((file) => filesThatWillDelete.contains(file));
+          bool wasChanging = ((!deepEq(initialFiles, _cubit.files)) ||
+              isExistsEditedFiles() || //сравнение файлов изначальных и окончательных
+              currentName !=
+                  _cubit.locationModel
+                      .name || //сравнение текущего имени локации и изначального
+              currentDescription !=
+                  _cubit.locationModel
+                      .description || //сравнение текущего описания и изначального
+              initialProfilePhotoOfMyHotel !=
+                  _cubit.myHotelModel
+                      .pathOfProfilePhoto || //есть ли изменение в профильном фото моего отеля
+              initialProfilePhotoOfLocation !=
+                  _cubit.locationModel.pathOfProfilePhoto ||
+              initialIdCategory !=
+                  _cubit.locationModel
+                      .idCategory); //есть ли изменение в профильном фото локации
 
-                        //test
-                        // await deleteteNotSavedFilesFromMemoryOfApplication();
-                        widget.saveCallback();
-                        Navigator.pop(context, true);
-                      },
-                      child: Text("Выйти", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextBlackAlertDialog)),
+          debugPrint('Были ли изменения? $wasChanging');
+          debugPrint(
+              ' initialIdCategory:$initialIdCategory, _cubit.locationModel.idCategory:${_cubit.locationModel.idCategory}');
+          if (wasChanging) {
+            debugPrint('Прошло проверку на изменения');
+            bool? resultAlertDialog = await showDialog<bool>(
+              context: contextWidget,
+              builder: (contextAlertDialog) {
+                return AlertDialog(
+                    surfaceTintColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    titlePadding: const EdgeInsets.only(
+                        left: 20, right: 20, top: 20, bottom: 0),
+                    title: Text(
+                      "Вы уверены что хотите выйти без сохранения?",
+                      style: textStyle(
+                          size: 18,
+                          weight: FontWeight.w300,
+                          color: ColorTextBlackAlertDialog),
+                      textAlign: TextAlign.center,
                     ),
-                    (isSyncing == true && everyModifiedFileWasUploaded() == false)
-                        ? SizedBox()
-                        : TextButton(
-                            onPressed: () async {
-                              await save();
-                              // await deleteteNotSavedFilesFromMemoryOfApplication();
-                              widget.saveCallback();
-                              Navigator.pop(context, true);
-                            },
-                            child: Text("Cохранить", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
-                          ),
-                  ]);
-            },
-          );
-          if (result == null) {
-            result = false;
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          // List<FileModel> filesThatWillDelete = [];
+                          // //deleteting not saved files from memory of application
+                          // for (final file in _cubit.files) {
+                          //   if (!initialFiles.contains(file)) {
+                          //     filesThatWillDelete.add(file);
+                          //     FileUtility.deleteFile(file.localPath);
+                          //   } else if (file.isEdited) {
+                          //     FileUtility.deleteFile(file.localPath);
+                          //     file.localPath = file.oldLocalPath;
+                          //   }
+                          // }
+                          // _cubit.files.removeWhere((file) => filesThatWillDelete.contains(file));
+
+                          //test
+                          // await deleteteNotSavedFilesFromMemoryOfApplication();
+                          widget.saveCallback();
+                          Navigator.pop(contextAlertDialog, true);
+                        },
+                        child: Text("Выйти",
+                            style: textStyle(
+                                size: 18,
+                                weight: FontWeight.w400,
+                                color: ColorTextBlackAlertDialog)),
+                      ),
+                      (isSyncing == true &&
+                              everyModifiedFileWasUploaded() == false)
+                          ? SizedBox()
+                          : TextButton(
+                              onPressed: () async {
+                                await save();
+                                // await deleteteNotSavedFilesFromMemoryOfApplication();
+                                widget.saveCallback();
+                                Navigator.pop(context, true);
+                              },
+                              child: Text("Cохранить",
+                                  style: textStyle(
+                                      size: 18,
+                                      weight: FontWeight.w400,
+                                      color: ColorTextOrange)),
+                            ),
+                    ]);
+              },
+            );
+            if (resultAlertDialog == null) {
+              resultAlertDialog = false;
+            }
+            if (resultAlertDialog == true && context.mounted) {
+              Navigator.of(context).pop(); // 🔹 Закрывает страницу
+            }
+          } else {
+            // debugPrint('start sinc after button save');
+            // ServiceContainer().sinkService.startSinc();
+            widget.saveCallback();
+            Navigator.of(context).pop();
           }
-          return result;
-        } else {
-          
-          // debugPrint('start sinc after button save');
-          // ServiceContainer().sinkService.startSinc();
-          widget.saveCallback();
-          return true;
-        }
+        });
       },
       child: BlocConsumer(
           bloc: _cubit,
           listener: (context, state) {
             if (state is ErrorState) {
-              showSnackBar(context: context, message: state.error ?? "Empty error");
+              showSnackBar(
+                  context: context, message: state.error ?? "Empty error");
             }
           },
           builder: (context, myHotelState) {
@@ -252,34 +300,53 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                     surfaceTintColor: Colors.transparent,
                     iconTheme: IconThemeData(color: Colors.black),
                     centerTitle: true,
-                    title: Text(_cubit.myHotelModel.name, style: textStyle(weight: Medium5, size: 18)),
+                    title: Text(_cubit.myHotelModel.name,
+                        style: textStyle(weight: Medium5, size: 18)),
                     actions: _cubit.selectedFiles.length > 0
                         ? [
                             IconButton(
                               icon: SvgPicture.asset(IMG.icons.iconDelete,
-                                  colorFilter: ColorFilter.mode(Colors.red, BlendMode.srcIn), height: 26, width: 23, fit: BoxFit.scaleDown),
+                                  colorFilter: ColorFilter.mode(
+                                      Colors.red, BlendMode.srcIn),
+                                  height: 26,
+                                  width: 23,
+                                  fit: BoxFit.scaleDown),
                               onPressed: () {
                                 showDialog(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                          title: Text("Удалить выбранные медиафайлы?",
-                                              style: textStyle(size: 18, weight: FontWeight.w300, color: ColorTextBlackAlertDialog)),
+                                          title: Text(
+                                              "Удалить выбранные медиафайлы?",
+                                              style: textStyle(
+                                                  size: 18,
+                                                  weight: FontWeight.w300,
+                                                  color:
+                                                      ColorTextBlackAlertDialog)),
                                           surfaceTintColor: Colors.white,
                                           actions: [
                                             TextButton(
                                               onPressed: () {
                                                 Navigator.pop(context);
                                               },
-                                              child:
-                                                  Text("Нет", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextBlackAlertDialog)),
+                                              child: Text("Нет",
+                                                  style: textStyle(
+                                                      size: 18,
+                                                      weight: FontWeight.w400,
+                                                      color:
+                                                          ColorTextBlackAlertDialog)),
                                             ),
                                             TextButton(
                                               onPressed: () async {
-                                                await _cubit.deleteSelectedFiles();
+                                                await _cubit
+                                                    .deleteSelectedFiles();
                                                 Navigator.pop(context);
                                               },
-                                              child: Text("Да", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
+                                              child: Text("Да",
+                                                  style: textStyle(
+                                                      size: 18,
+                                                      weight: FontWeight.w400,
+                                                      color: ColorTextOrange)),
                                             )
                                           ]);
                                     });
@@ -307,63 +374,85 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                             color: Color.fromRGBO(43, 54, 65, 0.7),
                           ),
                           child: Wrap(children: [
-                            Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              SizedBox(height: 8),
-                              IconButton(
-                                icon: SvgPicture.asset(IMG.icons.iconCamera, fit: BoxFit.scaleDown),
-                                onPressed: () async {
-                                  var status = await _permissionsCubit.checkPermissionsForCamera();
-                                  if (status == MyPermissionStatus.Granted) {
-                                    try {
-                                      final cameras = await availableCameras();
-                                      Navigator.of(context)
-                                          .push(
-                                        MaterialPageRoute(
-                                          builder: (context) => CustomCameraScreen(cameras: cameras),
-                                        ),
-                                      )
-                                          .then((result) {
-                                        if (result != null) {
-                                          List<FileModel> filesFromCamera = result;
-                                          setState(() {
-                                            _cubit.files = [...filesFromCamera.reversed, ..._cubit.files];
+                            Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  SizedBox(height: 8),
+                                  IconButton(
+                                    icon: SvgPicture.asset(IMG.icons.iconCamera,
+                                        fit: BoxFit.scaleDown),
+                                    onPressed: () async {
+                                      var status = await _permissionsCubit
+                                          .checkPermissionsForCamera();
+                                      if (status ==
+                                          MyPermissionStatus.Granted) {
+                                        try {
+                                          final cameras =
+                                              await availableCameras();
+                                          Navigator.of(context)
+                                              .push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  CustomCameraScreen(
+                                                      cameras: cameras),
+                                            ),
+                                          )
+                                              .then((result) {
+                                            if (result != null) {
+                                              List<FileModel> filesFromCamera =
+                                                  result;
+                                              setState(() {
+                                                _cubit.files = [
+                                                  ...filesFromCamera.reversed,
+                                                  ..._cubit.files
+                                                ];
+                                              });
+                                            }
                                           });
+                                        } catch (e) {
+                                          showSnackBar(
+                                              context: context,
+                                              message: e.toString());
                                         }
-                                      });
-                                    } catch (e) {
-                                      showSnackBar(context: context, message: e.toString());
-                                    }
-                                  } else {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return PermissionDeniedDialog(
-                                          target: 'camera',
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return PermissionDeniedDialog(
+                                              target: 'camera',
+                                            );
+                                          },
                                         );
-                                      },
-                                    );
-                                  }
-                                },
-                              ),
-                              Padding(padding: EdgeInsets.symmetric(horizontal: 9), child: Divider(color: Colors.white)),
-                              IconButton(
-                                icon: SvgPicture.asset(IMG.icons.iconGallery, fit: BoxFit.scaleDown),
-                                onPressed: () async {
-                                  var status = await _permissionsCubit.checkPermissionsForGallery();
-                                  if (status == MyPermissionStatus.Granted) {
-                                    await _cubit.addFilesFromGallery();
-                                  } else {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return PermissionDeniedDialog(target: 'gallery');
-                                      },
-                                    );
-                                  }
-                                },
-                              ),
-                              SizedBox(height: 8)
-                            ])
+                                      }
+                                    },
+                                  ),
+                                  Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 9),
+                                      child: Divider(color: Colors.white)),
+                                  IconButton(
+                                    icon: SvgPicture.asset(
+                                        IMG.icons.iconGallery,
+                                        fit: BoxFit.scaleDown),
+                                    onPressed: () async {
+                                      var status = await _permissionsCubit
+                                          .checkPermissionsForGallery();
+                                      if (status ==
+                                          MyPermissionStatus.Granted) {
+                                        await _cubit.addFilesFromGallery();
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return PermissionDeniedDialog(
+                                                target: 'gallery');
+                                          },
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(height: 8)
+                                ])
                           ]))),
                   body: BlocBuilder(
                     bloc: _permissionsCubit,
@@ -374,7 +463,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                           builder: (context, constraint) {
                             return SingleChildScrollView(
                               child: ConstrainedBox(
-                                constraints: BoxConstraints(minHeight: constraint.maxHeight),
+                                constraints: BoxConstraints(
+                                    minHeight: constraint.maxHeight),
                                 child: IntrinsicHeight(
                                   child: _buildBody(),
                                 ),
@@ -397,7 +487,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
     _cubit.files.addAll(filesByLocationId);
     initialFiles.addAll(filesByLocationId);
     await _cubit.getAllCategories();
-    _cubit.category = await _cubit.findCategoryById(_cubit.locationModel.idCategory);
+    _cubit.category =
+        await _cubit.findCategoryById(_cubit.locationModel.idCategory);
     debugPrint('_cubit.category: ${_cubit.category.description}');
   }
 
@@ -413,7 +504,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
           } else if (snapshot.hasError) {
             return Center(child: Text("Error occurred: ${snapshot.error}"));
           } else {
-            List<FileModel> notDeletedFiles = _cubit.files.where((file) => !file.deleted).toList();
+            List<FileModel> notDeletedFiles =
+                _cubit.files.where((file) => !file.deleted).toList();
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -450,28 +542,41 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                       _showCategoriesBottomSheet();
                     },
                     child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 8),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: _showRequiredFields == true ? Colors.red : ColorBorderV2, // Replace with your border color
+                            color: _showRequiredFields == true
+                                ? Colors.red
+                                : ColorBorderV2, // Replace with your border color
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
                           children: [
-                            SvgPicture.asset(_cubit.category.id == -1 ? IMG.icons.iconMapChooseCategory : getIconPathCategoty(_cubit.category.id),
+                            SvgPicture.asset(
+                                _cubit.category.id == -1
+                                    ? IMG.icons.iconMapChooseCategory
+                                    : getIconPathCategoty(_cubit.category.id),
                                 fit: BoxFit.scaleDown),
                             SizedBox(width: 9),
                             Expanded(
                                 child: Text(
                               _cubit.category.description,
-                              style: textStyle(color: (_showRequiredFields == true && _cubit.category.id == -1 )? Color.fromRGBO(160, 160, 160, 1) : Colors.black, size: 14),
+                              style: textStyle(
+                                  color: (_showRequiredFields == true &&
+                                          _cubit.category.id == -1)
+                                      ? Color.fromRGBO(160, 160, 160, 1)
+                                      : Colors.black,
+                                  size: 14),
                             )),
-                            SvgPicture.asset(IMG.icons.iconTriangleDown, fit: BoxFit.scaleDown),
+                            SvgPicture.asset(IMG.icons.iconTriangleDown,
+                                fit: BoxFit.scaleDown),
                           ],
                         ))),
                 _showRequiredFields == true
-                    ? Text('*Это поле является обязательным для заполнения', style: textStyle(color: Colors.red, size: 10))
+                    ? Text('*Это поле является обязательным для заполнения',
+                        style: textStyle(color: Colors.red, size: 10))
                     : SizedBox(),
                 SizedBox(height: 26),
                 Container(
@@ -511,8 +616,10 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                       padding: EdgeInsets.only(bottom: 20),
                       child: DefaultButton(
                         title: "Сохранить",
-                        loading: (isSyncing == true && everyModifiedFileWasUploaded() == false),
-                        enable: !((isSyncing == true && everyModifiedFileWasUploaded() == false)),
+                        loading: (isSyncing == true &&
+                            everyModifiedFileWasUploaded() == false),
+                        enable: !((isSyncing == true &&
+                            everyModifiedFileWasUploaded() == false)),
                         height: 55,
                         textSize: 18,
                         scheme: DefaultButtonScheme.Orange,
@@ -520,7 +627,7 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                           if (_cubit.category.id == -1) {
                             setState(() => _showRequiredFields = true);
                           } else {
-                            _showRequiredFields=false;
+                            _showRequiredFields = false;
                             await save();
                             widget.saveCallback();
                             Navigator.pop(context);
@@ -580,7 +687,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(borderRadiusOfImage),
                   child: model.type == FileModelType.Video
-                      ? ((File(model.localPath).existsSync()) // проверка существования видео
+                      ? ((File(model.localPath)
+                              .existsSync()) // проверка существования видео
                           ? ImageItem(imagePath: model.thumb ?? "")
                           : ImageItem(imagePath: model.localPath))
                       : ImageItem(imagePath: model.localPath)),
@@ -593,7 +701,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                     child: SvgPicture.asset(
                       IMG.icons.playPNG,
                       fit: BoxFit.scaleDown,
-                      colorFilter: ColorFilter.mode(Color.fromARGB(255, 189, 189, 189), BlendMode.srcIn),
+                      colorFilter: ColorFilter.mode(
+                          Color.fromARGB(255, 189, 189, 189), BlendMode.srcIn),
                     ),
                   ),
                 ),
@@ -603,22 +712,37 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                 top: 6,
                 child: Row(children: [
                   model.localPath == _cubit.locationModel.pathOfProfilePhoto
-                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfLocation, fit: BoxFit.scaleDown)
+                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfLocation,
+                          fit: BoxFit.scaleDown)
                       : SizedBox(),
-                  SizedBox(width: model.localPath == _cubit.locationModel.pathOfProfilePhoto ? 4 : 0),
+                  SizedBox(
+                      width: model.localPath ==
+                              _cubit.locationModel.pathOfProfilePhoto
+                          ? 4
+                          : 0),
                   model.localPath == _cubit.myHotelModel.pathOfProfilePhoto
-                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfMyHotel, fit: BoxFit.scaleDown)
+                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfMyHotel,
+                          fit: BoxFit.scaleDown)
                       : SizedBox()
                 ])),
             if (model.synced == true)
-              Positioned(right: 4, top: 4, child: SvgPicture.asset(IMG.icons.downloadComplite, width: 30, height: 30, fit: BoxFit.scaleDown))
+              Positioned(
+                  right: 4,
+                  top: 4,
+                  child: SvgPicture.asset(IMG.icons.downloadComplite,
+                      width: 30, height: 30, fit: BoxFit.scaleDown))
             else if (model.syncError == true)
-              Positioned(right: 7, top: 6, child: SvgPicture.asset(IMG.icons.downloadFailed, width: 24, height: 24, fit: BoxFit.scaleDown))
+              Positioned(
+                  right: 7,
+                  top: 6,
+                  child: SvgPicture.asset(IMG.icons.downloadFailed,
+                      width: 24, height: 24, fit: BoxFit.scaleDown))
             else if (model.synced == false)
               Positioned(
                 right: 4,
                 top: 4,
-                child: SvgPicture.asset(IMG.icons.uploading, width: 30, height: 30, fit: BoxFit.scaleDown),
+                child: SvgPicture.asset(IMG.icons.uploading,
+                    width: 30, height: 30, fit: BoxFit.scaleDown),
               ),
             if (_cubit.selectedFiles.isNotEmpty)
               Positioned(
@@ -632,7 +756,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
                             borderRadius: BorderRadius.circular(8),
                             color: Color.fromRGBO(255, 255, 255, 1),
                           ),
-                          child: SvgPicture.asset(IMG.icons.select, width: 20, height: 20, fit: BoxFit.scaleDown),
+                          child: SvgPicture.asset(IMG.icons.select,
+                              width: 20, height: 20, fit: BoxFit.scaleDown),
                         )
                       : Container(
                           width: 25,
@@ -670,7 +795,8 @@ class _AddFilesAndInformationScreenState extends State<AddFilesAndInformationScr
               child: CategoriesBottomSheet(
                 categories: _cubit.categories,
                 onTapCallback: (selectedCategory) async {
-                  _cubit.category = await _cubit.findCategoryById(selectedCategory!.id);
+                  _cubit.category =
+                      await _cubit.findCategoryById(selectedCategory!.id);
                   setState(() {
                     _cubit.locationModel.idCategory = selectedCategory.id;
                   });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 
 class GridOverlay extends StatelessWidget {
   // GridOverlay(this.width, this.height);
@@ -13,7 +14,7 @@ class GridOverlay extends StatelessWidget {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final gridPaint = Paint()
-          ..color = Colors.white.withOpacity(0.5)
+          ..color = applyOpacity(Colors.white, 0.5)
           ..style = PaintingStyle.stroke;
 
         return CustomPaint(

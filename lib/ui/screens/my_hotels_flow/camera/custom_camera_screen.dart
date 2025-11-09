@@ -12,9 +12,9 @@ import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:open_file/open_file.dart';
-import 'package:sensors/sensors.dart';
 import 'focus_circle_widget.dart';
 import 'grid_widget.dart';
 import 'package:collection/collection.dart';
@@ -113,7 +113,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
   int turns = 0;
   Future<void> initRotation() async {
     double degreeForRotation = Platform.isAndroid ? 1 : 8;
-    _accelerometerSubscription = accelerometerEvents.listen((AccelerometerEvent event) async {
+    _accelerometerSubscription =
+        accelerometerEventStream().listen((AccelerometerEvent event) async {
       if (_cameraController != null) {
         DeviceOrientation newOrientation = currentOrientation;
         if (event.y > degreeForRotation) {
@@ -163,7 +164,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
         } else {
           if (_printDuration(
                 Duration(
-                  milliseconds: (DateTime.now().millisecondsSinceEpoch - _dateTimeStartRecord!.millisecondsSinceEpoch),
+                  milliseconds: (DateTime.now().millisecondsSinceEpoch -
+                      _dateTimeStartRecord!.millisecondsSinceEpoch),
                 ),
               ) ==
               "00:00:30") {
@@ -190,7 +192,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
     await _cameraController!.initialize();
     maxZoomLevel = await _cameraController!.getMaxZoomLevel();
     minZoomLevel = await _cameraController!.getMinZoomLevel();
-    debugPrint('widget.cameras.length:${widget.cameras?.length}, maxZoomLevel:$maxZoomLevel, minZoomLevel:$minZoomLevel');
+    debugPrint(
+        'widget.cameras.length:${widget.cameras?.length}, maxZoomLevel:$maxZoomLevel, minZoomLevel:$minZoomLevel');
     setState(() {
       _currentIndexOfCamera = indexOfCamera;
       _loading = false;
@@ -210,7 +213,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
     if (isPhotoMode) {
       _cameraController = CameraController(_currentCamera!, resolutionPreset);
     } else {
-      _cameraController = CameraController(_currentCamera!, ResolutionPreset.high);
+      _cameraController =
+          CameraController(_currentCamera!, ResolutionPreset.high);
     }
     setState(() {
       _loading = true;
@@ -229,7 +233,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
 
   Future<void> _onScaleUpdate(ScaleUpdateDetails details) async {
     if (details.pointerCount >= 2 && _cameraController != null) {
-      double newScale = double.parse((_baseScale * details.scale).clamp(minZoomLevel, maxZoomLevel).toStringAsFixed(1));
+      double newScale = double.parse((_baseScale * details.scale)
+          .clamp(minZoomLevel, maxZoomLevel)
+          .toStringAsFixed(1));
       _currentScale = newScale;
       await _cameraController!.setZoomLevel(_currentScale);
       setState(() {});
@@ -279,47 +285,68 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return WillPopScope(
-        onWillPop: () async {
-          if (files.isNotEmpty) {
-            bool? result = await showDialog<bool>(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                    surfaceTintColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    titlePadding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 0),
-                    title: Text(
-                      "Вы уверены что хотите выйти без сохранения?" + (isLoadingMiniPhoto ? " Последний файл ещё не сохранился." : ""),
-                      style: textStyle(size: 18, weight: FontWeight.w300, color: ColorTextBlackAlertDialog),
-                      textAlign: TextAlign.center,
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context, true);
-                        },
-                        child: Text("Выйти", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextBlackAlertDialog)),
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          // предотвращаем повторный pop
+          if (didPop) return;
+          Future.microtask(() async {
+            // проверка, что экран еще "жив"
+            if (!mounted) return false;
+            if (files.isNotEmpty) {
+              bool? resultAlertDialog = await showDialog<bool>(
+                context: context,
+                builder: (contextAlertDialog) {
+                  return AlertDialog(
+                      surfaceTintColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
+                      titlePadding: const EdgeInsets.only(
+                          left: 20, right: 20, top: 20, bottom: 0),
+                      title: Text(
+                        "Вы уверены что хотите выйти без сохранения?" +
+                            (isLoadingMiniPhoto
+                                ? " Последний файл ещё не сохранился."
+                                : ""),
+                        style: textStyle(
+                            size: 18,
+                            weight: FontWeight.w300,
+                            color: ColorTextBlackAlertDialog),
+                        textAlign: TextAlign.center,
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context, false);
-                        },
-                        child: Text("Cохранить", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
-                      ),
-                    ]);
-              },
-            );
-            if (result == null) {
-              result = false;
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(contextAlertDialog, true);
+                          },
+                          child: Text("Выйти",
+                              style: textStyle(
+                                  size: 18,
+                                  weight: FontWeight.w400,
+                                  color: ColorTextBlackAlertDialog)),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(contextAlertDialog, false);
+                          },
+                          child: Text("Cохранить",
+                              style: textStyle(
+                                  size: 18,
+                                  weight: FontWeight.w400,
+                                  color: ColorTextOrange)),
+                        ),
+                      ]);
+                },
+              );
+              if (resultAlertDialog == false) {
+                _complitePicker();
+              } else if (resultAlertDialog == true) {
+                Navigator.of(context).pop();
+              }
+            } else {
+              Navigator.of(context).pop();
             }
-            if (result == false) {
-              _complitePicker();
-            }
-            return result;
-          } else {
-            return true;
-          }
+          });
         },
         child: Scaffold(
           appBar: AppBar(
@@ -329,7 +356,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                     (_recording == true && _dateTimeStartRecord != null)
                         ? _printDuration(
                             Duration(
-                              milliseconds: (DateTime.now().millisecondsSinceEpoch - _dateTimeStartRecord!.millisecondsSinceEpoch),
+                              milliseconds: (DateTime.now()
+                                      .millisecondsSinceEpoch -
+                                  _dateTimeStartRecord!.millisecondsSinceEpoch),
                             ),
                           )
                         : "00:00:00",
@@ -339,7 +368,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
             actions: [
               widgetFlashMode(),
               IconButton(
-                  icon: Icon(showGrid ? Icons.grid_on : Icons.grid_off), // Use the 'grid_on' icon
+                  icon: Icon(showGrid
+                      ? Icons.grid_on
+                      : Icons.grid_off), // Use the 'grid_on' icon
                   onPressed: () {
                     setState(() => showGrid = !showGrid);
                   })
@@ -367,7 +398,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                           }
                         } else {
                           //жест справа налево
-                          if (_currentIndexOfCamera < listOfBackCameras.length - 1) {
+                          if (_currentIndexOfCamera <
+                              listOfBackCameras.length - 1) {
                             _currentIndexOfCamera++;
                             await initCamera(_currentIndexOfCamera);
                           }
@@ -396,7 +428,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                             child: _buildFooterPortrait(),
                           ),
                           if (showFocusCircle) showCircle(x, y),
-                          _loading == true ? DefaultFullScreenIndicator : Container()
+                          _loading == true
+                              ? DefaultFullScreenIndicator
+                              : Container()
                         ],
                       ))
                   : Center(child: CircularProgressIndicator());
@@ -420,7 +454,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
       Offset point = Offset(xp, yp);
 
       if ((point.dx < 0 || point.dx > 1 || point.dy < 0 || point.dy > 1)) {
-        print('The values of point should be anywhere between (0,0) and (1,1).');
+        print(
+            'The values of point should be anywhere between (0,0) and (1,1).');
         return;
       }
       print("point : $point");
@@ -537,7 +572,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                     child: files.length != 0
                         ? Container(
                             decoration: BoxDecoration(
-                              color: isLoadingMiniPhoto == false ? Colors.orange : Colors.grey,
+                              color: isLoadingMiniPhoto == false
+                                  ? Colors.orange
+                                  : Colors.grey,
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                             child: Padding(
@@ -552,8 +589,14 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                         : Container(),
                   ),
                 ),
-                Expanded(child: _selectedIndex == 1 ? textButtonModePhoto() : textButtonModeVideo()),
-                Expanded(child: _selectedIndex == 1 ? textButtonModeVideo() : textButtonModePhoto()),
+                Expanded(
+                    child: _selectedIndex == 1
+                        ? textButtonModePhoto()
+                        : textButtonModeVideo()),
+                Expanded(
+                    child: _selectedIndex == 1
+                        ? textButtonModeVideo()
+                        : textButtonModePhoto()),
               ],
             ),
             Row(
@@ -579,17 +622,23 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                                       children: [
                                         Center(
                                           child: CircularProgressIndicator(
-                                            color: Color.fromARGB(255, 253, 216, 53),
+                                            color: Color.fromARGB(
+                                                255, 253, 216, 53),
                                           ),
                                         ),
                                         Image.file(
                                           File(
-                                            files.last.type == FileModelType.Video ? (files.last.thumb ?? "") : files.last.localPath,
+                                            files.last.type ==
+                                                    FileModelType.Video
+                                                ? (files.last.thumb ?? "")
+                                                : files.last.localPath,
                                           ),
                                           width: radiusOfImage * 2,
                                           height: radiusOfImage * 2,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                          errorBuilder: (BuildContext context,
+                                              Object error,
+                                              StackTrace? stackTrace) {
                                             return Center(
                                               child: Icon(Icons.error),
                                             );
@@ -602,7 +651,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                               ),
                             )
                           : null
-                      : Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 253, 216, 53))),
+                      : Center(
+                          child: CircularProgressIndicator(
+                              color: Color.fromARGB(255, 253, 216, 53))),
                 ),
                 Container(
                   width: 90,
@@ -622,8 +673,10 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                         padding: EdgeInsets.all(_recording == true ? 10 : 3),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: (_selectedIndex == 0) ? Colors.red : ColorWhite,
-                            borderRadius: BorderRadius.circular(_recording == true ? 10 : 35),
+                            color:
+                                (_selectedIndex == 0) ? Colors.red : ColorWhite,
+                            borderRadius: BorderRadius.circular(
+                                _recording == true ? 10 : 35),
                           ),
                         ),
                       ),
@@ -633,7 +686,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                 Container(
                   width: 120,
                   //icon for switching camera
-                  child: (widget.cameras != null && (widget.cameras?.length ?? 0) >= 2)
+                  child: (widget.cameras != null &&
+                          (widget.cameras?.length ?? 0) >= 2)
                       ? Center(
                           child: InkWell(
                             onTap: () {
@@ -671,7 +725,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
     return TextButton(
       onPressed: () async {
         if (_currentCamera != null) {
-          _cameraController = CameraController(_currentCamera!, resolutionPreset);
+          _cameraController =
+              CameraController(_currentCamera!, resolutionPreset);
           setState(() => _loading = true);
           if (_cameraController != null) {
             await _cameraController!.initialize();
@@ -686,7 +741,9 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
         'ФОТО',
         style: textStyle(
           size: 14,
-          color: _selectedIndex == 1 ? Colors.yellow[600] ?? Color.fromARGB(255, 253, 216, 53) : ColorWhite,
+          color: _selectedIndex == 1
+              ? Colors.yellow[600] ?? Color.fromARGB(255, 253, 216, 53)
+              : ColorWhite,
         ),
       ),
     );
@@ -698,7 +755,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
         isPhotoMode = false;
         if (resolutionPreset != ResolutionPreset.high) {
           //переключение качества камеры для видео
-          _cameraController = CameraController(_currentCamera!, ResolutionPreset.high);
+          _cameraController =
+              CameraController(_currentCamera!, ResolutionPreset.high);
           setState(() => _loading = true);
           if (_cameraController != null) {
             await _cameraController!.initialize();
@@ -715,13 +773,16 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
         'ВИДЕО',
         style: textStyle(
           size: 14,
-          color: _selectedIndex == 0 ? Colors.yellow[600] ?? Color.fromARGB(255, 253, 216, 53) : ColorWhite,
+          color: _selectedIndex == 0
+              ? Colors.yellow[600] ?? Color.fromARGB(255, 253, 216, 53)
+              : ColorWhite,
         ),
       ),
     );
   }
 
-  Future<void> _addFileFromXFile({required XFile xfile, required FileModelType type}) async {
+  Future<void> _addFileFromXFile(
+      {required XFile xfile, required FileModelType type}) async {
     setState(() => isLoadingMiniPhoto = true);
     try {
       if (type == FileModelType.Video) {
@@ -745,12 +806,16 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
         try {
           if (Platform.isAndroid) {
             MediaInfo? mediaInfo;
-            await Future.delayed(Duration(milliseconds: 200)); // задержка для избежания краша, когда к файлу будет обращаться Video Compressor
+            await Future.delayed(Duration(
+                milliseconds:
+                    200)); // задержка для избежания краша, когда к файлу будет обращаться Video Compressor
             // debugPrint("video123 File exists?:${await File(xfile.path).exists()}");
             //debugPrint("video123 before convert:${xfile.path}");
-            mediaInfo = await VideoCompress.compressVideo(xfile.path, deleteOrigin: true);
+            mediaInfo = await VideoCompress.compressVideo(xfile.path,
+                deleteOrigin: true);
             //debugPrint("video123 after convert:${mediaInfo!.path ?? ''}");
-            var thumb = await VideoCompress.getFileThumbnail(mediaInfo!.path ?? '');
+            var thumb =
+                await VideoCompress.getFileThumbnail(mediaInfo!.path ?? '');
             file.thumb = thumb.path;
             file.localPath = mediaInfo.path ?? 'null';
           } else {
@@ -759,7 +824,8 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
           }
         } catch (e) {
           //debugPrint("Error mini photo:$e");
-          showSnackBar(context: context, message: "Не удалось создать превью видео");
+          showSnackBar(
+              context: context, message: "Не удалось создать превью видео");
         }
         file.name = "video_" + xfile.name;
       }
@@ -834,6 +900,7 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
   }
 
   void showInSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

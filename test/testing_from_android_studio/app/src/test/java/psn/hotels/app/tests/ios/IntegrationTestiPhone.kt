@@ -43,7 +43,7 @@ class IntegrationTestiPhone {
         el.sendKeys("Ростислав Триодял") //TEST HOTEL
         el = driver.findElement(AppiumBy.accessibilityId("Пароль"))
         el.click()
-        el.sendKeys("parol777") //TESTHOTEL
+        el.sendKeys("TEST HOTEL") //TESTHOTEL
         el = driver.findElement(AppiumBy.accessibilityId("Done"))
         el.click()
         el = driver.findElement(AppiumBy.accessibilityId("Войти в систему"))

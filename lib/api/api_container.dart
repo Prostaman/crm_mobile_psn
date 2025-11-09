@@ -25,8 +25,6 @@ class ApiEnvironment {
         return "";
       case ApiState.prod:
         return "https://api.poehalisnami.ua/crm/";
-      default:
-        return "";
     }
   }
 
@@ -38,8 +36,6 @@ class ApiEnvironment {
         return _baseUrl();
       case ApiState.prod:
         return _baseUrl();
-      default:
-        return "";
     }
   }
 
@@ -51,8 +47,6 @@ class ApiEnvironment {
         return 2097152;
       case ApiState.prod:
         return 26214400;
-      default:
-        return 26214400;
     }
   }
 
@@ -63,8 +57,6 @@ class ApiEnvironment {
       case ApiState.dev:
         return "2MB";
       case ApiState.prod:
-        return "25MB";
-      default:
         return "25MB";
     }
   }
