@@ -34,7 +34,8 @@ class LocationsScreen extends StatefulWidget {
   _LocationsScreenState createState() => _LocationsScreenState();
 }
 
-class _LocationsScreenState extends State<LocationsScreen> with TickerProviderStateMixin {
+class _LocationsScreenState extends State<LocationsScreen>
+    with TickerProviderStateMixin {
   StreamSubscription? subscriptionSinc;
   late DBManager db;
   double percentLoaded = 0;
@@ -56,10 +57,12 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
   @override
   void initState() {
     db = DBManager();
-    subscriptionSinc = _cubit.services.sinkService.syncSuccess.stream.listen((item) {
+    subscriptionSinc =
+        _cubit.services.sinkService.syncSuccess.stream.listen((item) {
       //_cubit.refresh();
       setState(() {
-        _scrollController = ScrollController(initialScrollOffset: _scrollPosition);
+        _scrollController =
+            ScrollController(initialScrollOffset: _scrollPosition);
       });
     });
     super.initState();
@@ -83,7 +86,8 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
     percentOfLoadingAllFiles = 0;
     allFilesLength = 0;
     for (var location in locations) {
-      descriptionCategories.add(await _cubit.findDescriptionOfCategoryById(location.idCategory));
+      descriptionCategories
+          .add(await _cubit.findDescriptionOfCategoryById(location.idCategory));
       var files = await _cubit.findFilesByLocationId(location.localId);
       List<FileModel> notDeletedFiles = [];
       files.forEach((file) {
@@ -96,7 +100,8 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
         }
       });
       listOflistOfFiles.add(notDeletedFiles);
-      var percentOfLoaded = await _cubit.getPercentOfLoadedFilesOfLocationByLocationId(location.localId);
+      var percentOfLoaded = await _cubit
+          .getPercentOfLoadedFilesOfLocationByLocationId(location.localId);
       listOfPercentLoaded.add(percentOfLoaded);
     }
     if (allFilesLength == 0) {
@@ -129,7 +134,8 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
           padding: EdgeInsets.only(bottom: 24),
           child: FloatingActionButton(
             backgroundColor: ColorOrange,
-            child: SvgPicture.asset(IMG.icons.iconPlus, width: 30, height: 30, fit: BoxFit.scaleDown),
+            child: SvgPicture.asset(IMG.icons.iconPlus,
+                width: 30, height: 30, fit: BoxFit.scaleDown),
             onPressed: () {
               controllers.forEach((controller) {
                 controller.close();
@@ -180,7 +186,8 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                       state: state,
                       scrollController: _scrollController,
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10, top: 34, left: 22, right: 22),
+                        padding: const EdgeInsets.only(
+                            bottom: 10, top: 34, left: 22, right: 22),
                         child: Column(
                           children: [
                             Container(
@@ -191,69 +198,117 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                                 // crossAxisAlignment: CrossAxisAlignment.start,
                                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(children: [
                                     Expanded(
-                                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                      Text(
-                                        "Создано: ${formatDate(stringToDate(_cubit.myHotel.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
-                                        style: textStyle(size: 12, color: ColorGreyV2),
-                                      ),
-                                      SizedBox(height: 14),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          SvgPicture.asset(IMG.icons.iconMediaFile, fit: BoxFit.scaleDown),
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
                                           Text(
-                                            " $allFilesLength медиафайлов",
-                                            style: textStyle(size: 14),
+                                            "Создано: ${formatDate(stringToDate(_cubit.myHotel.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
+                                            style: textStyle(
+                                                size: 12, color: ColorGreyV2),
                                           ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                    ])),
-                                    if (locations.length > 0 && percentOfLoadingAllFiles != -1)
-                                      Expanded(child: IndicatorOfUploading(percentUploaded: percentOfLoadingAllFiles))
+                                          SizedBox(height: 14),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              SvgPicture.asset(
+                                                  IMG.icons.iconMediaFile,
+                                                  fit: BoxFit.scaleDown),
+                                              Text(
+                                                " $allFilesLength медиафайлов",
+                                                style: textStyle(size: 14),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
+                                        ])),
+                                    if (locations.length > 0 &&
+                                        percentOfLoadingAllFiles != -1)
+                                      Expanded(
+                                          child: IndicatorOfUploading(
+                                              percentUploaded:
+                                                  percentOfLoadingAllFiles))
                                   ]),
                                   Divider(
                                     color: Color.fromRGBO(108, 106, 106, 0.2),
                                   ),
                                   Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 8),
                                       child: Row(children: [
-                                        Expanded(child: Text("Описание", style: textStyle(color: ColorGreyV2, size: 12), textAlign: TextAlign.start)),
+                                        Expanded(
+                                            child: Text("Описание",
+                                                style: textStyle(
+                                                    color: ColorGreyV2,
+                                                    size: 12),
+                                                textAlign: TextAlign.start)),
                                         Expanded(
                                             child: InkWell(
                                                 onTap: () {
                                                   showModalBottomSheet(
                                                       context: context,
                                                       isScrollControlled: true,
-                                                      backgroundColor: Colors.white,
+                                                      backgroundColor:
+                                                          Colors.white,
                                                       shape: RoundedRectangleBorder(
                                                           borderRadius:
-                                                              BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32))),
-                                                      builder: (BuildContext bc) {
+                                                              BorderRadius.only(
+                                                                  topLeft: Radius
+                                                                      .circular(
+                                                                          32),
+                                                                  topRight: Radius
+                                                                      .circular(
+                                                                          32))),
+                                                      builder:
+                                                          (BuildContext bc) {
                                                         return Container(
-                                                            decoration: BoxDecoration(
-                                                              borderRadius: BorderRadius.only(
-                                                                topLeft: Radius.circular(32.0), // Adjust the radius as needed
-                                                                topRight: Radius.circular(32.0), // Adjust the radius as needed
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .only(
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        32.0), // Adjust the radius as needed
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        32.0), // Adjust the radius as needed
                                                               ),
-                                                              color: Colors.white,
+                                                              color:
+                                                                  Colors.white,
                                                             ),
-                                                            child: HotelDescriptionBottomSheet(
-                                                              description: _cubit.myHotel.description,
-                                                              saveCallback: (newValue) async {
-                                                                _cubit.myHotel.description = newValue;
-                                                                await _cubit.updateHotel();
-                                                                debugPrint("startSinc update description of my hotel");
-                                                                ServiceContainer().sinkService.startSinc();
+                                                            child:
+                                                                HotelDescriptionBottomSheet(
+                                                              description: _cubit
+                                                                  .myHotel
+                                                                  .description,
+                                                              saveCallback:
+                                                                  (newValue) async {
+                                                                _cubit.myHotel
+                                                                        .description =
+                                                                    newValue;
+                                                                await _cubit
+                                                                    .updateHotel();
+                                                                debugPrint(
+                                                                    "startSinc update description of my hotel");
+                                                                ServiceContainer()
+                                                                    .sinkService
+                                                                    .startSinc();
                                                               },
                                                             ));
                                                       });
                                                 },
-                                                child: Text("Изменить", style: textStyle(color: Colors.orange, size: 14), textAlign: TextAlign.end)))
+                                                child: Text("Изменить",
+                                                    style: textStyle(
+                                                        color: Colors.orange,
+                                                        size: 14),
+                                                    textAlign: TextAlign.end)))
                                       ])),
                                   if (_cubit.myHotel.description != null)
                                     Padding(
@@ -273,7 +328,8 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                             locations.isNotEmpty
                                 ? SlidableAutoCloseBehavior(
                                     child: Column(
-                                    children: locations.mapIndexed((index, location) {
+                                    children:
+                                        locations.mapIndexed((index, location) {
                                       controllers.add(SlidableController(this));
                                       return Column(children: [
                                         InkWell(
@@ -306,82 +362,98 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                                                       color: Colors.red,
                                                     ),
                                                     child: IconButton(
-                                                      icon: SvgPicture.asset(IMG.icons.iconDelete, fit: BoxFit.scaleDown),
+                                                      icon: SvgPicture.asset(
+                                                          IMG.icons.iconDelete,
+                                                          fit:
+                                                              BoxFit.scaleDown),
                                                       onPressed: () {
                                                         showModalBottomSheet(
                                                             context: context,
-                                                            backgroundColor: Colors.white,
-                                                            builder: (BuildContext bc) {
+                                                            backgroundColor:
+                                                                Colors.white,
+                                                            builder:
+                                                                (BuildContext
+                                                                    bc) {
                                                               return Container(
-                                                                  decoration: BoxDecoration(
-                                                                    borderRadius: BorderRadius.only(
-                                                                      topLeft: Radius.circular(32.0), // Adjust the radius as needed
-                                                                      topRight: Radius.circular(32.0), // Adjust the radius as needed
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .only(
+                                                                      topLeft: Radius
+                                                                          .circular(
+                                                                              32.0), // Adjust the radius as needed
+                                                                      topRight:
+                                                                          Radius.circular(
+                                                                              32.0), // Adjust the radius as needed
                                                                     ),
-                                                                    color: Colors.white,
+                                                                    color: Colors
+                                                                        .white,
                                                                   ),
-                                                                  child: Wrap(children: [
-                                                                    Padding(
-                                                                        padding: EdgeInsets.only(bottom: 60, left: 16, right: 16, top: 16),
-                                                                        child: Column(
-                                                                          children: [
-                                                                            SvgPicture.asset(IMG.icons.iconDelete,
-                                                                                colorFilter: ColorFilter.mode(
-                                                                                  Colors.red,
-                                                                                  BlendMode.srcIn,
-                                                                                ),
-                                                                                fit: BoxFit.scaleDown),
-                                                                            SizedBox(height: 12),
-                                                                            Text("Удаление записи",
-                                                                                style: textStyle(size: 22, weight: FontWeight.bold)),
-                                                                            SizedBox(height: 20),
-                                                                            Text("Вы действительно хотите\nудалить запись?",
-                                                                                textAlign: TextAlign.center, style: textStyle(size: 18)),
-                                                                            SizedBox(height: 49),
-                                                                            Row(
+                                                                  child: Wrap(
+                                                                      children: [
+                                                                        Padding(
+                                                                            padding: EdgeInsets.only(
+                                                                                bottom: 60,
+                                                                                left: 16,
+                                                                                right: 16,
+                                                                                top: 16),
+                                                                            child: Column(
                                                                               children: [
-                                                                                Expanded(
-                                                                                  child: DefaultButton(
-                                                                                    textSize: 18,
-                                                                                    height: 55,
-                                                                                    title: "Отменить",
-                                                                                    scheme: DefaultButtonScheme.White,
-                                                                                    onPressed: () {
-                                                                                      controllers[index].close();
-                                                                                      Navigator.pop(context);
-                                                                                    },
-                                                                                  ),
-                                                                                ),
-                                                                                SizedBox(width: 16),
-                                                                                Expanded(
-                                                                                  child: DefaultButton(
-                                                                                    title: "Да, удалить",
-                                                                                    textSize: 18,
-                                                                                    height: 55,
-                                                                                    scheme: DefaultButtonScheme.Orange,
-                                                                                    onPressed: () async {
-                                                                                      try {
-                                                                                        await _cubit.deleteLocation(locationModel: location);
-                                                                                        controllers.removeAt(index);
+                                                                                SvgPicture.asset(IMG.icons.iconDelete,
+                                                                                    colorFilter: ColorFilter.mode(
+                                                                                      Colors.red,
+                                                                                      BlendMode.srcIn,
+                                                                                    ),
+                                                                                    fit: BoxFit.scaleDown),
+                                                                                SizedBox(height: 12),
+                                                                                Text("Удаление записи", style: textStyle(size: 22, weight: FontWeight.bold)),
+                                                                                SizedBox(height: 20),
+                                                                                Text("Вы действительно хотите\nудалить запись?", textAlign: TextAlign.center, style: textStyle(size: 18)),
+                                                                                SizedBox(height: 49),
+                                                                                Row(
+                                                                                  children: [
+                                                                                    Expanded(
+                                                                                      child: DefaultButton(
+                                                                                        textSize: 18,
+                                                                                        height: 55,
+                                                                                        title: "Отменить",
+                                                                                        scheme: DefaultButtonScheme.White,
+                                                                                        onPressed: () {
+                                                                                          controllers[index].close();
+                                                                                          Navigator.pop(context);
+                                                                                        },
+                                                                                      ),
+                                                                                    ),
+                                                                                    SizedBox(width: 16),
+                                                                                    Expanded(
+                                                                                      child: DefaultButton(
+                                                                                        title: "Да, удалить",
+                                                                                        textSize: 18,
+                                                                                        height: 55,
+                                                                                        scheme: DefaultButtonScheme.Orange,
+                                                                                        onPressed: () async {
+                                                                                          try {
+                                                                                            await _cubit.deleteLocation(locationModel: location);
+                                                                                            controllers.removeAt(index);
 
-                                                                                        Navigator.pop(mainContext);
-                                                                                        setState(() {});
-                                                                                        _cubit.updateHotel();
-                                                                                        widget.updateCallback();
-                                                                                      } catch (e) {
-                                                                                        debugPrint("UI Deleting location: $e");
-                                                                                        FirebaseCrashlytics.instance.log("ui deleting location $e");
-                                                                                        FirebaseCrashlytics.instance
-                                                                                            .recordFlutterError(FlutterErrorDetails(exception: e));
-                                                                                      }
-                                                                                    },
-                                                                                  ),
-                                                                                ),
+                                                                                            Navigator.pop(mainContext);
+                                                                                            setState(() {});
+                                                                                            _cubit.updateHotel();
+                                                                                            widget.updateCallback();
+                                                                                          } catch (e) {
+                                                                                            debugPrint("UI Deleting location: $e");
+                                                                                            FirebaseCrashlytics.instance.log("ui deleting location $e");
+                                                                                            FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+                                                                                          }
+                                                                                        },
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                )
                                                                               ],
-                                                                            )
-                                                                          ],
-                                                                        ))
-                                                                  ]));
+                                                                            ))
+                                                                      ]));
                                                             });
                                                       },
                                                     ),
@@ -389,61 +461,123 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                                                 ],
                                               ),
                                               child: Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Container(
                                                       width: 150,
                                                       height: 150,
                                                       decoration: BoxDecoration(
-                                                        color: ColorLightGrey.withOpacity(0.5),
-                                                        borderRadius: BorderRadius.circular(12),
+                                                        color: applyOpacity(
+                                                            ColorLightGrey,
+                                                            0.5),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
                                                       ),
-                                                      child: profileImageOfLocation(index, location, listOflistOfFiles)),
+                                                      child:
+                                                          profileImageOfLocation(
+                                                              index,
+                                                              location,
+                                                              listOflistOfFiles)),
                                                   Expanded(
                                                       child: Padding(
-                                                          padding: EdgeInsets.only(left: 16),
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  left: 16),
                                                           child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
                                                             children: [
-                                                              SizedBox(height: 8),
+                                                              SizedBox(
+                                                                  height: 8),
                                                               Text(
                                                                 "Создано: ${formatDate(stringToDate(location.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
-                                                                style: textStyle(size: 12, color: Color.fromRGBO(108, 106, 106, 1)),
+                                                                style: textStyle(
+                                                                    size: 12,
+                                                                    color: Color
+                                                                        .fromRGBO(
+                                                                            108,
+                                                                            106,
+                                                                            106,
+                                                                            1)),
                                                               ),
-                                                              SizedBox(height: 8),
+                                                              SizedBox(
+                                                                  height: 8),
                                                               Row(
                                                                 children: [
-                                                                  SvgPicture.asset(getIconPathCategoty(location.idCategory), fit: BoxFit.scaleDown),
+                                                                  SvgPicture.asset(
+                                                                      getIconPathCategoty(
+                                                                          location
+                                                                              .idCategory),
+                                                                      fit: BoxFit
+                                                                          .scaleDown),
                                                                   Expanded(
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                     " ${descriptionCategories[index]}",
-                                                                    style: textStyle(size: 19, weight: FontWeight.bold),
-                                                                    textAlign: TextAlign.left,
+                                                                    style: textStyle(
+                                                                        size:
+                                                                            19,
+                                                                        weight:
+                                                                            FontWeight.bold),
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .left,
                                                                     maxLines: 1,
                                                                     //overflow: TextOverflow.ellipsis,
                                                                   )),
                                                                 ],
                                                               ),
-                                                              SizedBox(height: location.name.isNotEmpty ? 3 : 0),
-                                                              location.name.isNotEmpty
-                                                                  ? Text(location.name,
-                                                                      style: textStyle(size: 14, weight: FontWeight.w500),
-                                                                      textAlign: TextAlign.left,
-                                                                      maxLines: 2)
+                                                              SizedBox(
+                                                                  height: location
+                                                                          .name
+                                                                          .isNotEmpty
+                                                                      ? 3
+                                                                      : 0),
+                                                              location.name
+                                                                      .isNotEmpty
+                                                                  ? Text(
+                                                                      location
+                                                                          .name,
+                                                                      style: textStyle(
+                                                                          size:
+                                                                              14,
+                                                                          weight: FontWeight
+                                                                              .w500),
+                                                                      textAlign:
+                                                                          TextAlign
+                                                                              .left,
+                                                                      maxLines:
+                                                                          2)
                                                                   : Container(),
-                                                              SizedBox(height: 8),
+                                                              SizedBox(
+                                                                  height: 8),
                                                               Row(
                                                                 children: [
-                                                                  SvgPicture.asset(IMG.icons.iconMediaFile, fit: BoxFit.scaleDown),
+                                                                  SvgPicture.asset(
+                                                                      IMG.icons
+                                                                          .iconMediaFile,
+                                                                      fit: BoxFit
+                                                                          .scaleDown),
                                                                   Text(
                                                                     " ${listOflistOfFiles[index]?.length ?? 0} медиафайлов",
-                                                                    style: textStyle(size: 14),
+                                                                    style: textStyle(
+                                                                        size:
+                                                                            14),
                                                                   )
                                                                 ],
                                                               ),
-                                                              SizedBox(height: 8),
-                                                              if (listOfPercentLoaded[index] != -1)
-                                                                IndicatorOfUploading(percentUploaded: listOfPercentLoaded[index])
+                                                              SizedBox(
+                                                                  height: 8),
+                                                              if (listOfPercentLoaded[
+                                                                      index] !=
+                                                                  -1)
+                                                                IndicatorOfUploading(
+                                                                    percentUploaded:
+                                                                        listOfPercentLoaded[
+                                                                            index])
                                                             ],
                                                           )))
                                                 ],
@@ -454,11 +588,14 @@ class _LocationsScreenState extends State<LocationsScreen> with TickerProviderSt
                                     }).toList(),
                                   ))
                                 : Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       SizedBox(height: 132),
-                                      SvgPicture.asset(IMG.icons.iconNoLocations, fit: BoxFit.scaleDown),
+                                      SvgPicture.asset(
+                                          IMG.icons.iconNoLocations,
+                                          fit: BoxFit.scaleDown),
                                       SizedBox(height: 16),
                                       Text(
                                         "Вы еще не добавили локацию.\nДля добавления нажмите +",

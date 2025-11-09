@@ -1,4 +1,4 @@
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:psn.hotels.hub/helpers/shared_preferences_utils.dart';
 
 class SettingsService {
@@ -9,14 +9,12 @@ class SettingsService {
   // переключатель режима developer/нет
   //late bool developerMode;
 
- 
   static SharedPrefUtils sharedPrefUtils = SharedPrefUtils();
-
- 
 
   int get qualityOfFiles {
     return sharedPrefUtils.getValue("quality", 2) as int;
-  } 
+  }
+
   set qualityOfFiles(int value) {
     sharedPrefUtils.setValue("quality", value);
   }
@@ -47,6 +45,4 @@ class SettingsService {
   //   sharedPrefUtils.setValue("kDeleteContentEnable", enable);
   //   deleteContentIfUploaded = enable;
   // }
-
-
 }

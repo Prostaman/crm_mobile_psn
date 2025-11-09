@@ -14,7 +14,8 @@ import 'package:workmanager/workmanager.dart';
 
 void initWorkManagerSyncing() {
   print('Was init workmanager');
-  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  Workmanager().initialize(callbackDispatcher);
+
   Workmanager().registerPeriodicTask("TASK_SYNC_PSN", "TASK_SYNC_PSN",
       initialDelay: Duration(hours: 3),
       frequency: Duration(hours: 3),
@@ -23,7 +24,8 @@ void initWorkManagerSyncing() {
           networkType: NetworkType.connected));
 }
 
-@pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+@pragma(
+    'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     print('Was executeTask workmanager');
@@ -35,17 +37,18 @@ void callbackDispatcher() {
       await initFirebase();
       await FirebaseCrashlytics.instance.setUserIdentifier(userModel.userName!);
       if (Platform.isIOS) {
-        await FirebaseAnalytics.instance.logEvent(name: "start_sinc_from_workmanager_ios",
-         parameters: {
-        "full_text": "start_sinc_from_workmanager_ios",
-    });
+        await FirebaseAnalytics.instance
+            .logEvent(name: "start_sinc_from_workmanager_ios", parameters: {
+          "full_text": "start_sinc_from_workmanager_ios",
+        });
       }
       print('start sinc from Workmanager');
       await SinkService().startSinc();
     } catch (e) {
       print('Workmanager error:$e');
       String error = "Workmanager error: $e";
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: error));
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: error));
     }
 
     return true;

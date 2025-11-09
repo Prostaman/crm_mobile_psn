@@ -1,4 +1,4 @@
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:synchronized/synchronized.dart';
 
 /// A wrapper class aground image saving process for preventing the deadlocks
