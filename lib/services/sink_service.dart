@@ -248,7 +248,7 @@ class SinkService {
         await changingProfilePhoto(myHotelsDao, filesDao, locationsDao);
         if (wasChanging == true) {
           syncSuccess.add(true);
-          debugPrint("setState after sinc");
+          debugPrint("refresh after sinc");
         }
       }
       isSyncing = false;

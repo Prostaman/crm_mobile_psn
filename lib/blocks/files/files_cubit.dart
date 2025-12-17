@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -21,7 +22,7 @@ import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:collection/collection.dart';
 
-class MyHotelCubit extends BaseCubit {
+class FilesCubit extends BaseCubit {
   MyHotelModel myHotelModel;
   final DBManager db;
 
@@ -33,11 +34,14 @@ class MyHotelCubit extends BaseCubit {
   CategoryModel category =
       CategoryModel(id: -1, description: 'Выберите категорию *');
 
-  MyHotelCubit(
+  late bool isSyncing;
+
+  FilesCubit(
       {LocationModel? location, required this.myHotelModel, required this.db})
       : super(InitialState()) {
     editing = location != null;
     locationModel = location != null ? location : LocationModel();
+    isSyncing = services.sinkService.isSyncing;
   }
 
   Future<void> addAndUpdateLocationWithFiles(List<FileModel> files) async {
@@ -67,7 +71,7 @@ class MyHotelCubit extends BaseCubit {
     }
 
     Future<void> moveProfilePhotosToInternalStorage(String oldLocalPath,
-        FileModel file, HotelLocationsRepository repository) async {
+        FileModel file, LocationsRepository repository) async {
       if (locationModel.pathOfProfilePhoto == oldLocalPath) {
         locationModel.pathOfProfilePhoto = file
             .localPath; //перезапись профильного фото, если оно было перемещено
@@ -87,7 +91,7 @@ class MyHotelCubit extends BaseCubit {
     debugPrint('addAndUpdateLocationWithFiles');
     emit(LoadingState());
     try {
-      HotelLocationsRepository repository =
+      LocationsRepository repository =
           RepositoryContainer().locationsRepository;
       Directory documentsDirectory = await getApplicationDocumentsDirectory();
       //debugPrint('documentsDirectory: ${documentsDirectory.path}');
@@ -173,8 +177,7 @@ class MyHotelCubit extends BaseCubit {
   }
 
   Future<void> startSync() async {
-    HotelLocationsRepository repository =
-        RepositoryContainer().locationsRepository;
+    LocationsRepository repository = RepositoryContainer().locationsRepository;
     repository.startSinc();
   }
 

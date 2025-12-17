@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:psn.hotels.hub/blocks/hotel_location/my_hotel_cubit.dart';
+import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
 import 'package:psn.hotels.hub/helpers/file_utility.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
@@ -26,7 +26,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 class FullMediaPreviewSlider extends StatefulWidget {
   final int initialPage;
   final PageController pageController;
-  final MyHotelCubit _cubit;
+  final FilesCubit _cubit;
   final VoidCallback setStateCallback;
 
   FullMediaPreviewSlider(

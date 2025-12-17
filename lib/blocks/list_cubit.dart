@@ -46,7 +46,6 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   Future<void> loadMore() async {
     final int nextPage = query.currentPage + 1;
     if (nextPage > query.lastPage) {
-      
       emit(SuccessListState<Model>(models: _models, date: DateTime.now()));
     } else {
       emit(LoadingMoreState());
@@ -54,9 +53,7 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
     }
   }
 
-  Future<void> getModels({
-    int page = 0
-    });
+  Future<void> getModels({int page = 0});
 
   Future<void> setResponse(
       {required List<Model> data,
@@ -143,7 +140,7 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
     }
   }
 
-  int get modelsLanght {
+  int get modelsLenght {
     return _models.length;
   }
 

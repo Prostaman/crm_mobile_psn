@@ -20,8 +20,8 @@ class RepositoryContainer {
     return _hotelListRepository;
   }
 
-  late HotelLocationsRepository _locationsRepository;
-  HotelLocationsRepository get locationsRepository {
+  late LocationsRepository _locationsRepository;
+  LocationsRepository get locationsRepository {
     return _locationsRepository;
   }
 
@@ -33,7 +33,7 @@ class RepositoryContainer {
   RepositoryContainer._internal() {
     _myHotelRepository = MyHotelRepository();
     _hotelListRepository = HotelListRepository();
-    _locationsRepository = HotelLocationsRepository();
+    _locationsRepository = LocationsRepository();
     _categoriesRepository = CategoriesRepository();
   }
 }

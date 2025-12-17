@@ -10,12 +10,12 @@ import 'package:psn.hotels.hub/services/sink_service.dart';
 
 import '../models/entities_database/location_model.dart';
 
-class HotelLocationsRepository {
+class LocationsRepository {
   final LocationApi locationApi = ApiContainer().locationApi;
   final FilesApi filesApi = ApiContainer().filesApi;
   final CategoryApi categoryApi = ApiContainer().categoryApi;
   DBManager db = DBManager();
-  HotelLocationsRepository();
+  LocationsRepository();
 
   Future<List<LocationModel>> getLocations() async {
     try {
@@ -36,8 +36,8 @@ class HotelLocationsRepository {
   //     var response = await categoryApi.getAll();
   //     if (response != null && response.list != null) {
   //        await (await db.categoriesDao()).insertCategories(response.list!);
-     
-  //     } 
+
+  //     }
   //   } catch (e) {
   //     throw e;
   //   }
@@ -56,34 +56,45 @@ class HotelLocationsRepository {
     }
   }
 
-  Future<int> addLocation({required MyHotelModel hotelModel, required LocationModel locationModel}) async {
+  Future<int> addLocation(
+      {required MyHotelModel hotelModel,
+      required LocationModel locationModel}) async {
     try {
       locationModel.hotelId = hotelModel.id;
       locationModel.synced = false;
       locationModel.createdAt = DateTime.now().toIso8601String();
 
-      int locationId = await (await db.locationsDao()).insertLocation(locationModel);
+      int locationId =
+          await (await db.locationsDao()).insertLocation(locationModel);
       return locationId;
     } catch (e) {
       throw e;
     }
   }
 
-  Future<void> updateLocation({required MyHotelModel hotelModel, required LocationModel locationModel}) async {
+  Future<void> updateLocation(
+      {required MyHotelModel hotelModel,
+      required LocationModel locationModel}) async {
     try {
       locationModel.synced = false;
-      await (await db.locationsDao()).updateLocation(locationModel.localId, locationModel);
+      await (await db.locationsDao())
+          .updateLocation(locationModel.localId, locationModel);
     } catch (e) {
       throw e;
     }
   }
 
-  Future<void> deleteLocation({required MyHotelModel hotelModel, required LocationModel locationModel}) async {
+  Future<void> deleteLocation(
+      {required MyHotelModel hotelModel,
+      required LocationModel locationModel}) async {
     try {
       locationModel.synced = false;
       locationModel.deleted = true;
-      await (await db.locationsDao()).updateLocation(locationModel.localId, locationModel);
-      var files = await (await db.filesDao()).findFilesByLocationId(locationModel.localId) ?? [];
+      await (await db.locationsDao())
+          .updateLocation(locationModel.localId, locationModel);
+      var files = await (await db.filesDao())
+              .findFilesByLocationId(locationModel.localId) ??
+          [];
       for (var file in files) {
         file.deleted = true;
         file.synced = false;
@@ -127,7 +138,8 @@ class HotelLocationsRepository {
     await (await db.filesDao()).updateFile(file.localId, file);
   }
 
-  Future<void> deleteSelectedFiles({required LocationModel locationModel, required FileModel file}) async {
+  Future<void> deleteSelectedFiles(
+      {required LocationModel locationModel, required FileModel file}) async {
     // file.synced = false;
     // file.deleted = true;
     // //await (await db.filesDao()).updateFile(file.localId, file);
@@ -136,8 +148,10 @@ class HotelLocationsRepository {
   }
 
   Future<List<LocationModel>> get allLocations async {
-    List<Map<String, dynamic>> locationsMaps = await (await db.locationsDao()).getAllLocations();
-    List<LocationModel> locations = locationsMaps.map((map) => LocationModel.fromMap(map)).toList();
+    List<Map<String, dynamic>> locationsMaps =
+        await (await db.locationsDao()).getAllLocations();
+    List<LocationModel> locations =
+        locationsMaps.map((map) => LocationModel.fromMap(map)).toList();
     return locations;
   }
 }
