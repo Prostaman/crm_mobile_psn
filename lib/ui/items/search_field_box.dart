@@ -8,7 +8,9 @@ class SearchFieldBox extends StatefulWidget {
   final Function(String) callback;
   final String placeholder;
   final Color? color;
-  SearchFieldBox({Key? key, required this.placeholder, required this.callback, this.color}) : super(key: key);
+  SearchFieldBox(
+      {Key? key, required this.placeholder, required this.callback, this.color})
+      : super(key: key);
 
   @override
   _SearchFieldBoxState createState() => _SearchFieldBoxState();
@@ -57,11 +59,11 @@ class _SearchFieldBoxState extends State<SearchFieldBox> {
         color: color,
         // border: Border.all(color: Colors.grey[200] ?? Color.fromARGB(255, 238, 238, 238)),
       ),
-      child: 
-      TextField(
+      child: TextField(
         controller: _searchQuery,
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 9),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 0, vertical: 9),
           isDense: true,
           prefixIconConstraints: BoxConstraints(minWidth: 30, maxWidth: 30),
           prefixIcon: Icon(
@@ -80,9 +82,7 @@ class _SearchFieldBoxState extends State<SearchFieldBox> {
                   iconSize: 18,
                   color: Colors.grey,
                   onPressed: () {
-                    setState(() {
-                      _searchQuery.clear();
-                    });
+                    setState(() => _searchQuery.clear());
                   },
                   icon: Icon(Icons.clear),
                   alignment: Alignment.centerRight,
@@ -91,7 +91,6 @@ class _SearchFieldBoxState extends State<SearchFieldBox> {
         ),
         style: textStyle(color: Colors.black, size: 19),
       ),
-    )
-    ;
+    );
   }
 }

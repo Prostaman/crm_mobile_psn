@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/blocks/hotel_location/my_hotel_cubit.dart';
+import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/helpers/getter_icon_path_category.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
@@ -38,14 +38,13 @@ class AddFilesAndInformationScreen extends StatefulWidget {
 
 class _AddFilesAndInformationScreenState
     extends State<AddFilesAndInformationScreen> {
+  _AddFilesAndInformationScreenState();
   StreamSubscription? subscriptionSinc;
-  late bool isSyncing;
 
   Future<void>?
       futureGetAll; // because TextField doesnt work correctly in FutureBuilder
 
   List<FileModel> initialFiles = [];
-  _AddFilesAndInformationScreenState();
   String currentName = "";
   String currentDescription = "";
   String initialProfilePhotoOfLocation = '';
@@ -64,11 +63,11 @@ class _AddFilesAndInformationScreenState
     initialProfilePhotoOfMyHotel = _cubit.myHotelModel.pathOfProfilePhoto;
     initialIdCategory = _cubit.locationModel.idCategory;
 
-    isSyncing = _cubit.services.sinkService.isSyncing;
+    //isSyncing = _cubit.services.sinkService.isSyncing;
     subscriptionSinc =
         _cubit.services.sinkService.isSyncingObserver.stream.listen((item) {
       setState(() {
-        isSyncing = item;
+        _cubit.isSyncing = item;
       });
     });
 
@@ -83,8 +82,8 @@ class _AddFilesAndInformationScreenState
     super.dispose();
   }
 
-  MyHotelCubit get _cubit {
-    return BlocProvider.of<MyHotelCubit>(context);
+  FilesCubit get _cubit {
+    return BlocProvider.of<FilesCubit>(context);
   }
 
   PermissionsCubit get _permissionsCubit {
@@ -249,7 +248,7 @@ class _AddFilesAndInformationScreenState
                                 weight: FontWeight.w400,
                                 color: ColorTextBlackAlertDialog)),
                       ),
-                      (isSyncing == true &&
+                      (_cubit.isSyncing == true &&
                               everyModifiedFileWasUploaded() == false)
                           ? SizedBox()
                           : TextButton(
@@ -616,9 +615,9 @@ class _AddFilesAndInformationScreenState
                       padding: EdgeInsets.only(bottom: 20),
                       child: DefaultButton(
                         title: "Сохранить",
-                        loading: (isSyncing == true &&
+                        loading: (_cubit.isSyncing == true &&
                             everyModifiedFileWasUploaded() == false),
-                        enable: !((isSyncing == true &&
+                        enable: !((_cubit.isSyncing == true &&
                             everyModifiedFileWasUploaded() == false)),
                         height: 55,
                         textSize: 18,
@@ -629,6 +628,7 @@ class _AddFilesAndInformationScreenState
                           } else {
                             _showRequiredFields = false;
                             await save();
+                            debugPrint('saveCallback');
                             widget.saveCallback();
                             Navigator.pop(context);
                           }

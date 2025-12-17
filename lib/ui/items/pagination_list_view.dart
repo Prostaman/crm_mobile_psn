@@ -45,17 +45,28 @@ class PaginationListView extends StatelessWidget {
         return Stack(
           children: [
             NotificationListener(
-              child: poolToRefresh == true ? _buildRefreshIndicator() : _buildListView(),
+              child: poolToRefresh == true
+                  ? _buildRefreshIndicator()
+                  : _buildListView(),
               // onNotification: (notification) => _onNotification(
               //     notification: notification, state: state as BaseCubitState),
             ),
             if (state is LoadingState)
               DefaultFullScreenIndicator
             else if (state is LoadingMoreState)
-              LoadingMoreInsicator(alignment: reverse == false ? Alignment.bottomCenter : Alignment.topCenter)
-            else if (state is SuccessListState && state.models.length == 0 && emptyViewPlug != null && cubit.query.searching == false)
+              LoadingMoreInsicator(
+                  alignment: reverse == false
+                      ? Alignment.bottomCenter
+                      : Alignment.topCenter)
+            else if (state is SuccessListState &&
+                state.models.length == 0 &&
+                emptyViewPlug != null &&
+                cubit.query.searching == false)
               Center(child: emptyViewPlug)
-            else if (state is SuccessListState && state.models.length == 0 && emptySearchViewPlug != null && cubit.query.searching == true)
+            else if (state is SuccessListState &&
+                state.models.length == 0 &&
+                emptySearchViewPlug != null &&
+                cubit.query.searching == true)
               Center(child: emptySearchViewPlug)
             else if (state is ErrorState && errorViewPlug != null)
               Center(child: errorViewPlug),
@@ -86,7 +97,7 @@ class PaginationListView extends StatelessWidget {
         scrollDirection: scrollDirection,
         reverse: reverse,
         shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLanght,
+        itemCount: cubit.modelsLenght,
         itemBuilder: itemBuilder,
         separatorBuilder: separatorBuilder!,
       );
@@ -98,7 +109,7 @@ class PaginationListView extends StatelessWidget {
         scrollDirection: scrollDirection,
         reverse: reverse,
         shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLanght,
+        itemCount: cubit.modelsLenght,
         itemBuilder: itemBuilder,
       );
     }

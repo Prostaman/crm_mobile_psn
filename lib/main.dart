@@ -9,6 +9,7 @@ import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
 import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
+import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/ui/screens/auth_flow/sign_in_screen.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
@@ -149,7 +150,10 @@ class PoehalisnamiApp extends StatelessWidget {
       if (wasOfferToUpdate == false) {
         _checkUpdate(context);
       }
-      return SplashScreen();
+      return BlocProvider(
+        create: (context) => SplashCubit(),
+        child: const SplashScreen(),
+      );
     }
   }
 
