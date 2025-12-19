@@ -1,15 +1,14 @@
 package psn.hotels.app.tests.android
 
+import android.util.Log
 import io.appium.java_client.AppiumBy
 import io.appium.java_client.android.AndroidDriver
-import io.appium.java_client.remote.MobileCapabilityType
 import org.junit.After
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
 import org.openqa.selenium.Point
-import org.openqa.selenium.remote.DesiredCapabilities
 import psn.hotels.app.helpers.getCurrentDate
 import psn.hotels.app.helpers.performTap
 import java.net.URL
@@ -18,30 +17,13 @@ import java.time.Duration
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class IntegrationTestAndroid {
 
-//für Appium Session
-//    {
-//        "appium:automationName": "UiAutomator2",
-//        "appium:platformName": "Android",
-//        "appium:platformVersion": "11",
-//        "appium:deviceName": "deb444ce59ee",
-//        "appium:app": "/Users/trio/development/CompanyPSN/publication/android/apk/crm_mobile_1.25.6+46.apk"
-//    }
     private lateinit var driver: AndroidDriver
 //AppiumDriver
 
     @Before
     fun setUp() {
-        val capabilities = DesiredCapabilities()
-        capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "UiAutomator2")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "11")
-        capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "deb444ce59ee") 
-        capabilities.setCapability(
-            MobileCapabilityType.APP,
-            "/Users/trio/development/CompanyPSN/publication/android/apk/crm_mobile_1.25.9+49.apk"
-        )
-        driver = AndroidDriver(URL("http://127.0.0.1:4723/"), capabilities)
-        driver.manage()?.timeouts()?.implicitlyWait(Duration.ofSeconds(30))
+        driver = AndroidDriver(URL("http://127.0.0.1:4723/"), getAndroidCapabilities())
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30))
     }
 
     private fun addingMediaFiles(title:String, description:String){
@@ -83,6 +65,7 @@ class IntegrationTestAndroid {
         el1.click()
         Thread.sleep(1000)
         //добавление из камеры 1 фото и 1 видео
+        //стоп
         performTap(Point(606, 1106),driver)
         el1 = driver.findElement(AppiumBy.androidUIAutomator("new UiSelector().className(\"android.view.View\").instance(6)"))
         el1.click()

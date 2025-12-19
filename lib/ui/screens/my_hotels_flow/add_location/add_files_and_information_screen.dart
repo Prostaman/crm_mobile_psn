@@ -378,6 +378,7 @@ class _AddFilesAndInformationScreenState
                                 children: [
                                   SizedBox(height: 8),
                                   IconButton(
+                                    key: const ValueKey('camera_button'),
                                     icon: SvgPicture.asset(IMG.icons.iconCamera,
                                         fit: BoxFit.scaleDown),
                                     onPressed: () async {
