@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 
+//applyOpacity(Colors.white, 0.5)
 class GridOverlay extends StatelessWidget {
   // GridOverlay(this.width, this.height);
 
@@ -13,13 +13,10 @@ class GridOverlay extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
-        final gridPaint = Paint()
-          ..color = applyOpacity(Colors.white, 0.5)
-          ..style = PaintingStyle.stroke;
 
         return CustomPaint(
           size: Size(width, height),
-          painter: GridPainter(gridPaint: gridPaint),
+          painter: GridPainter(),
         );
       },
     );
@@ -27,9 +24,22 @@ class GridOverlay extends StatelessWidget {
 }
 
 class GridPainter extends CustomPainter {
-  final Paint gridPaint;
+  final Paint darkPaint;
+  final Paint lightPaint;
 
-  GridPainter({required this.gridPaint});
+  GridPainter()
+      : darkPaint = Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..isAntiAlias = true
+          ..blendMode = BlendMode.srcOver,
+        lightPaint = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..isAntiAlias = true
+          ..blendMode = BlendMode.srcOver;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -39,19 +49,41 @@ class GridPainter extends CustomPainter {
     final double rowHeight = size.height / rows;
     final double colWidth = size.width / cols;
 
+    // Горизонтальні лінії
     for (int i = 1; i < rows; i++) {
-      final double dy = i * rowHeight;
-      canvas.drawLine(Offset(0, dy), Offset(size.width, dy), gridPaint);
+      final dy = i * rowHeight;
+
+      canvas.drawLine(
+        Offset(0, dy),
+        Offset(size.width, dy),
+        darkPaint,
+      );
+
+      canvas.drawLine(
+        Offset(0, dy),
+        Offset(size.width, dy),
+        lightPaint,
+      );
     }
 
+    // Вертикальні лінії
     for (int i = 1; i < cols; i++) {
-      final double dx = i * colWidth;
-      canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), gridPaint);
+      final dx = i * colWidth;
+
+      canvas.drawLine(
+        Offset(dx, 0),
+        Offset(dx, size.height),
+        darkPaint,
+      );
+
+      canvas.drawLine(
+        Offset(dx, 0),
+        Offset(dx, size.height),
+        lightPaint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
