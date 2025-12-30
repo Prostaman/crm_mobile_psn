@@ -8,18 +8,21 @@ class LocationsDao {
 
   LocationsDao(this._database, this.tableName);
 
- Future<int> insertLocation(LocationModel location) async {
+  Future<int> insertLocation(LocationModel location) async {
     //Database db = await database;
     try {
-      int id = await _database.insert(tableName, location.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      int id = await _database.insert(tableName, location.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
       return id;
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "insertLocation");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "insertLocation");
       throw e;
     }
   }
 
-  Future<List<Map<String, dynamic>>?> findLocationsByHotelId(int hotelId) async {
+  Future<List<Map<String, dynamic>>?> findLocationsByHotelId(
+      int hotelId) async {
     //Database db = await database;
     try {
       return await _database.query(
@@ -28,7 +31,8 @@ class LocationsDao {
         whereArgs: [hotelId],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findLocationsByHotelId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findLocationsByHotelId");
       throw e;
     }
   }
@@ -43,7 +47,8 @@ class LocationsDao {
       );
       return locations.map((map) => LocationModel.fromMap(map)).toList();
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findLocationsByCloudId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findLocationsByCloudId");
       throw e;
     }
   }
@@ -63,18 +68,19 @@ class LocationsDao {
         return null; // No matching location found
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findLocationByLocalId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findLocationByLocalId");
       throw e;
     }
   }
 
-    Future<List<LocationModel>> findLocationsWithChangedProfilePhoto() async {
+  Future<List<LocationModel>> findLocationsWithChangedProfilePhoto() async {
     try {
       //Database db = await database;
       List<Map<String, dynamic>> locationsListMap = (await _database.query(
         tableName,
         where: 'profilePhotoIsChanged = ?',
-        whereArgs: [true],
+        whereArgs: [1],
       ));
       // Создаем список для хранения экземпляров MyHotelModel
       List<LocationModel> locationsList = [];
@@ -85,7 +91,8 @@ class LocationsDao {
       }
       return locationsList;
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findMyHotelWithChangedProfilePhoto");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findMyHotelWithChangedProfilePhoto");
       throw e;
     }
   }
@@ -101,19 +108,19 @@ class LocationsDao {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "updateLocation");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "updateLocation");
       throw e;
     }
   }
-
-  
 
   Future<List<Map<String, dynamic>>> getAllLocations() async {
     //Database db = await database;
     try {
       return await _database.query(tableName);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "getAllLocations");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getAllLocations");
       throw e;
     }
   }
@@ -127,7 +134,8 @@ class LocationsDao {
         whereArgs: [hotelId],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "deleteLocationsByHotelId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "deleteLocationsByHotelId");
       throw e;
     }
   }
@@ -141,7 +149,8 @@ class LocationsDao {
         whereArgs: [localId],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "deleteLocation");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "deleteLocation");
       throw e;
     }
   }
@@ -151,9 +160,9 @@ class LocationsDao {
     try {
       await _database.delete(tableName);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "clearLocationsTable");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "clearLocationsTable");
       throw e;
     }
   }
-
 }

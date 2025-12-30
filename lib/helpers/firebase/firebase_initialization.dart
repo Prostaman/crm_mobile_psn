@@ -11,6 +11,7 @@ Future<void> initFirebase() async {
     if (Platform.isIOS) {
       /// Getting permission for appTrackingTransparency required a delay between prompts.
       if (await AppTrackingTransparency.trackingAuthorizationStatus != TrackingStatus.authorized) {
+        await Future.delayed(const Duration(milliseconds: 200));
         final status = await AppTrackingTransparency.requestTrackingAuthorization();
         if (status == TrackingStatus.authorized) {
           await FirebaseHelper.enableCrashlyticsAndAnalytics();

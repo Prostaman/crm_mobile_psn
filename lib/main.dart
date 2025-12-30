@@ -10,6 +10,7 @@ import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';
+import 'package:psn.hotels.hub/helpers/workmanager/workmanger_sync.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/ui/screens/auth_flow/sign_in_screen.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
@@ -27,9 +28,9 @@ void main() async {
   initializeReflectable();
   // Точка входа
   WidgetsFlutterBinding.ensureInitialized();
-
   await initFirebase();
   await SharedPrefUtils().init();
+  initWorkManagerSyncing();
   // Инициализация сервиса локализации
   LocationHelper.init();
 
