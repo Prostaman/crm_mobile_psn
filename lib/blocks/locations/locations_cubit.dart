@@ -61,6 +61,7 @@ class LocationsCubit extends BaseCubit {
       myHotel = await RepositoryContainer()
           .myHotelRepository
           .updateMyHotel(model: myHotel);
+
       emit(SuccessModelState(model: myHotel));
     } catch (e) {
       catchError(e);
@@ -128,7 +129,9 @@ class LocationsCubit extends BaseCubit {
       await RepositoryContainer()
           .locationsRepository
           .deleteLocation(hotelModel: myHotel, locationModel: locationModel);
-      emit(SuccessModelState(model: myHotel));
+      // emit(SuccessModelState<LocationsState>(
+      //   model: locationsData,
+      // )); почему-то лучше работает без этого
     } catch (e) {
       catchError(e);
     }

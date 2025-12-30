@@ -365,10 +365,9 @@ class _LocationsScreenState extends State<LocationsScreen>
                                                                                       try {
                                                                                         await _cubit.deleteLocation(locationModel: location);
                                                                                         controllers.removeAt(index);
-
                                                                                         Navigator.pop(mainContext);
-                                                                                        // setState(() {});
-                                                                                        _cubit.updateHotel();
+                                                                                        // _cubit.updateHotel();
+
                                                                                         widget.updateCallback();
                                                                                       } catch (e) {
                                                                                         debugPrint("UI Deleting location: $e");
