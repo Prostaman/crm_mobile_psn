@@ -53,6 +53,9 @@ Thumbs.db
 
 # Firebase
 lib/firebase_options.dart
+firebase.json
+**/google-services.json
+
 
 # Flutter/Dart
 .dart_tool/
