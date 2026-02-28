@@ -17,7 +17,8 @@ DateTime? stringToDate(String date, {String format = ""}) {
   return outputFormat.parse(date);
 }
 
-String formatDate(DateTime date, {DateFormatType format = DateFormatType.Medium}) {
+String formatDate(DateTime date,
+    {DateFormatType format = DateFormatType.Medium}) {
   switch (format) {
     case DateFormatType.Date:
       return DateFormat('dd.MM.y').format(date.toLocal());
@@ -31,8 +32,6 @@ String formatDate(DateTime date, {DateFormatType format = DateFormatType.Medium}
       return DateFormat('MMMM dd, y in hh:mm a').format(date.toLocal());
     case DateFormatType.Full:
       return DateFormat('MM.dd.yy, hh:mm a').format(date.toLocal());
-    default:
-      return DateFormat('mm.dd.yyyy hh.mm.ss').format(date.toLocal());
   }
 }
 
@@ -47,4 +46,3 @@ int hoursBetween(DateTime from, DateTime to) {
   to = DateTime(to.year, to.month, to.day, from.hour, from.minute);
   return to.difference(from).inHours.round();
 }
-

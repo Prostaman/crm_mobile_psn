@@ -2,11 +2,10 @@ package psn.hotels.app.tests.android
 
 import io.appium.java_client.AppiumBy
 import io.appium.java_client.android.AndroidDriver
-import io.appium.java_client.remote.MobileCapabilityType
+//import io.appium.java_client.remote.MobileCapabilityType
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.openqa.selenium.remote.DesiredCapabilities
 import java.net.URL
 import java.time.Duration
 import java.util.Properties
@@ -14,30 +13,13 @@ import java.util.Properties
 
 class UnitTestAuth {
 
-    //für Appium Session
-//    {
-//        "appium:automationName": "UiAutomator2",
-//        "appium:platformName": "Android",
-//        "appium:platformVersion": "11",
-//        "appium:deviceName": "deb444ce59ee",
-//        "appium:app": "/Users/trio/development/CompanyPSN/publication/android/apk/crm_mobile_1.25.6+46.apk"
-//    }
     private lateinit var driver: AndroidDriver
 //AppiumDriver
 
     @Before
     fun setUp() {
-        val capabilities = DesiredCapabilities()
-        capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "UiAutomator2")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "11")
-        capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "deb444ce59ee")
-        capabilities.setCapability(
-            MobileCapabilityType.APP,
-            "/Users/trio/development/CompanyPSN/publication/android/apk/app-release.apk"
-        )
-        driver = AndroidDriver(URL("http://127.0.0.1:4723/"), capabilities)
-        driver.manage()?.timeouts()?.implicitlyWait(Duration.ofSeconds(30))
+        driver = AndroidDriver(URL("http://127.0.0.1:4723/"), getAndroidCapabilities())
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30))
     }
 
 

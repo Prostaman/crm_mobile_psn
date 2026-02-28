@@ -54,11 +54,17 @@ class HotelListRepository {
   //***************************************************
 
   // Вернет список отсортированых отелей по дистанции к пользователю  из локальной базы данных
-  Future<List<HotelModel>> getHotelsBySearchTextAndSortedByDistanceRepository(int qtyToShow, String searchText) async {
+  Future<List<HotelModel>> getHotelsBySearchTextAndSortedByDistanceRepository(
+      int qtyToShow, String searchText) async {
     late Position position;
     try {
       // получим текущую позицию пользователя(телефона)
-      position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
+
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.bestForNavigation,
+        ),
+      );
     } catch (e) {
       position = Position(
         latitude: 0.0,
@@ -73,11 +79,16 @@ class HotelListRepository {
         speedAccuracy: 0.0,
       );
       debugPrint("Error getHotelsBySearchTextAndSortedByDistanceRepository:$e");
-      await FirebaseCrashlytics.instance.log("Didn't get position of user, null Position");
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      await FirebaseCrashlytics.instance
+          .log("Didn't get position of user, null Position");
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
     }
-    List<HotelModel> hotels = await (await db.hotelsDao()).getHotelsSortedByDistance(position.latitude, position.longitude, qtyToShow, searchText);
-    debugPrint("getHotelsWithOffsetAndSortedByDistance:\n" + hotels.length.toString());
+    List<HotelModel> hotels = await (await db.hotelsDao())
+        .getHotelsSortedByDistance(
+            position.latitude, position.longitude, qtyToShow, searchText);
+    debugPrint(
+        "getHotelsWithOffsetAndSortedByDistance:\n" + hotels.length.toString());
     hotels.forEach((element) {
       debugPrint(" ${element.name}");
     });
@@ -87,7 +98,8 @@ class HotelListRepository {
   // Вернет отель по id из локальной базы данных
   Future<HotelModel?> findHotelFromLocalDBById(int id) async {
     try {
-      Map<String, dynamic>? hotelMap = await (await db.hotelsDao()).findHotelById(id);
+      Map<String, dynamic>? hotelMap =
+          await (await db.hotelsDao()).findHotelById(id);
       if (hotelMap != null)
         return HotelModel.fromMap(hotelMap);
       else
@@ -97,7 +109,8 @@ class HotelListRepository {
     }
   }
 
-  StreamController observerOfLoadingHotels = new StreamController<bool>.broadcast();
+  StreamController observerOfLoadingHotels =
+      new StreamController<bool>.broadcast();
   int attempt = 0;
   // Загрузит отели из ПСН БД
   Future<bool> downloadAllHotels() async {
@@ -117,7 +130,8 @@ class HotelListRepository {
       attempt = 0;
       return true;
     } else {
-      FirebaseCrashlyticsHelper.recordApiError(response, "Attempt: $attempt. getAllHotels");
+      FirebaseCrashlyticsHelper.recordApiError(
+          response, "Attempt: $attempt. getAllHotels");
       attempt++;
       if (attempt < 4) {
         await Future.delayed(Duration(seconds: 3));
@@ -138,15 +152,20 @@ class HotelListRepository {
       MyHotelsDao myHotelsDao = await db.myHotelsDao();
       LocationsDao locationsDao = await db.locationsDao();
       FilesDao filesDao = await db.filesDao();
-      List<HotelModel> hotels = await hotelsDao.getAllRussianAndBelorusianHotels();
+      List<HotelModel> hotels =
+          await hotelsDao.getAllRussianAndBelorusianHotels();
       for (var hotel in hotels) {
         var myHotelMap = await myHotelsDao.findMyHotelById(hotel.id);
         if (myHotelMap != null) {
           MyHotelModel? myHotel = MyHotelModel.fromMap(myHotelMap);
-          var locationsMap = await (await db.locationsDao()).findLocationsByHotelId(myHotel.id) ?? [];
-          var locations = locationsMap.map((map) => LocationModel.fromMap(map)).toList();
+          var locationsMap = await (await db.locationsDao())
+                  .findLocationsByHotelId(myHotel.id) ??
+              [];
+          var locations =
+              locationsMap.map((map) => LocationModel.fromMap(map)).toList();
           for (var location in locations) {
-            var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+            var files =
+                await filesDao.findFilesByLocationId(location.localId) ?? [];
             for (var file in files) {
               await filesDao.deleteFile(file.localId, file.localPath);
             }
@@ -158,7 +177,8 @@ class HotelListRepository {
         await hotelsDao.deleteHotel(hotel.id);
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "Удаление белорусских и русских отелей");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "Удаление белорусских и русских отелей");
     }
   }
 }
@@ -178,5 +198,6 @@ class FilterHotelsModel {
   double lon;
   Iterable<HotelModel> models;
 
-  FilterHotelsModel({required this.lat, required this.lon, required this.models});
+  FilterHotelsModel(
+      {required this.lat, required this.lon, required this.models});
 }

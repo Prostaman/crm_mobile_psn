@@ -7,7 +7,6 @@ import 'package:psn.hotels.hub/api/auth_api.dart';
 import 'package:psn.hotels.hub/blocks/auth_user_cubit/auth_user_cubit.dart';
 import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
 import 'package:psn.hotels.hub/db/db_manager.dart';
-import 'package:psn.hotels.hub/helpers/workmanager/workmanger_sync.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/models/request_models/sign_in_request.dart';
 import 'package:psn.hotels.hub/models/response_models/sign_in_response.dart';
@@ -35,18 +34,21 @@ class AuthService {
     await _changeFlowIfNeed(fetchedUser);
   }
 
-  Future<void> loadData({required bool isEmptyHotels, required bool isEmptyCategories}) async {
+  Future<void> loadData(
+      {required bool isEmptyHotels, required bool isEmptyCategories}) async {
     flowCubit.loading();
     debugPrint("Start loading from auth");
 
     bool isSyncedHotels = true;
     if (isEmptyHotels) {
-      isSyncedHotels = await RepositoryContainer().hotelListRepository.downloadAllHotels();
+      isSyncedHotels =
+          await RepositoryContainer().hotelListRepository.downloadAllHotels();
     }
 
     bool isDownloadedCategories = true;
     if (isEmptyCategories) {
-      isDownloadedCategories = await RepositoryContainer().categoriesRepository.downloadCategories();
+      isDownloadedCategories =
+          await RepositoryContainer().categoriesRepository.downloadCategories();
     }
 
     if (isSyncedHotels && isDownloadedCategories) {
@@ -113,8 +115,6 @@ class AuthService {
               bool success = await _saveUserToShared(response.item);
               if (success == true) {
                 //adding auto uploading files to the server, when app is closed
-                initWorkManagerSyncing();
-
                 return response.item;
               } else {
                 throw ("Error saving user to shared");
@@ -162,7 +162,8 @@ class AuthService {
         throw "Error removing user from shared";
       }
     } catch (e) {
-      if (flowCubit.state == FlowState.Onboarding || flowCubit.state == FlowState.Login) {
+      if (flowCubit.state == FlowState.Onboarding ||
+          flowCubit.state == FlowState.Login) {
         ApiContainer().removeToken();
       }
       throw e;
@@ -176,10 +177,15 @@ class AuthService {
           ApiContainer().setToken(model.token!);
           var onboarding = await _onboardingExist();
           if (onboarding == true) {
-            bool tableOfHotelsIsEmpty = await (await DBManager().hotelsDao()).isTableHotelsEmpty();
-            bool tableOfCategoriesIsEmpty = await (await DBManager().categoriesDao()).isTableCategoriesEmpty();
+            bool tableOfHotelsIsEmpty =
+                await (await DBManager().hotelsDao()).isTableHotelsEmpty();
+            bool tableOfCategoriesIsEmpty =
+                await (await DBManager().categoriesDao())
+                    .isTableCategoriesEmpty();
             if (tableOfHotelsIsEmpty || tableOfCategoriesIsEmpty) {
-              await ServiceContainer().authService.loadData(isEmptyHotels: tableOfHotelsIsEmpty, isEmptyCategories: tableOfCategoriesIsEmpty);
+              await ServiceContainer().authService.loadData(
+                  isEmptyHotels: tableOfHotelsIsEmpty,
+                  isEmptyCategories: tableOfCategoriesIsEmpty);
             } else {
               if (Platform.isIOS) {
                 await (await DBManager().filesDao()).updateUUID_of_Files();
@@ -190,7 +196,8 @@ class AuthService {
               sinkService.initObserverInternetConnection();
               flowCubit.home();
             }
-          } else if (flowCubit.state != FlowState.Onboarding && onboarding == false) {
+          } else if (flowCubit.state != FlowState.Onboarding &&
+              onboarding == false) {
             flowCubit.onboarding();
           }
         } else {

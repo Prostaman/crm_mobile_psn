@@ -64,7 +64,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Container(
                       width: 289,
                       height: 119,
-                      child: SvgPicture.asset(IMG.icons.logoPNG, fit: BoxFit.scaleDown),
+                      child: SvgPicture.asset(IMG.icons.logoPNG,
+                          fit: BoxFit.scaleDown),
                     ),
                   ),
                   SizedBox(height: 66),
@@ -121,12 +122,14 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                           child: SingleChildScrollView(
                               // Adding SingleChildScrollView here
-                              scrollDirection: Axis.vertical, // Allowing horizontal scrolling
+                              scrollDirection: Axis
+                                  .vertical, // Allowing horizontal scrolling
                               child: Padding(
                                   padding: EdgeInsets.only(top: 12),
                                   child: Row(
                                     children: [
-                                      SvgPicture.asset(IMG.icons.iconWarning, fit: BoxFit.scaleDown),
+                                      SvgPicture.asset(IMG.icons.iconWarning,
+                                          fit: BoxFit.scaleDown),
                                       SizedBox(width: 8),
                                       Expanded(
                                           child: Text(
@@ -165,7 +168,8 @@ class _SignInScreenState extends State<SignInScreen> {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: "Для получения доступа, обратитесь на Email: ",
+                              text:
+                                  "Для получения доступа, обратитесь на Email: ",
                               style: textStyle(size: 16, color: Colors.black),
                             ),
                             TextSpan(
@@ -176,7 +180,8 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () async {
-                                  Clipboard.setData(ClipboardData(text: "info@poehalisnami.com"));
+                                  Clipboard.setData(ClipboardData(
+                                      text: "info@poehalisnami.com"));
                                   showSnackBar(
                                     context: context,
                                     message: "email скопирован в буфер обмена",

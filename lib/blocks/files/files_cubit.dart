@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -21,7 +22,7 @@ import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:collection/collection.dart';
 
-class MyHotelCubit extends BaseCubit {
+class FilesCubit extends BaseCubit {
   MyHotelModel myHotelModel;
   final DBManager db;
 
@@ -30,20 +31,31 @@ class MyHotelCubit extends BaseCubit {
   List<FileModel> selectedFiles = [];
   List<FileModel> files = [];
   List<CategoryModel> categories = [];
-  CategoryModel category = CategoryModel(id: -1, description: 'Выберите категорию *');
+  CategoryModel category =
+      CategoryModel(id: -1, description: 'Выберите категорию *');
 
-  MyHotelCubit({LocationModel? location, required this.myHotelModel, required this.db}) : super(InitialState()) {
+  late bool isSyncing;
+
+  FilesCubit(
+      {LocationModel? location, required this.myHotelModel, required this.db})
+      : super(InitialState()) {
     editing = location != null;
     locationModel = location != null ? location : LocationModel();
+    isSyncing = services.sinkService.isSyncing;
   }
 
   Future<void> addAndUpdateLocationWithFiles(List<FileModel> files) async {
-    Future<void> moveFilesToInternalStorage(FileModel file, Directory documentsDirectory) async {
-      file.localPath = await FileUtility.moveFile(File(file.localPath), documentsDirectory.path); //перемещение файла во внутренее хранилище
+    Future<void> moveFilesToInternalStorage(
+        FileModel file, Directory documentsDirectory) async {
+      file.localPath = await FileUtility.moveFile(File(file.localPath),
+          documentsDirectory.path); //перемещение файла во внутренее хранилище
       if (file.type == FileModelType.Video && ((file.thumb ?? '').isNotEmpty)) {
         //String tempOldThumb = file.thumb!;
 
-        file.thumb = await FileUtility.moveFile(File(file.thumb!), documentsDirectory.path); //перемещение картинки of видео во внутренее хранилище
+        file.thumb = await FileUtility.moveFile(
+            File(file.thumb!),
+            documentsDirectory
+                .path); //перемещение картинки of видео во внутренее хранилище
 
         // if (file.thumb != tempOldThumb) {
         //   //перезаписывает thumb для всех видео у который совпадает путь к thumb
@@ -58,26 +70,34 @@ class MyHotelCubit extends BaseCubit {
       }
     }
 
-    Future<void> moveProfilePhotosToInternalStorage(String oldLocalPath, FileModel file, HotelLocationsRepository repository) async {
+    Future<void> moveProfilePhotosToInternalStorage(String oldLocalPath,
+        FileModel file, LocationsRepository repository) async {
       if (locationModel.pathOfProfilePhoto == oldLocalPath) {
-        locationModel.pathOfProfilePhoto = file.localPath; //перезапись профильного фото, если оно было перемещено
-        await repository.updateLocation(hotelModel: myHotelModel, locationModel: locationModel);
+        locationModel.pathOfProfilePhoto = file
+            .localPath; //перезапись профильного фото, если оно было перемещено
+        await repository.updateLocation(
+            hotelModel: myHotelModel, locationModel: locationModel);
       }
 
       if (myHotelModel.pathOfProfilePhoto == oldLocalPath) {
-        myHotelModel.pathOfProfilePhoto = file.localPath; //перезапись профильного фото, если оно было перемещено
-        await RepositoryContainer().myHotelRepository.updateMyHotel(model: myHotelModel);
+        myHotelModel.pathOfProfilePhoto = file
+            .localPath; //перезапись профильного фото, если оно было перемещено
+        await RepositoryContainer()
+            .myHotelRepository
+            .updateMyHotel(model: myHotelModel);
       }
     }
 
     debugPrint('addAndUpdateLocationWithFiles');
     emit(LoadingState());
     try {
-      HotelLocationsRepository repository = RepositoryContainer().locationsRepository;
+      LocationsRepository repository =
+          RepositoryContainer().locationsRepository;
       Directory documentsDirectory = await getApplicationDocumentsDirectory();
       //debugPrint('documentsDirectory: ${documentsDirectory.path}');
       if (editing == true) {
-        var lastUpdateOfLocation = await repository.getLocationFromLocalDB(locationModel.localId);
+        var lastUpdateOfLocation =
+            await repository.getLocationFromLocalDB(locationModel.localId);
         String tempNameOfLocation = locationModel.name;
         String tempDescriptionOfLocation = locationModel.description;
         String tempPathOfProfilePhoto = locationModel.pathOfProfilePhoto;
@@ -90,14 +110,18 @@ class MyHotelCubit extends BaseCubit {
           locationModel.idCategory = tempCategoryId;
         }
         //debugPrint('locationModel updated: ${locationModel.pathOfProfilePhoto}');
-        await repository.updateLocation(hotelModel: myHotelModel, locationModel: locationModel);
+        await repository.updateLocation(
+            hotelModel: myHotelModel, locationModel: locationModel);
         for (var file in files) {
-          debugPrint('mode: Edition, deleted:${file.deleted}, file.localPath: ${file.localPath}');
-          if (!file.deleted && !file.localPath.contains(documentsDirectory.path)) {
+          debugPrint(
+              'mode: Edition, deleted:${file.deleted}, file.localPath: ${file.localPath}');
+          if (!file.deleted &&
+              !file.localPath.contains(documentsDirectory.path)) {
             String oldLocalPath = file.localPath;
             await moveFilesToInternalStorage(file, documentsDirectory);
             if (oldLocalPath != file.localPath) {
-              await moveProfilePhotosToInternalStorage(oldLocalPath, file, repository);
+              await moveProfilePhotosToInternalStorage(
+                  oldLocalPath, file, repository);
               file.isEdited = true;
               debugPrint('Was moving to internal storage:${file.localPath}');
             }
@@ -116,16 +140,20 @@ class MyHotelCubit extends BaseCubit {
         }
       } else {
         locationModel.hotelId = myHotelModel.id;
-        int localLocationId =
-            await repository.addLocation(hotelModel: myHotelModel, locationModel: locationModel); // insert location to local db and get him id
+        int localLocationId = await repository.addLocation(
+            hotelModel: myHotelModel,
+            locationModel:
+                locationModel); // insert location to local db and get him id
         for (var file in files) {
           if (file.deleted == false) {
-            debugPrint('deleted:${file.deleted}, file.localPath: ${file.localPath}');
+            debugPrint(
+                'deleted:${file.deleted}, file.localPath: ${file.localPath}');
             if (!file.localPath.contains(documentsDirectory.path)) {
               String oldLocalPath = file.localPath;
               await moveFilesToInternalStorage(file, documentsDirectory);
               if (oldLocalPath != file.localPath) {
-                await moveProfilePhotosToInternalStorage(oldLocalPath, file, repository);
+                await moveProfilePhotosToInternalStorage(
+                    oldLocalPath, file, repository);
                 file.isEdited = true;
                 debugPrint('Was moving to internal storage:${file.localPath}');
               }
@@ -135,6 +163,7 @@ class MyHotelCubit extends BaseCubit {
           }
         }
       }
+      // удаление старых не используемых файлов
       for (var file in files) {
         if (file.isEdited) {
           FileUtility.deleteFile(file.oldLocalPath);
@@ -148,14 +177,15 @@ class MyHotelCubit extends BaseCubit {
   }
 
   Future<void> startSync() async {
-
-    HotelLocationsRepository repository = RepositoryContainer().locationsRepository;
+    LocationsRepository repository = RepositoryContainer().locationsRepository;
     repository.startSinc();
   }
 
   Future<void> deleteLocation({required LocationModel model}) async {
     try {
-      await RepositoryContainer().locationsRepository.deleteLocation(hotelModel: myHotelModel, locationModel: model);
+      await RepositoryContainer()
+          .locationsRepository
+          .deleteLocation(hotelModel: myHotelModel, locationModel: model);
     } catch (e) {
       catchError(e);
     }
@@ -171,7 +201,8 @@ class MyHotelCubit extends BaseCubit {
     });
     selectedFiles.clear();
     emit(RefreshState());
-    emit(SuccessModelState(model: myHotelModel)); // если один и тот же State, то ui не обновляется
+    emit(SuccessModelState(
+        model: myHotelModel)); // если один и тот же State, то ui не обновляется
     //files.remove(file);
   }
 
@@ -189,12 +220,16 @@ class MyHotelCubit extends BaseCubit {
     for (var selectedFile in selectedFiles) {
       listForSharing.add(XFile(selectedFile.localPath));
     }
-    await Share.shareXFiles(listForSharing);
+    // Використовуємо сучасний метод
+    await SharePlus.instance.share(ShareParams(files: listForSharing));
+
     selectedFiles.clear();
   }
 
   Future<List<FileModel>> findFilesByLocationId() async {
-    var files = await (await db.filesDao()).findFilesByLocationId(locationModel.localId) ?? [];
+    var files = await (await db.filesDao())
+            .findFilesByLocationId(locationModel.localId) ??
+        [];
     // Фильтруем список, чтобы оставить только не удаленные файлы
     files.where((file) => file.deleted == false).toList();
     // сортируем по дате создания
@@ -241,11 +276,15 @@ class MyHotelCubit extends BaseCubit {
       List<XFile> xfilesRemoving = [];
       for (var xfile in xfilesFromGallery) {
         files.forEach((file) {
-          debugPrint('xfile name:${getNameOfFile(xfile.path)} | file name:${getNameOfFile(file.localPath)} ');
+          debugPrint(
+              'xfile name:${getNameOfFile(xfile.path)} | file name:${getNameOfFile(file.localPath)} ');
         });
 
-        debugPrint('is Duplicate?:${files.firstWhereOrNull((file) => (xfile.path == file.localPath)) != null}');
-        bool isDuplicate = files.firstWhereOrNull((file) => (getNameOfFile(xfile.path) == getNameOfFile(file.localPath))) != null;
+        debugPrint(
+            'is Duplicate?:${files.firstWhereOrNull((file) => (xfile.path == file.localPath)) != null}');
+        bool isDuplicate = files.firstWhereOrNull((file) =>
+                (getNameOfFile(xfile.path) == getNameOfFile(file.localPath))) !=
+            null;
         if (isDuplicate == true) {
           debugPrint('было удаление');
           xfilesRemoving.add(xfile);
@@ -260,10 +299,12 @@ class MyHotelCubit extends BaseCubit {
 
     emit(LoadingState());
     try {
-      const double maxFileSizeInBytes = 100 * 1048576; //100 MB limit size for files
+      const double maxFileSizeInBytes =
+          100 * 1048576; //100 MB limit size for files
       List<FileModel> filesFromGallery = [];
       final ImagePicker _picker = ImagePicker();
-      List<XFile> xfilesFromGallery = await _picker.pickMultipleMedia(imageQuality: 100);
+      List<XFile> xfilesFromGallery =
+          await _picker.pickMultipleMedia(imageQuality: 100);
       debugPrint('Удаляем дубликаты');
 
       deleteDuplicates(xfilesFromGallery);
@@ -276,7 +317,9 @@ class MyHotelCubit extends BaseCubit {
           if (fileType!.contains('image') || fileType.contains('video')) {
             FileModel file = FileModel();
             file.localPath = xfile.path;
-            file.createdAt = (await FileUtility().getFileCreationDate(xfile.path))?.toIso8601String();
+            file.createdAt =
+                (await FileUtility().getFileCreationDate(xfile.path))
+                    ?.toIso8601String();
             file.size = await xfile.length() / 1024;
             // if (position != null) {
             //   file.lat = position.latitude;
@@ -305,7 +348,8 @@ class MyHotelCubit extends BaseCubit {
       String error = "Pick file, error:$e";
       debugPrint(error);
       await FirebaseCrashlytics.instance.log(error);
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: error));
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: error));
       emit(ErrorState(error: "Error: $e"));
     }
     emit(SuccessModelState(model: myHotelModel));
@@ -338,7 +382,8 @@ class MyHotelCubit extends BaseCubit {
     //persons.firstWhere((person) => person.id == searchId, orElse: () => null);
     //CategoryModel category = await (await db.categoriesDao()).findCategoryById(id) ?? CategoryModel(id: -1, description: 'Выберите категорию *');
     CategoryModel category =
-        categories.firstWhereOrNull((category) => category.id == id) ?? CategoryModel(id: -1, description: 'Выберите категорию *');
+        categories.firstWhereOrNull((category) => category.id == id) ??
+            CategoryModel(id: -1, description: 'Выберите категорию *');
     emit(SuccessModelState(model: myHotelModel));
     return category;
   }

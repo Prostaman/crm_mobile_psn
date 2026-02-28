@@ -9,6 +9,8 @@ import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
 import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
+import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';
+import 'package:psn.hotels.hub/helpers/workmanager/workmanger_sync.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/ui/screens/auth_flow/sign_in_screen.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
@@ -26,9 +28,9 @@ void main() async {
   initializeReflectable();
   // Точка входа
   WidgetsFlutterBinding.ensureInitialized();
-
   await initFirebase();
   await SharedPrefUtils().init();
+  initWorkManagerSyncing();
   // Инициализация сервиса локализации
   LocationHelper.init();
 
@@ -55,11 +57,11 @@ void main() async {
   );
 }
 
-
 _providers() {
   return <BlocProvider<dynamic>>[
     // авторизация
-    BlocProvider<FlowCubit>(create: (context) => ServiceContainer().authService.flowCubit..check()),
+    BlocProvider<FlowCubit>(
+        create: (context) => ServiceContainer().authService.flowCubit..check()),
     // кубит с отелями
     BlocProvider<HotelsDialogCubit>(create: (context) => HotelsDialogCubit()),
     // кубит с доступами - микрофон, камера, и тд
@@ -70,10 +72,14 @@ _providers() {
 bool wasOfferToUpdate = false;
 _checkUpdate(BuildContext context) {
   //проверка обновлений
-  final appleId = '6480569224'; // If this value is null, its packagename will be considered
-  final playStoreId = 'psn.hotels.app'; // If this value is null, its packagename will be considered
+  final appleId =
+      '6480569224'; // If this value is null, its packagename will be considered
+  final playStoreId =
+      'psn.hotels.app'; // If this value is null, its packagename will be considered
   final country = 'ua'; // If this value is null 'us' will be the default value
-  AppVersionUpdate.checkForUpdates(appleId: appleId, playStoreId: playStoreId, country: country).then((data) async {
+  AppVersionUpdate.checkForUpdates(
+          appleId: appleId, playStoreId: playStoreId, country: country)
+      .then((data) async {
     wasOfferToUpdate = true;
     if (data.canUpdate!) {
       AppVersionUpdate.showAlertUpdate(
@@ -85,18 +91,24 @@ _checkUpdate(BuildContext context) {
               backgroundColor: WidgetStatePropertyAll(
                 Color.fromRGBO(28, 28, 28, 0.2),
               ),
-              textStyle: WidgetStatePropertyAll(textStyle(size: 16, weight: FontWeight.w400)),
-              fixedSize: WidgetStatePropertyAll(Size(109, 34))
-              ),
+              textStyle: WidgetStatePropertyAll(
+                  textStyle(size: 16, weight: FontWeight.w400)),
+              fixedSize: WidgetStatePropertyAll(Size(109, 34))),
           updateButtonStyle: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll(Color.fromRGBO(225, 108, 58, 1)),
-              textStyle: WidgetStatePropertyAll(textStyle(size: 16, weight: FontWeight.w400)),
-              fixedSize: WidgetStatePropertyAll(Size(109, 34))
-              ),
+              backgroundColor:
+                  WidgetStatePropertyAll(Color.fromRGBO(225, 108, 58, 1)),
+              textStyle: WidgetStatePropertyAll(
+                  textStyle(size: 16, weight: FontWeight.w400)),
+              fixedSize: WidgetStatePropertyAll(Size(109, 34))),
           content: 'Обновить сейчас?',
           cancelButtonText: 'Позже',
           updateButtonText: 'Обновить');
     }
+  }).catchError((e) async {
+    String error = "app_version_update ERROR, $e ";
+    debugPrint(error);
+    await FirebaseCrashlytics.instance
+        .recordFlutterError(FlutterErrorDetails(exception: error));
   });
 }
 
@@ -109,7 +121,10 @@ class PoehalisnamiApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSN Hotels',
       initialRoute: '/',
-      theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme, fontFamily: 'SFUIDisplay'),
+      theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: lightColorScheme,
+          fontFamily: 'SFUIDisplay'),
       home: BlocConsumer(
         bloc: BlocProvider.of<FlowCubit>(context),
         builder: _builder,
@@ -136,7 +151,10 @@ class PoehalisnamiApp extends StatelessWidget {
       if (wasOfferToUpdate == false) {
         _checkUpdate(context);
       }
-      return SplashScreen();
+      return BlocProvider(
+        create: (context) => SplashCubit(),
+        child: const SplashScreen(),
+      );
     }
   }
 

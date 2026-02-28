@@ -49,22 +49,25 @@ class DefaultButton extends StatelessWidget {
       case DefaultButtonScheme.White:
         color = ColorWhite;
         textColor = Colors.black;
-        disableTextColor = ColorTextBlue.withOpacity(0.6);
+        disableTextColor = applyOpacity(ColorTextBlue, 0.6);
+        // disableTextColor = ColorTextBlue.withOpacity(0.6);
         indicatorValueColor = ColorRed;
         indicatorBackgroundColor = Colors.white;
         borderColor = Color.fromRGBO(108, 106, 106, 0.5);
         break;
-
-      default:
     }
+
     return TextButton(
       style: TextButton.styleFrom(
         fixedSize: Size.fromHeight(height),
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: enable == true ? borderColor : borderColor.withOpacity(0.4)),
+          side: BorderSide(
+              color: enable == true
+                  ? borderColor
+                  : applyOpacity(borderColor, 0.4)),
           borderRadius: BorderRadius.circular(this.rounded),
         ),
-        backgroundColor: enable == true ? color : color.withOpacity(0.6),
+        backgroundColor: enable == true ? color : applyOpacity(color, 0.6),
       ),
       onPressed: (enable == true && loading == false) ? onPressed : null,
       child: loading == true
@@ -91,27 +94,31 @@ class DefaultButton extends StatelessWidget {
                   )
                 else
                   Expanded(
-                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text(
-                      titleOfLoading,
-                      textAlign: TextAlign.center,
-                      style: textStyle(
-                        weight: Regular4,
-                        size: textSize,
-                        color: enable == true ? textColor : disableTextColor,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Container(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(indicatorValueColor),
-                        backgroundColor: indicatorBackgroundColor,
-                        strokeWidth: 3,
-                      ),
-                    )
-                  ]))
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                        Text(
+                          titleOfLoading,
+                          textAlign: TextAlign.center,
+                          style: textStyle(
+                            weight: Regular4,
+                            size: textSize,
+                            color:
+                                enable == true ? textColor : disableTextColor,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                indicatorValueColor),
+                            backgroundColor: indicatorBackgroundColor,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      ]))
               ],
             )
           : (titleIcon != null)

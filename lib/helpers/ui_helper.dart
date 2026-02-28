@@ -100,6 +100,18 @@ hideKeyboard({required BuildContext context}) {
   }
 }
 
+/// Apply opacity to a base [Color] without using deprecated `withOpacity`.
+/// Returns a new color with the same RGB and the given opacity (0.0 - 1.0).
+Color applyOpacity(Color base, double opacity) {
+  // New color component accessors are `.r`, `.g`, `.b` and may be int or double.
+  // Treat them as `num` and round to int to be safe across SDK versions.
+  final a = (opacity * 255).round();
+  final r = (base.r as num).round();
+  final g = (base.g as num).round();
+  final b = (base.b as num).round();
+  return Color.fromARGB(a, r, g, b);
+}
+
 const DefaultIndicator = CircularProgressIndicator(
   valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
   backgroundColor: Colors.white,
@@ -135,9 +147,9 @@ Widget DefaultBigIndicator = Container(
   ),
 );
 
-// ignore: non_constant_identifier_names
+
 Widget DefaultFullScreenIndicator = Container(
-  color: Colors.black.withOpacity(0.2),
+  color: const Color.fromRGBO(0, 0, 0, 0.2),
   child: Center(
     child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),

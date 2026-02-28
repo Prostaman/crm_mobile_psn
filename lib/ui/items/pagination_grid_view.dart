@@ -53,23 +53,24 @@ class PaginationGridView extends StatelessWidget {
       builder: (context, state) {
         return Stack(
           children: [
-              if (state is BaseCubitState)
-            NotificationListener(
-              child: poolToRefresh == true ? _buildRefreshIndicator() : _buildListView(),
-              onNotification: (notification) => _onNotification(notification: notification, state: state ),
-            ),
+            if (state is BaseCubitState)
+              NotificationListener(
+                child: poolToRefresh == true
+                    ? _buildRefreshIndicator()
+                    : _buildListView(),
+                onNotification: (notification) =>
+                    _onNotification(notification: notification, state: state),
+              ),
             if (state is LoadingState)
-            Center(
-              child: Container(
-                height: 200,
-                child: Center(
-                  child: DefaultIndicator
-                )
-              )
-            )
-              // DefaultFullScreenIndicator
+              Center(
+                  child: Container(
+                      height: 200, child: Center(child: DefaultIndicator)))
+            // DefaultFullScreenIndicator
             else if (state is LoadingMoreState)
-              LoadingMoreInsicator(alignment: reverse == false ? Alignment.bottomCenter : Alignment.topCenter)
+              LoadingMoreInsicator(
+                  alignment: reverse == false
+                      ? Alignment.bottomCenter
+                      : Alignment.topCenter)
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
                 emptyViewPlug != null &&
@@ -113,14 +114,19 @@ class PaginationGridView extends StatelessWidget {
       physics: physics != null ? physics : AlwaysScrollableScrollPhysics(),
       scrollDirection: scrollDirection,
       shrinkWrap: shrinkWrap,
-      itemCount: appendToLast == true ? cubit.modelsLanght + 1 : cubit.modelsLanght,
+      itemCount:
+          appendToLast == true ? cubit.modelsLenght + 1 : cubit.modelsLenght,
     );
   }
 
-  bool _onNotification({required var notification, required BaseCubitState state}) {
-    if (!(state is LoadingState) && !(state is LoadingMoreState) && notification is ScrollNotification) {
+  bool _onNotification(
+      {required var notification, required BaseCubitState state}) {
+    if (!(state is LoadingState) &&
+        !(state is LoadingMoreState) &&
+        notification is ScrollNotification) {
       // if (notification is ScrollEndNotification) {
-      if (scrollController.position.extentAfter <= 400 && scrollController.position.maxScrollExtent >= 20) {
+      if (scrollController.position.extentAfter <= 400 &&
+          scrollController.position.maxScrollExtent >= 20) {
         cubit.loadMore();
 
         // print(_scrollController.position.maxScrollExtent);

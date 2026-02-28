@@ -32,7 +32,9 @@ class SinkService {
   }
 
   Future<void> initObserverInternetConnection() async {
-    connectivity = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
+    connectivity = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) async {
       String? token = ServiceContainer().authService.user?.token;
       if (token != null && token.isNotEmpty) {
         debugPrint("onConnectivityChanged");
@@ -43,8 +45,11 @@ class SinkService {
             startSinc();
           }
         } else {
-          if (result == ConnectivityResult.ethernet || result == ConnectivityResult.wifi || result == ConnectivityResult.mobile) {
-            debugPrint("ConnectivityResult.ethernet is true so startSinc, isSyncing:$isSyncing");
+          if (result == ConnectivityResult.ethernet ||
+              result == ConnectivityResult.wifi ||
+              result == ConnectivityResult.mobile) {
+            debugPrint(
+                "ConnectivityResult.ethernet is true so startSinc, isSyncing:$isSyncing");
             startSinc();
           }
         }
@@ -53,11 +58,14 @@ class SinkService {
   }
 
   Future<void> deleteRussianAndBelorusianHotels() async {
-    await RepositoryContainer().hotelListRepository.deleteRussianAndBelorusianHotels();
+    await RepositoryContainer()
+        .hotelListRepository
+        .deleteRussianAndBelorusianHotels();
   }
 
   Future<void> startDownloadHotels() async {
-    var typeOfConnectionWithInternet = await (Connectivity().checkConnectivity());
+    var typeOfConnectionWithInternet =
+        await (Connectivity().checkConnectivity());
     if (typeOfConnectionWithInternet != ConnectivityResult.none) {
       if (ServiceContainer().settingsService.uploadIfWiFiEnable == true) {
         if (typeOfConnectionWithInternet != ConnectivityResult.wifi) {
@@ -81,7 +89,8 @@ class SinkService {
       isSyncingObserver.add(isSyncing);
       bool wasChanging = false;
 
-      var typeOfConnectionWithInternet = await (Connectivity().checkConnectivity());
+      var typeOfConnectionWithInternet =
+          await (Connectivity().checkConnectivity());
       // String? token = ServiceContainer().authService.user?.token;
       // if (token != null && token.isNotEmpty && typeOfConnectionWithInternet != ConnectivityResult.none) {
       if (typeOfConnectionWithInternet != ConnectivityResult.none) {
@@ -106,17 +115,27 @@ class SinkService {
         FilesDao filesDao = await db.filesDao();
 
         try {
-          var myHotels = await RepositoryContainer().myHotelRepository.allMyHotels;
-          var myHotelsNotSynced = myHotels.where((element) => element.synced == false).toList();
+          var myHotels =
+              await RepositoryContainer().myHotelRepository.allMyHotels;
+          var myHotelsNotSynced =
+              myHotels.where((element) => element.synced == false).toList();
           for (var myHotel in myHotelsNotSynced) {
             if (myHotel.deleted == true) {
-              var response = await RepositoryContainer().myHotelRepository.hotelApi.deleteMyHotel(myHotelId: myHotel.id);
+              var response = await RepositoryContainer()
+                  .myHotelRepository
+                  .hotelApi
+                  .deleteMyHotel(myHotelId: myHotel.id);
               if (response != null && response.success == true) {
                 wasChanging = true;
-                var locationsMap = await locationsDao.findLocationsByHotelId(myHotel.id) ?? [];
-                var locations = locationsMap.map((map) => LocationModel.fromMap(map)).toList();
+                var locationsMap =
+                    await locationsDao.findLocationsByHotelId(myHotel.id) ?? [];
+                var locations = locationsMap
+                    .map((map) => LocationModel.fromMap(map))
+                    .toList();
                 for (var location in locations) {
-                  var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+                  var files =
+                      await filesDao.findFilesByLocationId(location.localId) ??
+                          [];
                   for (var file in files) {
                     await filesDao.deleteFile(file.localId, file.localPath);
                   }
@@ -124,51 +143,68 @@ class SinkService {
                 await (locationsDao).deleteLocationsByHotelId(myHotel.id);
                 await myHotelsDao.deleteMyHotel(myHotel.id);
               } else {
-                FirebaseCrashlyticsHelper.recordApiError(response, "deleteMyHotel");
+                FirebaseCrashlyticsHelper.recordApiError(
+                    response, "deleteMyHotel");
               }
             } else {
-              var response = await RepositoryContainer().myHotelRepository.hotelApi.updateMyHotel(myHotel);
+              var response = await RepositoryContainer()
+                  .myHotelRepository
+                  .hotelApi
+                  .updateMyHotel(myHotel);
               if (response != null && response.success == true) {
                 wasChanging = true;
                 myHotel.synced = true;
                 await (myHotelsDao).updateMyHotel(myHotel.id, myHotel);
               } else {
-                FirebaseCrashlyticsHelper.recordApiError(response, "updateMyHotel");
+                FirebaseCrashlyticsHelper.recordApiError(
+                    response, "updateMyHotel");
               }
             }
           }
         } catch (e) {
           isSyncing = false;
           isSyncingObserver.add(isSyncing);
-          FirebaseCrashlytics.instance.log("Error update or delete MyHotel: $e");
-          FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+          FirebaseCrashlytics.instance
+              .log("Error update or delete MyHotel: $e");
+          FirebaseCrashlytics.instance
+              .recordFlutterError(FlutterErrorDetails(exception: e));
           throw e;
         }
 
         // try {
-        var locationsAll = await RepositoryContainer().locationsRepository.allLocations;
+        var locationsAll =
+            await RepositoryContainer().locationsRepository.allLocations;
         // var currentDate = DateTime.now();
         for (var location in locationsAll) {
           bool saveLocation = false;
           //List<FileModel> deletions = [];
           // Синхронизация списка локаций
           if (location.synced == false && location.deleted == true) {
-            var response = await RepositoryContainer().locationsRepository.locationApi.deleteLocation(request: location);
+            var response = await RepositoryContainer()
+                .locationsRepository
+                .locationApi
+                .deleteLocation(request: location);
             if (response != null && response.success == true) {
               wasChanging = true;
               debugPrint("Deleting location on the backend: success");
-              var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+              var files =
+                  await filesDao.findFilesByLocationId(location.localId) ?? [];
               for (var file in files) {
                 await filesDao.deleteFile(file.localId, file.localPath);
               }
               await locationsDao.deleteLocation(location.localId);
             } else {
-              FirebaseCrashlyticsHelper.recordApiError(response, "deleteLocation");
+              FirebaseCrashlyticsHelper.recordApiError(
+                  response, "deleteLocation");
             }
           } else if (location.synced == false && location.deleted == false) {
-            debugPrint("addLocation, location.synced == false && location.deleted == false");
+            debugPrint(
+                "addLocation, location.synced == false && location.deleted == false");
             //обновление
-            var r = await RepositoryContainer().locationsRepository.locationApi.addLocation(location: location);
+            var r = await RepositoryContainer()
+                .locationsRepository
+                .locationApi
+                .addLocation(location: location);
             if (r.success == true) {
               wasChanging = true;
               location.synced = true;
@@ -177,7 +213,9 @@ class SinkService {
               await locationsDao.updateLocation(location.localId, location);
               debugPrint("oldLocationCloudId: $oldLocationCloudId");
               if (oldLocationCloudId == 0) {
-                var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+                var files =
+                    await filesDao.findFilesByLocationId(location.localId) ??
+                        [];
                 for (var file in files) {
                   file.cloudLocationId = location.cloudId;
                   file.synced = false;
@@ -192,36 +230,48 @@ class SinkService {
           }
 
           // синхронизация файлов
-          var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+          var files =
+              await filesDao.findFilesByLocationId(location.localId) ?? [];
           if (files.isNotEmpty) {
             for (var file in files) {
               if (file.synced == false && file.deleted == true) {
-                debugPrint("Testing file.synced == false && file.deleted == true");
+                debugPrint(
+                    "Testing file.synced == false && file.deleted == true");
                 var response;
-                response = await RepositoryContainer().locationsRepository.filesApi.deleteFile(file: file);
+                response = await RepositoryContainer()
+                    .locationsRepository
+                    .filesApi
+                    .deleteFile(file: file);
                 debugPrint("Testing got response delete file:$response");
                 if (response != null && response.success == true) {
                   wasChanging = true;
                   debugPrint("Testing response success delete file");
                   //file.synced = true;
                   await filesDao.deleteFile(file.localId, file.localPath);
-                  if (file.type == FileModelType.Video && (file.thumb ?? '').isNotEmpty) {
+                  if (file.type == FileModelType.Video &&
+                      (file.thumb ?? '').isNotEmpty) {
                     await FileUtility.deleteFile(file.thumb!);
                   }
                   saveLocation = true;
                 } else {
-                  FirebaseCrashlyticsHelper.recordApiError(response, "deleteFile");
+                  FirebaseCrashlyticsHelper.recordApiError(
+                      response, "deleteFile");
                 }
               } else if (file.synced == false && file.deleted == false) {
                 //debugPrint("Testing file.synced == false && file.deleted == false  fileLocalId:${file.localId}");
-                var r = await RepositoryContainer().locationsRepository.filesApi.send(file: file, hotelId: location.hotelId);
+                var r = await RepositoryContainer()
+                    .locationsRepository
+                    .filesApi
+                    .send(file: file, hotelId: location.hotelId);
                 debugPrint("sent file");
                 if (r != null && r.success == true) {
                   wasChanging = true;
-                  debugPrint("Testing reponse send file r != null && r.success == true");
+                  debugPrint(
+                      "Testing reponse send file r != null && r.success == true");
                   file.cloudId = r.item?.id ?? 0;
                   // file.url = r.item.url;
-                  debugPrint("item url: ${r.item?.url ?? "empty"}, item id: ${r.item?.id}");
+                  debugPrint(
+                      "item url: ${r.item?.url ?? "empty"}, item id: ${r.item?.id}");
                   file.synced = true;
                   file.uploadedAt = DateTime.now().toIso8601String();
                   await filesDao.updateFile(file.localId, file);
@@ -233,7 +283,8 @@ class SinkService {
                   FirebaseCrashlyticsHelper.recordApiError(r, "send File");
                 }
               } else if (file.synced == true && file.deleted == true) {
-                debugPrint("Testing file.synced == true && file.deleted == true");
+                debugPrint(
+                    "Testing file.synced == true && file.deleted == true");
                 await filesDao.deleteFile(file.localId, file.localPath);
                 saveLocation = true;
               }
@@ -248,7 +299,7 @@ class SinkService {
         await changingProfilePhoto(myHotelsDao, filesDao, locationsDao);
         if (wasChanging == true) {
           syncSuccess.add(true);
-          debugPrint("setState after sinc");
+          debugPrint("refresh after sinc");
         }
       }
       isSyncing = false;
@@ -260,45 +311,63 @@ class SinkService {
     }
   }
 
-  Future<void> changingProfilePhoto(MyHotelsDao myHotelsDao, FilesDao filesDao, LocationsDao locationsDao) async {
+  Future<void> changingProfilePhoto(MyHotelsDao myHotelsDao, FilesDao filesDao,
+      LocationsDao locationsDao) async {
     debugPrint("start changingProfilePhoto");
     try {
-      List<MyHotelModel> myHotels = await myHotelsDao.findMyHotelsWithChangedProfilePhoto();
+      List<MyHotelModel> myHotels =
+          await myHotelsDao.findMyHotelsWithChangedProfilePhoto();
       for (var myHotel in myHotels) {
         debugPrint("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
-        FileModel file = await filesDao.findFileByLocalPath(myHotel.pathOfProfilePhoto);
+        FileModel file =
+            await filesDao.findFileByLocalPath(myHotel.pathOfProfilePhoto);
         if (file.deleted == false && file.synced == true && file.cloudId != 0) {
-          var response = await RepositoryContainer().locationsRepository.filesApi.changeProfilePhoto(cloudId: file.cloudId, isHotel: true);
+          var response = await RepositoryContainer()
+              .locationsRepository
+              .filesApi
+              .changeProfilePhoto(cloudId: file.cloudId, isHotel: true);
           if (response != null && response.success == true) {
             myHotel.profilePhotoIsChanged = false;
             await myHotelsDao.updateMyHotel(myHotel.id, myHotel);
           } else {
-            FirebaseCrashlyticsHelper.recordApiError(response, "changingProfilePhotoOfMyHotel");
+            FirebaseCrashlyticsHelper.recordApiError(
+                response, "changingProfilePhotoOfMyHotel");
           }
         }
       }
     } catch (e) {
-      await FirebaseCrashlytics.instance.log("changingProfilePhoto in myHotel in sync");
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      await FirebaseCrashlytics.instance
+          .log("changingProfilePhoto in myHotel in sync");
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
     }
     try {
-      List<LocationModel> locations = await locationsDao.findLocationsWithChangedProfilePhoto();
+      List<LocationModel> locations =
+          await locationsDao.findLocationsWithChangedProfilePhoto();
       for (var location in locations) {
-        debugPrint("location.pathOfProfilePhoto:${location.pathOfProfilePhoto}");
-        FileModel file = await filesDao.findFileByLocalPath(location.pathOfProfilePhoto);
+        debugPrint(
+            "location.pathOfProfilePhoto:${location.pathOfProfilePhoto}");
+        FileModel file =
+            await filesDao.findFileByLocalPath(location.pathOfProfilePhoto);
         if (file.deleted == false && file.synced == true && file.cloudId != 0) {
-          var response = await RepositoryContainer().locationsRepository.filesApi.changeProfilePhoto(cloudId: file.cloudId, isHotel: true);
+          var response = await RepositoryContainer()
+              .locationsRepository
+              .filesApi
+              .changeProfilePhoto(cloudId: file.cloudId, isHotel: true);
           if (response != null && response.success == true) {
             location.profilePhotoIsChanged = false;
             await locationsDao.updateLocation(location.localId, location);
           } else {
-            FirebaseCrashlyticsHelper.recordApiError(response, "changingProfilePhotoOfMyHotel");
+            FirebaseCrashlyticsHelper.recordApiError(
+                response, "changingProfilePhotoOfMyHotel");
           }
         }
       }
     } catch (e) {
-      await FirebaseCrashlytics.instance.log("changingProfilePhoto of location in sync");
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      await FirebaseCrashlytics.instance
+          .log("changingProfilePhoto of location in sync");
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
     }
   }
 

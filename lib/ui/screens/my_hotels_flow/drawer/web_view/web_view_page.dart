@@ -39,8 +39,10 @@ class _WebViewPageState extends State<WebViewPage> {
           },
           onWebResourceError: (WebResourceError error) {},
           onNavigationRequest: (NavigationRequest request) {
-            if (!request.url.startsWith('https://www.poehalisnami.ua/user_agreement') &&
-                !request.url.startsWith('https://www.poehalisnami.ua/privacy')) {
+            if (!request.url
+                    .startsWith('https://www.poehalisnami.ua/user_agreement') &&
+                !request.url
+                    .startsWith('https://www.poehalisnami.ua/privacy')) {
               _launchURL(request.url);
               return NavigationDecision.prevent;
             }
@@ -52,10 +54,12 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      // prefer launchUrl over deprecated launch
+      await launchUrl(uri);
     } else {
-      throw 'Could not launch $url';
+      print('Could not launch $url');
     }
   }
 
@@ -89,7 +93,8 @@ class _WebViewPageState extends State<WebViewPage> {
           children: [
             _isLoading
                 ? Center(
-                    child: CircularProgressIndicator(), // Infinite progress indicator
+                    child:
+                        CircularProgressIndicator(), // Infinite progress indicator
                   )
                 : WebViewWidget(controller: webViewController!),
           ],

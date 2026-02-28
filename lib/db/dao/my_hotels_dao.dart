@@ -19,9 +19,11 @@ class MyHotelsDao {
   Future<void> insertMyHotel(MyHotelModel myHotel) async {
     try {
       //Database db = await database;
-      await _database.insert(tableName, myHotel.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      await _database.insert(tableName, myHotel.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "insertMyHotel");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "insertMyHotel");
       throw e;
     }
   }
@@ -31,11 +33,13 @@ class MyHotelsDao {
       //Database db = await database;
       Batch batch = _database.batch();
       for (var myHotel in myHotels) {
-        batch.insert(tableName, myHotel.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(tableName, myHotel.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
       await batch.commit(noResult: true);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "insertMyHotels");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "insertMyHotels");
       throw e;
     }
   }
@@ -54,7 +58,8 @@ class MyHotelsDao {
         return null;
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findMyHotelById");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findMyHotelById");
       throw e;
     }
   }
@@ -65,7 +70,7 @@ class MyHotelsDao {
       List<Map<String, dynamic>> myHotelsListMap = (await _database.query(
         tableName,
         where: 'profilePhotoIsChanged = ?',
-        whereArgs: [true],
+        whereArgs: [1],
       ));
       // Создаем список для хранения экземпляров MyHotelModel
       List<MyHotelModel> myHotelsList = [];
@@ -76,7 +81,8 @@ class MyHotelsDao {
       }
       return myHotelsList;
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findMyHotelWithChangedProfilePhoto");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findMyHotelWithChangedProfilePhoto");
       throw e;
     }
   }
@@ -92,7 +98,8 @@ class MyHotelsDao {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "updateMyHotel");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "updateMyHotel");
       throw e;
     }
   }
@@ -102,7 +109,8 @@ class MyHotelsDao {
       //Database db = await database;
       return await _database.query(tableName);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "getAllMyHotels");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getAllMyHotels");
       throw e;
     }
   }
@@ -123,10 +131,14 @@ class MyHotelsDao {
         var myHotelMap = await findMyHotelById(hotel.id);
         if (myHotelMap != null) {
           MyHotelModel? myHotel = MyHotelModel.fromMap(myHotelMap);
-          var locationsMap = await (await db.locationsDao()).findLocationsByHotelId(myHotel.id) ?? [];
-          var locations = locationsMap.map((map) => LocationModel.fromMap(map)).toList();
+          var locationsMap = await (await db.locationsDao())
+                  .findLocationsByHotelId(myHotel.id) ??
+              [];
+          var locations =
+              locationsMap.map((map) => LocationModel.fromMap(map)).toList();
           for (var location in locations) {
-            var files = await filesDao.findFilesByLocationId(location.localId) ?? [];
+            var files =
+                await filesDao.findFilesByLocationId(location.localId) ?? [];
             for (var file in files) {
               await filesDao.deleteFile(file.localId, file.localPath);
             }
@@ -138,7 +150,8 @@ class MyHotelsDao {
         await hotelsDao.deleteHotel(hotel.id);
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "Удаление белорусских и русских отелей");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "Удаление белорусских и русских отелей");
     }
   }
 
@@ -151,7 +164,8 @@ class MyHotelsDao {
         whereArgs: [id],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "deleteMyHotel");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "deleteMyHotel");
       throw e;
     }
   }
@@ -161,7 +175,8 @@ class MyHotelsDao {
       //Database db = await database;
       await _database.delete(tableName);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "clearMyHotelsTable");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "clearMyHotelsTable");
       throw e;
     }
   }

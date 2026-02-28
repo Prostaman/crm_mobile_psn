@@ -19,8 +19,7 @@ class LocationHelper {
 
   static Future<void> _getLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition();
       _position = position;
       Future.delayed(Duration(minutes: 1), () async {
         await _getLocation();

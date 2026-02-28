@@ -2,7 +2,6 @@ package psn.hotels.app.tests.ios
 
 import io.appium.java_client.AppiumBy
 import io.appium.java_client.AppiumDriver
-import io.appium.java_client.remote.MobileCapabilityType
 import org.junit.Before
 import org.junit.Test
 import org.openqa.selenium.Point
@@ -22,16 +21,7 @@ class IntegrationTestiPhone {
 
     @Before
     fun setUp() {
-        val capabilities = DesiredCapabilities()
-        capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "xcuitest")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS")
-        capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "17.5")
-        capabilities.setCapability(MobileCapabilityType.UDID, "00008030-001C05EE1AC2202E")
-        capabilities.setCapability(
-            MobileCapabilityType.APP,
-            "/Users/trio/development/CompanyPSN/publication/ios/ipa/Runner 2024-08-23 19-20-43 v1.25.8/PSN Hotels.ipa"
-        )
-        driver = AppiumDriver(URL("http://127.0.0.1:4723/"), capabilities)
+        driver = AppiumDriver(URL("http://127.0.0.1:4723/"), getIOSCapabilities())
         driver.manage()?.timeouts()?.implicitlyWait(Duration.ofSeconds(30))
     }
 
@@ -43,7 +33,7 @@ class IntegrationTestiPhone {
         el.sendKeys("Ростислав Триодял") //TEST HOTEL
         el = driver.findElement(AppiumBy.accessibilityId("Пароль"))
         el.click()
-        el.sendKeys("parol777") //TESTHOTEL
+        el.sendKeys("TEST HOTEL") //TESTHOTEL
         el = driver.findElement(AppiumBy.accessibilityId("Done"))
         el.click()
         el = driver.findElement(AppiumBy.accessibilityId("Войти в систему"))
