@@ -409,6 +409,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                       await _cubit.refresh();
                     },
                   );
+                  await _cubit.refresh();
                 },
               ));
         });

@@ -23,107 +23,98 @@ class PermissionsCubit extends Cubit<BaseCubitState> {
 
   PermissionsCubit() : super(InitialState());
 
-  Future<void> fetchPermissionsForCamera() async {
+  Future<void> requestAllPermissions() async {
+    List<Permission> permissions = [
+      Permission.camera,
+      Permission.microphone,
+      Permission.location,
+    ];
+
+    if (Platform.isIOS) {
+      permissions.add(Permission.photos);
+    } else if (Platform.isAndroid) {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      if (androidInfo.version.sdkInt <= 32) {
+        permissions.add(Permission.storage);
+      } else {
+        permissions.add(Permission.photos);
+      }
+    }
+
+    await permissions.request();
+  }
+
+  Future<void> _fetchPermissionsForCamera() async {
     emit(LoadingState());
-    cameraStatus = await Permission.camera.request();
-    microphoneStatus = await Permission.microphone.request();
-    // locationStatus =
-    await Permission.location.request();
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.microphone,
+      Permission.location,
+    ].request();
+
+    cameraStatus = statuses[Permission.camera] ?? PermissionStatus.denied;
+    microphoneStatus =
+        statuses[Permission.microphone] ?? PermissionStatus.denied;
     emit(SuccessPermissionState());
   }
 
   Future<MyPermissionStatus> checkPermissionsForCamera() async {
     debugPrint('checkPermissionsForCamera');
-    await fetchPermissionsForCamera();
-    bool flag = false;
-    if (cameraStatus.isGranted && microphoneStatus.isGranted
-        //&& locationStatus.isGranted
-        ) {
-      await fetchPermissionsForCamera();
+    await _fetchPermissionsForCamera();
+
+    if (cameraStatus.isGranted && microphoneStatus.isGranted) {
       return MyPermissionStatus.Granted;
     }
-    if (cameraStatus.isRestricted || cameraStatus.isPermanentlyDenied || cameraStatus.isDenied) {
-      return MyPermissionStatus.DeniedCamera;
-    } else {
-      cameraStatus = await Permission.camera.request();
-      flag = true;
-    }
-    if (microphoneStatus.isRestricted || microphoneStatus.isPermanentlyDenied || microphoneStatus.isDenied) {
-      return MyPermissionStatus.DeniedMicrophone;
-    } else {
-      microphoneStatus = await Permission.microphone.request();
-      flag = true;
-    }
-    // if (locationStatus.isRestricted || locationStatus.isPermanentlyDenied || locationStatus.isDenied) {
-    //   return MyPermissionStatus.DeniedLocation;
-    // }
-    // else{
-    //   locationStatus = await Permission.location.request();
-    //   flag = true;
-    // }
 
-    if (flag) {
-      return MyPermissionStatus.Undetermined;
+    if (!cameraStatus.isGranted) {
+      return MyPermissionStatus.DeniedCamera;
     }
+
+    if (!microphoneStatus.isGranted) {
+      return MyPermissionStatus.DeniedMicrophone;
+    }
+
+    return MyPermissionStatus.Undetermined;
   }
 
-  Future<void> makePermissionRequestAndroidPhotos() async {
+  Future<void> _makePermissionRequestAndroidPhotos() async {
     debugPrint('madePermissionRequestAndroidPhotos');
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    if (androidInfo.version.sdkInt <= 32) {
-      galleryStatus = await Permission.storage.request();
-    } else {
-      galleryStatus = await Permission.photos.request();
-    }
+    galleryStatus = await (androidInfo.version.sdkInt <= 32
+        ? Permission.storage.request()
+        : Permission.photos.request());
   }
 
-  Future<void> fetchPermissionsForGallery() async {
+  Future<void> _fetchPermissionsForGallery() async {
     emit(LoadingState());
 
     if (Platform.isIOS) {
       galleryStatus = await Permission.photos.request();
     } else {
-      await makePermissionRequestAndroidPhotos();
+      await _makePermissionRequestAndroidPhotos();
     }
 
     emit(SuccessPermissionState());
   }
 
   Future<MyPermissionStatus> checkPermissionsForGallery() async {
-    await fetchPermissionsForGallery();
-    bool flag = false;
-    if (galleryStatus.isGranted && galleryStatus.isGranted
-        //&& locationStatus.isGranted
-        ) {
-      await fetchPermissionsForGallery();
+    debugPrint('checkPermissionsForGallery');
+    await _fetchPermissionsForGallery();
+
+    if (galleryStatus.isGranted) {
       return MyPermissionStatus.Granted;
     }
-    if (galleryStatus.isRestricted || galleryStatus.isPermanentlyDenied || galleryStatus.isDenied) {
+
+    if (galleryStatus.isRestricted ||
+        galleryStatus.isPermanentlyDenied ||
+        galleryStatus.isDenied) {
       return MyPermissionStatus.DeniedGallery;
-    } else {
-      if (Platform.isIOS) {
-        galleryStatus = await Permission.photos.request();
-      } else {
-        await makePermissionRequestAndroidPhotos();
-      }
-      flag = true;
     }
 
-    if (flag) {
-      return MyPermissionStatus.Undetermined;
-    }
+    return MyPermissionStatus.Undetermined;
   }
-
-//   bool get permissionGranted {
-//     if (cameraStatus.isGranted && microphoneStatus.isGranted
-//     //&& locationStatus.isGranted
-//     ) {
-//       return true;
-//     }
-
-//     return false;
-//   }
 }
 
 class SuccessPermissionState extends BaseCubitState {}

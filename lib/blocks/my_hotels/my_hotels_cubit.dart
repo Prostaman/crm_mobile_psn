@@ -32,14 +32,6 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelModel> {
   Future<void> init() async {
     emit(LoadingState());
     try {
-      debugPrint("LocationsCubit init");
-      if (state is SuccessModelState<MyHotelModel>) {
-        debugPrint("Cubit сейчас в SuccessModelState");
-      } else if (state is InitialState) {
-        debugPrint("Cubit сейчас в InitialState");
-      } else {
-        debugPrint("Cubit сейчас в LoadingState");
-      }
       myHotelsUI.clear();
       // 1. Отримуємо всі готелі
       var myHotels =
@@ -74,13 +66,6 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelModel> {
       emit(SuccessListState<MyHotelState>(
         models: myHotelsUI,
       ));
-      // if (state is SuccessModelState<MyHotelModel>) {
-      //   debugPrint("Cubit сейчас в SuccessModelState");
-      // } else if (state is InitialState) {
-      //   debugPrint("Cubit сейчас в InitialState");
-      // } else {
-      //   debugPrint("Cubit сейчас в LoadingState");
-      // }
     } catch (e) {
       catchError(e);
       emit(ErrorState(error: e.toString()));
@@ -191,8 +176,8 @@ class MyHotelState {
     required this.resort,
   });
 
-  // int get id => base.id;
-  // String? get description => base.description;
-  // String get name => base.name;
-  // і так далі для інших полів, якщо потрібно
+// int get id => base.id;
+// String? get description => base.description;
+// String get name => base.name;
+// і так далі для інших полів, якщо потрібно
 }
