@@ -6,21 +6,24 @@ abstract class MiltiPickerCubitProtocol<Model extends BaseModel> {
   late List<Model> selected;
 }
 
-mixin MultiPickerCubitMixit<Model extends BaseModel> implements MiltiPickerCubitProtocol<Model> {
+mixin MultiPickerCubitMixit<Model extends BaseModel>
+    implements MiltiPickerCubitProtocol<Model> {
   ListCubit get cubit;
 
   bool isSelected(Model model) {
-    var item = selected.firstWhereOrNull((element) => element.baseId == model.baseId);
+    var item =
+        selected.firstWhereOrNull((element) => element.baseId == model.baseId);
     return item != null;
   }
 
   Future<void> select(Model model) async {
-    var index = selected.indexWhere((element) => element.baseId == model.baseId);
+    var index =
+        selected.indexWhere((element) => element.baseId == model.baseId);
     if (index != -1) {
       selected.removeAt(index);
     } else {
       selected.add(model);
     }
-    cubit.update();
+    cubit.updateList();
   }
 }

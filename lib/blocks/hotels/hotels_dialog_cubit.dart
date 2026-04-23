@@ -6,53 +6,51 @@ import 'package:psn.hotels.hub/models/response_models/base_model.dart';
 
 import '../../repository/repository_container.dart';
 
-class HotelsDialogCubit extends ListCubit<BaseQuery, HotelModel> with LocalSearchCubitMixin<HotelModel> {
-   // кол-во файлов для отображения
+class HotelsDialogCubit extends ListCubit<BaseQuery, HotelModel>
+    with LocalSearchCubitMixin<HotelModel> {
+  // кол-во файлов для отображения
   final int limit = 100;
 
-  HotelsDialogCubit() : super(InitialState());
+  HotelsDialogCubit() : super(InitialState()) {
+    query = BaseQuery();
+  }
 
   Future<void> clear() async {
     removeAll();
   }
 
   @override
-  Future<void> getModels({int page = 0}) async {
-    // try {
-    //   //emit(LoadingState());
-    //   removeAll();
-    //   var localHotels = await RepositoryContainer().hotelListRepository.getHotelsBySearchTextAndSortedByDistanceRepository(limit);
-    //   saved = localHotels;
-    //   setResponse(data: localHotels, page: page, lastPage: page);
-    // } catch (e) {
-    //   catchError(e);
-    // }
-    //await search();
+  Future<ListResult<HotelModel>?> getModels({int page = 0}) async {
+    return null;
   }
 
   @override
-  Future<void> addAll({List<HotelModel>? models}) async{
+  Future<void> addAll({List<HotelModel>? models}) async {
     await cubit.removeAll();
-    var list = models?.take(limit).toList()?? [];
-    await super.addAll(models:list);
+    var list = models?.take(limit).toList() ?? [];
+    await super.addAll(models: list);
   }
 
   @override
   Future<void> search() async {
     cubit.removeAll();
-    var searchHotels = await RepositoryContainer().hotelListRepository.getHotelsBySearchTextAndSortedByDistanceRepository(limit, query.search);
+    var searchHotels = await RepositoryContainer()
+        .hotelListRepository
+        .getHotelsBySearchTextAndSortedByDistanceRepository(
+            limit, query.search);
     // var searched = saved.where((element) => element.name.toLowerCase().contains(query.search.toLowerCase())).toList();
     // cubit.addAll(models: searched);
     await cubit.addAll(models: searchHotels);
   }
 
-
   Future<List<HotelModel>> getNearestHotels() async {
-    return await RepositoryContainer().hotelListRepository.getHotelsBySearchTextAndSortedByDistanceRepository(limit, "");
+    return await RepositoryContainer()
+        .hotelListRepository
+        .getHotelsBySearchTextAndSortedByDistanceRepository(limit, "");
   }
-  
+
   @override
-  List<HotelModel> saved=[];
+  List<HotelModel> saved = [];
 
   @override
   ListCubit<BaseQuery, BaseModel> get cubit => this;

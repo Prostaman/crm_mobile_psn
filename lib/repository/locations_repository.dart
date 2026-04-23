@@ -6,7 +6,7 @@ import 'package:psn.hotels.hub/db/db_manager.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
-import 'package:psn.hotels.hub/services/sink_service.dart';
+import 'package:psn.hotels.hub/services/synchronization_service.dart';
 
 import '../models/entities_database/location_model.dart';
 
@@ -45,7 +45,7 @@ class LocationsRepository {
   // }
 
   Future<void> startSinc() async {
-    SinkService().startSinc();
+    SinkService().startSynchronization();
   }
 
   Future<LocationModel?> getLocationFromLocalDB(int localId) async {
@@ -101,7 +101,7 @@ class LocationsRepository {
         await (await db.filesDao()).updateFile(file.localId, file);
       }
       print("startSinc deleteLocation");
-      ServiceContainer().sinkService.startSinc();
+      ServiceContainer().sinkService.startSynchronization();
     } catch (e) {
       throw e;
     }
@@ -138,20 +138,16 @@ class LocationsRepository {
     await (await db.filesDao()).updateFile(file.localId, file);
   }
 
-  Future<void> deleteSelectedFiles(
-      {required LocationModel locationModel, required FileModel file}) async {
-    // file.synced = false;
-    // file.deleted = true;
-    // //await (await db.filesDao()).updateFile(file.localId, file);
-    // debugPrint("deleteSelectedFiles startSinc");
-    // //ServiceContainer().sinkService.startSinc();
-  }
+  // Future<void> deleteSelectedFiles(
+  //     {required LocationModel locationModel, required FileModel file}) async {
+  // file.synced = false;
+  // file.deleted = true;
+  // //await (await db.filesDao()).updateFile(file.localId, file);
+  // debugPrint("deleteSelectedFiles startSinc");
+  // //ServiceContainer().sinkService.startSinc();
+  //}
 
-  Future<List<LocationModel>> get allLocations async {
-    List<Map<String, dynamic>> locationsMaps =
-        await (await db.locationsDao()).getAllLocations();
-    List<LocationModel> locations =
-        locationsMaps.map((map) => LocationModel.fromMap(map)).toList();
-    return locations;
+  Future<List<LocationModel>> get allLocationsForSynchronization async {
+    return await (await db.locationsDao()).getLocationsToSync();
   }
 }

@@ -18,7 +18,6 @@ class MyHotelsDao {
 
   Future<void> insertMyHotel(MyHotelModel myHotel) async {
     try {
-      //Database db = await database;
       await _database.insert(tableName, myHotel.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
@@ -30,7 +29,6 @@ class MyHotelsDao {
 
   Future<void> insertMyHotels(List<MyHotelModel> myHotels) async {
     try {
-      //Database db = await database;
       Batch batch = _database.batch();
       for (var myHotel in myHotels) {
         batch.insert(tableName, myHotel.toMap(),
@@ -89,7 +87,6 @@ class MyHotelsDao {
 
   Future<void> updateMyHotel(int id, MyHotelModel newMyHotel) async {
     try {
-      //Database db = await database;
       await _database.update(
         tableName,
         newMyHotel.toMap(),
@@ -104,13 +101,62 @@ class MyHotelsDao {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAllMyHotels() async {
+  Future<List<Map<String, dynamic>>> getAllMyHotelsNotDeleted(
+      {int? limit, int? offset, String? search}) async {
+    debugPrint('getAllMyHotelsForUI');
     try {
-      //Database db = await database;
-      return await _database.query(tableName);
+      String? where;
+      List<dynamic>? whereArgs;
+
+      if (search != null && search.isNotEmpty) {
+        where = 'name LIKE ? AND deleted = 0';
+        whereArgs = ['%$search%'];
+      } else {
+        where = 'deleted = 0';
+      }
+
+      return await _database.query(
+        tableName,
+        limit: limit,
+        offset: offset,
+        where: where,
+        whereArgs: whereArgs,
+        orderBy: 'createdAt DESC',
+      );
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
-          e.toString(), "getAllMyHotels");
+          e.toString(), "getAllMyHotelsUI");
+      throw e;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAllMyHotelsToSynchronization() async {
+    debugPrint('getAllMyHotelsSynchronization');
+    try {
+      return await _database.query(
+        where: 'synced = 0 OR deleted = 1',
+        tableName,
+      );
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getAllMyHotelsSynchronization");
+      throw e;
+    }
+  }
+
+  Future<int> getMyHotelsCount({String? search}) async {
+    try {
+      String sql = 'SELECT COUNT(*) FROM $tableName WHERE deleted = 0';
+      List<dynamic> args = [];
+      if (search != null && search.isNotEmpty) {
+        sql += ' AND name LIKE ?';
+        args.add('%$search%');
+      }
+      var result = await _database.rawQuery(sql, args);
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getMyHotelsCount");
       throw e;
     }
   }
@@ -157,7 +203,6 @@ class MyHotelsDao {
 
   Future<void> deleteMyHotel(int id) async {
     try {
-      //Database db = await database;
       await _database.delete(
         tableName,
         where: 'id = ?',
@@ -172,7 +217,6 @@ class MyHotelsDao {
 
   Future<void> clearMyHotelsTable() async {
     try {
-      //Database db = await database;
       await _database.delete(tableName);
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(

@@ -1,6 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/models/response_models/base_model.dart';
 import 'package:collection/collection.dart';
+
+class ListResult<Model> {
+  final List<Model> models;
+  final int lastPage;
+
+  ListResult({required this.models, required this.lastPage});
+}
 
 abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
     extends BaseCubit {
@@ -10,66 +18,85 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   ListCubit(BaseCubitState state) : super(state);
 
   Future<void> initial({required Query query}) async {
-    this._models = [];
+    emit(LoadingState());
     this.query = query;
     this.query.currentPage = 0;
     this.query.lastPage = 0;
-
-    emit(LoadingState());
-    await getModels(page: 0);
+    debugPrint("$runtimeType: getModels from initial");
+    final result = await getModels(page: 0);
+    if (result != null) {
+      addModels(data: result.models, page: 0, lastPage: result.lastPage);
+    }
   }
 
   Future<void> search() async {
     emit(LoadingState());
-    this._models = [];
     this.query.currentPage = 0;
     this.query.lastPage = 0;
-    await getModels(page: this.query.currentPage);
+    debugPrint("$runtimeType: getModels from search");
+    final result = await getModels(page: this.query.currentPage);
+    if (result != null) {
+      addModels(
+          data: result.models,
+          page: this.query.currentPage,
+          lastPage: result.lastPage);
+    }
   }
 
   Future<void> refresh() async {
-    this._models = [];
-    this.query.currentPage = 0;
-    this.query.lastPage = 0;
     emit(RefreshState());
-    await getModels(page: 0);
+    debugPrint("$runtimeType: getModels from refresh");
+    final result = await getModels(page: 0);
+    if (result != null) {
+      addModels(data: result.models, page: 0, lastPage: result.lastPage);
+    }
   }
 
   Future<void> reload() async {
-    this._models = [];
+    emit(LoadingState());
     this.query.currentPage = 0;
     this.query.lastPage = 0;
-    emit(LoadingState());
-    await getModels(page: 0);
+    debugPrint("$runtimeType: getModels from reload");
+    final result = await getModels(page: 0);
+    if (result != null) {
+      addModels(data: result.models, page: 0, lastPage: result.lastPage);
+    }
   }
 
   Future<void> loadMore() async {
     final int nextPage = query.currentPage + 1;
-    if (nextPage > query.lastPage) {
-      emit(SuccessListState<Model>(models: _models, date: DateTime.now()));
-    } else {
+    if (nextPage <= query.lastPage) {
       emit(LoadingMoreState());
-      await getModels(page: nextPage);
+      debugPrint("$runtimeType: getModels from load More");
+      final result = await getModels(page: nextPage);
+      if (result != null) {
+        addModels(
+            data: result.models, page: nextPage, lastPage: result.lastPage);
+      }
     }
   }
 
-  Future<void> getModels({int page = 0});
+  Future<ListResult<Model>?> getModels({int page = 0});
 
-  Future<void> setResponse(
+  Future<void> addModels(
       {required List<Model> data,
       required int page,
       required int lastPage}) async {
     query.currentPage = page;
     query.lastPage = lastPage;
-    addAll(models: data);
 
-    sortIfNeeded();
+    if (page == 0) {
+      _models.clear();
+    }
 
-    emit(SuccessListState<Model>(models: _models, date: DateTime.now()));
+    _models.addAll(data);
+    //sortIfNeeded();
+    updateList();
   }
 
-  Future<void> update() async {
-    emit(SuccessListState<Model>(models: _models, date: DateTime.now()));
+  Future<void> updateList() async {
+    debugPrint('updateList cubit');
+    emit(SuccessListState<Model>(models: List.from(_models)));
   }
 
   List<Model> get models {
@@ -85,7 +112,7 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   }
 
   removeAll() {
-    _models = [];
+    _models.clear();
   }
 
   removeAt({required int index}) {
@@ -97,60 +124,34 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   }
 
   addAll({required List<Model> models}) {
-    models.forEach((element) {
-      add(model: element);
-      // _models?.add(element);
-    });
-    // _models?.addAll(models);
+    _models.addAll(models);
   }
 
-  add({required Model model}) {
+  insert({required Model model, int? byIndex}) {
+    debugPrint('insert');
     try {
       var index = indexBy(model: model);
       if (index != null && index != -1) {
+        debugPrint('Модель найдена, её индекс: $index');
         _models.removeAt(index);
         _models.insert(index, model);
       } else {
-        _models.add(model);
+        debugPrint('Модель не найдена, добавляем новую модель');
+        _models.insert(byIndex ?? _models.length, model);
       }
+      updateList();
     } catch (e) {
       catchError(e);
     }
   }
 
-  insertToTop({required Model model}) {
-    insert(model: model, byIndex: null);
-  }
-
-  insert({required Model model, required int? byIndex}) {
-    try {
-      var index = indexBy(model: model);
-      if (index != null && index != -1) {
-        _models.removeAt(index);
-        _models.insert(index, model);
-      } else {
-        if (byIndex != null) {
-          _models.insert(byIndex, model);
-        } else {
-          _models.insert(0, model);
-        }
-      }
-    } catch (e) {
-      catchError(e);
-    }
-  }
-
-  int get modelsLenght {
+  int get modelsLength {
     return _models.length;
   }
 
   Model? modelById({required int id}) {
     return _models.firstWhereOrNull((element) {
-      if (element.baseId is String) {
-        return int.parse(element.baseId) == id;
-      } else {
-        return element.baseId == id;
-      }
+      return element.baseId == id;
     });
   }
 
@@ -163,13 +164,11 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   }
 
   int? indexBy({required Model model}) {
-    var i = _models.indexWhere((element) => (element.baseId is String)
-        ? int.parse(element.baseId) == model.baseId
-        : element.baseId == model.baseId);
+    int i = _models.indexWhere((element) => element.baseId == model.baseId);
     if (i == -1) {
       return null;
     }
-
+    debugPrint('indexBy: $i');
     return i;
   }
 

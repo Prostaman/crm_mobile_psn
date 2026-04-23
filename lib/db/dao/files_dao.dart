@@ -12,30 +12,30 @@ class FilesDao {
   final Database _database;
 
   FilesDao(this._database, this.tableName);
-    //обновляет UUID в path каждого файла, если он был изменён дабы не потерять файлы
+  //обновляет UUID в path каждого файла, если он был изменён дабы не потерять файлы
   Future<void> updateUUID_of_Files() async {
-      getUUID(String path) {
-        RegExp regExp = RegExp(r'Application\/(.*?)\/Documents');
-        RegExpMatch? match = regExp.firstMatch(path);
-        String uuid = match!.group(1)!;
-        return uuid;
-      }
+    getUUID(String path) {
+      RegExp regExp = RegExp(r'Application\/(.*?)\/Documents');
+      RegExpMatch? match = regExp.firstMatch(path);
+      String uuid = match!.group(1)!;
+      return uuid;
+    }
 
-      Directory documentsDirectory = await getApplicationDocumentsDirectory();
-      String current_UUID_of_db = getUUID(documentsDirectory.path);
-      debugPrint('current_UUID_of_db: $current_UUID_of_db');
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String current_UUID_of_db = getUUID(documentsDirectory.path);
+    debugPrint('current_UUID_of_db: $current_UUID_of_db');
 
-      List<FileModel> allFiles = await getAllFiles();
-      for (FileModel file in allFiles) {
-        String current_UUID_of_file = getUUID(file.localPath);
-        debugPrint('current_UUID_of_file: $current_UUID_of_file');
-        if (current_UUID_of_db != current_UUID_of_file) {
-          file.localPath = file.localPath.replaceFirst(current_UUID_of_file, current_UUID_of_db);
-          debugPrint('New file.localPath: ${file.localPath}');
-          await updateFile(file.localId, file);
-        }
+    List<FileModel> allFiles = await getAllFiles();
+    for (FileModel file in allFiles) {
+      String current_UUID_of_file = getUUID(file.localPath);
+      debugPrint('current_UUID_of_file: $current_UUID_of_file');
+      if (current_UUID_of_db != current_UUID_of_file) {
+        file.localPath = file.localPath
+            .replaceFirst(current_UUID_of_file, current_UUID_of_db);
+        debugPrint('New file.localPath: ${file.localPath}');
+        await updateFile(file.localId, file);
       }
-    
+    }
   }
 
   Future<List<FileModel>> getAllFiles() async {
@@ -44,7 +44,24 @@ class FilesDao {
       List<Map<String, dynamic>> mapList = await _database.query(tableName);
       return mapList.map((map) => FileModel.fromMap(map)).toList();
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "getAllFiles");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getAllFiles");
+      throw e;
+    }
+  }
+
+  Future<List<FileModel>> getFilesToSync() async {
+    try {
+      // Выполняем запрос с фильтрацией
+      var maps = await _database.query(
+        tableName,
+        where: 'synced = 0 OR deleted = 1',
+      );
+      // Преобразуем List<Map> в List<LocationModel>
+      return maps.map((map) => FileModel.fromMap(map)).toList();
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getFilesToSync");
       throw e;
     }
   }
@@ -52,10 +69,12 @@ class FilesDao {
   Future<List<FileModel>?> findFileBylocalId(int localId) async {
     //Database db = await database;
     try {
-      List<Map<String, dynamic>> mapList = await _database.query(tableName, where: 'localId = ?', whereArgs: [localId], limit: 1);
+      List<Map<String, dynamic>> mapList = await _database.query(tableName,
+          where: 'localId = ?', whereArgs: [localId], limit: 1);
       return mapList.map((map) => FileModel.fromMap(map)).toList();
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findFileBylocalId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findFileBylocalId");
       throw e;
     }
   }
@@ -71,7 +90,8 @@ class FilesDao {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "updateFile");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "updateFile");
       throw e;
     }
   }
@@ -86,7 +106,8 @@ class FilesDao {
       );
       return mapList.map((map) => FileModel.fromMap(map)).toList();
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findFilesByLocationId");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findFilesByLocationId");
       throw e;
     }
   }
@@ -106,10 +127,12 @@ class FilesDao {
 
   Future<FileModel> findFileByLocalPath(String localPath) async {
     try {
-      List<Map<String, dynamic>> mapList = await _database.query(tableName, where: 'localPath = ?', whereArgs: [localPath], limit: 1);
+      List<Map<String, dynamic>> mapList = await _database.query(tableName,
+          where: 'localPath = ?', whereArgs: [localPath], limit: 1);
       return FileModel.fromMap(mapList.first);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findFileByLocalPath");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findFileByLocalPath");
       throw e;
     }
   }
@@ -117,9 +140,11 @@ class FilesDao {
   Future<void> insertFile(FileModel file) async {
     //Database db = await database;
     try {
-      await _database.insert(tableName, file.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      await _database.insert(tableName, file.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "insertFile");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "insertFile");
       throw e;
     }
   }
@@ -133,7 +158,8 @@ class FilesDao {
         whereArgs: [localId],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "deleteFile");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "deleteFile");
     }
   }
 
@@ -142,7 +168,8 @@ class FilesDao {
     try {
       await _database.delete(tableName);
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "clearFilesTable");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "clearFilesTable");
       throw e;
     }
   }

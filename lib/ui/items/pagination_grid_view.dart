@@ -74,12 +74,12 @@ class PaginationGridView extends StatelessWidget {
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
                 emptyViewPlug != null &&
-                cubit.query.searching == false)
+                cubit.query.is_searching == false)
               Center(child: emptyViewPlug)
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
                 emptySearchViewPlug != null &&
-                cubit.query.searching == true)
+                cubit.query.is_searching == true)
               Center(child: emptySearchViewPlug)
             else if (state is ErrorState && errorViewPlug != null)
               Center(child: errorViewPlug),
@@ -115,7 +115,7 @@ class PaginationGridView extends StatelessWidget {
       scrollDirection: scrollDirection,
       shrinkWrap: shrinkWrap,
       itemCount:
-          appendToLast == true ? cubit.modelsLenght + 1 : cubit.modelsLenght,
+          appendToLast == true ? cubit.modelsLength + 1 : cubit.modelsLength,
     );
   }
 

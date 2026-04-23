@@ -114,19 +114,36 @@ class LocationsDao {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAllLocations() async {
-    //Database db = await database;
+  Future<int> getLocationsCount() async {
     try {
-      return await _database.query(tableName);
+      // Sqflite.firstIntValue возвращает значение первого столбца первой строки
+      return Sqflite.firstIntValue(
+              await _database.rawQuery('SELECT COUNT(*) FROM $tableName')) ??
+          0;
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
-          e.toString(), "getAllLocations");
+          e.toString(), "getLocationsCount");
+      throw e;
+    }
+  }
+
+  Future<List<LocationModel>> getLocationsToSync() async {
+    try {
+      // Выполняем запрос с фильтрацией
+      var maps = await _database.query(
+        tableName,
+        where: 'synced = 0 OR deleted = 1',
+      );
+      // Преобразуем List<Map> в List<LocationModel>
+      return maps.map((map) => LocationModel.fromMap(map)).toList();
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getLocationsToSync");
       throw e;
     }
   }
 
   Future<void> deleteLocationsByHotelId(int hotelId) async {
-    //Database db = await database;
     try {
       await _database.delete(
         tableName,

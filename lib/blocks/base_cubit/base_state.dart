@@ -27,17 +27,10 @@ class SuccessModelState<Model> extends BaseCubitState {
 
 class SuccessListState<Model> extends BaseCubitState {
   final List<Model> models;
-  final DateTime? date;
-  final String? hash;
-  SuccessListState({required this.models, this.date, this.hash});
+  SuccessListState({required this.models});
 
   @override
-  List<Object> get props => [models, date?.toString() ?? "", hash ?? ""];
-
-  @override
-  String toString() {
-    return (date?.toString() ?? "") + (hash ?? "");
-  }
+  List<Object?> get props => [models];
 }
 
 class ErrorState extends BaseCubitState {
@@ -53,7 +46,8 @@ class ErrorState extends BaseCubitState {
     String textError = error.toString();
     debugPrint(error);
     FirebaseCrashlytics.instance.log("Error state:$textError");
-    FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: textError));
+    FirebaseCrashlytics.instance
+        .recordFlutterError(FlutterErrorDetails(exception: textError));
     return textError;
   }
 }

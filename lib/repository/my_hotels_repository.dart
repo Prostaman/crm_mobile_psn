@@ -13,22 +13,31 @@ class MyHotelRepository {
 
   MyHotelRepository();
 
-  Future<List<MyHotelModel>> getMyHotels() async {
+  Future<List<MyHotelModel>> getMyHotelsNotDeleted(
+      {int? limit, int? offset, String? search}) async {
     try {
-      var list = await allMyHotels;
-      var filteredList =
-          list.where((element) => element.deleted == false).toList();
-      return filteredList;
+      List<Map<String, dynamic>> myHotelsMaps = await (await db.myHotelsDao())
+          .getAllMyHotelsNotDeleted(
+              limit: limit, offset: offset, search: search);
+      List<MyHotelModel> myHotels = myHotelsMaps
+          .map((map) => MyHotelModel.fromMap(map))
+          .where((element) => element.deleted == false)
+          .toList();
+      return myHotels;
     } catch (e) {
       throw e;
     }
+  }
+
+  Future<int> getMyHotelsCount({String? search}) async {
+    return await (await db.myHotelsDao()).getMyHotelsCount(search: search);
   }
 
   Future<MyHotelModel> addMyHotel({required HotelModel hotel}) async {
     try {
       var foundHotel = await (await db.myHotelsDao()).findMyHotelById(hotel.id);
       if (foundHotel == null) {
-        var myHotel = MyHotelModel();
+        MyHotelModel myHotel = MyHotelModel();
         myHotel.id = hotel.id;
         myHotel.name = hotel.name;
         myHotel.createdAt = DateTime.now().toIso8601String();
@@ -62,14 +71,9 @@ class MyHotelRepository {
     myHotel.synced = false;
     myHotel.deleted = true;
     await (await db.myHotelsDao()).updateMyHotel(myHotel.id, myHotel);
-    debugPrint("startSinc removeHotel");
-    ServiceContainer().sinkService.startSinc();
+    debugPrint("start Synchronization removeHotel");
+    ServiceContainer().sinkService.startSynchronization();
   }
-
-  // Future<void> startSinc() async {
-  //     print("startSinc removeHotel");
-  //   await ServiceContainer().sinkService.startSinc();
-  // }
 
   Future<void> removeAll() async {
     try {
@@ -79,9 +83,17 @@ class MyHotelRepository {
     }
   }
 
-  Future<List<MyHotelModel>> get allMyHotels async {
+  Future<List<MyHotelModel>> get allMyHotelsNotDeleted async {
     List<Map<String, dynamic>> myHotelsMaps =
-        await (await db.myHotelsDao()).getAllMyHotels();
+        await (await db.myHotelsDao()).getAllMyHotelsNotDeleted();
+    List<MyHotelModel> myHotels =
+        myHotelsMaps.map((map) => MyHotelModel.fromMap(map)).toList();
+    return myHotels;
+  }
+
+  Future<List<MyHotelModel>> get allMyHotelsToSynchronization async {
+    List<Map<String, dynamic>> myHotelsMaps =
+        await (await db.myHotelsDao()).getAllMyHotelsToSynchronization();
     List<MyHotelModel> myHotels =
         myHotelsMaps.map((map) => MyHotelModel.fromMap(map)).toList();
     return myHotels;

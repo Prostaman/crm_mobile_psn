@@ -30,7 +30,8 @@ class LocationsCubit extends BaseCubit {
     required this.myHotel,
     required this.db,
   }) : super(InitialState()) {
-    _subscriptionSinc = services.sinkService.syncSuccess.stream.listen((item) {
+    _subscriptionSinc =
+        services.sinkService.syncLocationsObserver.stream.listen((item) {
       refresh();
     });
     init();

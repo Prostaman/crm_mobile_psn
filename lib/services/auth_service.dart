@@ -54,39 +54,7 @@ class AuthService {
     if (isSyncedHotels && isDownloadedCategories) {
       flowCubit.home();
     }
-    // await gelAllMyHotelsFromDBBackend();
   }
-
-  // Future<void> gelAllMyHotelsFromDBBackend() async {
-  //   var db = RepositoryContainer().locationsRepository.db;
-  //   var locations =
-  //       await RepositoryContainer().locationsRepository.getLocations();
-  //   for (var locationModel in locations) {
-  //     //добавление моих отелей
-  //     var myHotel = await findMyHotelByHotelId(locationModel.hotelId, db);
-  //     if (myHotel == null) {
-  //       var hotel = await RepositoryContainer()
-  //           .hotelListRepository
-  //           .findHotelFromLocalDBById(locationModel.hotelId); // findHotelById
-  //       if (hotel != null) {
-  //         myHotel = await RepositoryContainer()
-  //             .myHotelRepository
-  //             .addMyHotel(hotel: hotel);
-  //       }
-  //     }
-  //     // окончание добавления моих отелей
-  //     //добавление локаций
-  //     if (myHotel != null) {
-  //       var location = (await db.findLocationsByCloudId(locationModel.cloudId)).firstOrNull;
-  //       if (location == null) {
-  //         locationModel.createdAt = DateTime.now().toIso8601String();
-  //         locationModel.synced = true;
-  //         db.insertLocation(locationModel);
-  //       }
-  //     }
-  //     //окончание добавление локаций
-  //   }
-  // }
 
   Future<MyHotelModel?> findMyHotelByHotelId(int hotelId, DBManager db) async {
     var myHotelMap = await (await db.myHotelsDao()).findMyHotelById(hotelId);
@@ -193,7 +161,7 @@ class AuthService {
               var sinkService = ServiceContainer().sinkService;
               await sinkService.deleteRussianAndBelorusianHotels();
               sinkService.startDownloadHotels();
-              sinkService.initObserverInternetConnection();
+              //sinkService.initObserverInternetConnection();
               flowCubit.home();
             }
           } else if (flowCubit.state != FlowState.Onboarding &&

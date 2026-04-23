@@ -6,7 +6,7 @@ import 'package:psn.hotels.hub/helpers/shared_preferences_utils.dart';
 import 'package:psn.hotels.hub/main.reflectable.dart';
 import 'package:psn.hotels.hub/models/response_models/user_model.dart';
 import 'package:psn.hotels.hub/services/auth_service.dart';
-import 'package:psn.hotels.hub/services/sink_service.dart';
+import 'package:psn.hotels.hub/services/synchronization_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 void initWorkManagerSyncing() {
@@ -25,7 +25,7 @@ void initWorkManagerSyncing() {
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
-      print('Workmanager is started: $task');
+      debugPrint('Workmanager is started: $task');
       initializeReflectable();
       await SharedPrefUtils().init();
       UserModel? userModel = await AuthService().loadUserFromShared();
@@ -36,7 +36,7 @@ void callbackDispatcher() {
         await initFirebase();
         await FirebaseCrashlytics.instance
             .setUserIdentifier(userModel.userName!);
-        await SinkService().startSinc();
+        await SinkService().startSynchronization();
       }
     } catch (e) {
       String error = "Workmanager error: $e";

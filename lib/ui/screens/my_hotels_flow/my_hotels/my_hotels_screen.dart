@@ -32,17 +32,23 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
   late List<SlidableController> controllers;
   late final MyHotelsCubit _cubit;
 
+  //поиск
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _cubit = BlocProvider.of<MyHotelsCubit>(context);
     _cubit.scrollController = ScrollController();
+    _cubit.initial(query: BaseQuery());
     controllers = [];
   }
 
   @override
   void dispose() {
     _cubit.scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -56,9 +62,40 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
           surfaceTintColor: ColorWhite,
           iconTheme: IconThemeData(color: Colors.black),
           centerTitle: true,
-          title: Text("Мои отели",
-              style: textStyle(weight: Medium5, size: 22, color: Colors.black)),
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Поиск отелей...',
+                    border: InputBorder.none,
+                    hintStyle: textStyle(color: Colors.grey),
+                  ),
+                  style: textStyle(color: Colors.black),
+                  onChanged: (value) {
+                    _cubit.query.search = value;
+                    _cubit.reload();
+                  },
+                )
+              : Text("Мои отели",
+                  style: textStyle(
+                      weight: Medium5, size: 22, color: Colors.black)),
           systemOverlayStyle: SystemUiOverlayStyle.dark,
+          actions: [
+            IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = !_isSearching;
+                  if (!_isSearching) {
+                    _searchController.clear();
+                    _cubit.query.search = "";
+                    _cubit.reload();
+                  }
+                });
+              },
+            ),
+          ],
         ),
         floatingActionButton: Padding(
             padding: EdgeInsets.only(bottom: 24),
@@ -74,7 +111,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
               },
             )),
         drawer: AppDrawer(setStateCallback: (() async {
-          await _cubit.refresh();
+          await _cubit.reload();
         })),
         body: _buildBody(context));
   }
@@ -119,12 +156,13 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                           controllers.forEach((controller) {
                             controller.close();
                           });
-                          pushToHotelLocationsScreen(
+                          pushToLocationsScreen(
                             context: context,
-                            model: _cubit.myHotelsUI[index].base,
+                            model: _cubit.models[index].base,
                             db: _cubit.db,
                             updateCallback: () async {
-                              await _cubit.refresh();
+                              await _cubit.updateSingleHotel(
+                                  _cubit.models[index].base.id);
                             },
                           );
                         },
@@ -134,7 +172,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Slidable(
-                              key: ValueKey(index),
+                              key: ValueKey(_cubit.models[index].baseId),
                               controller: controllers[index],
                               endActionPane: ActionPane(
                                 motion: ScrollMotion(),
@@ -158,8 +196,9 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                                   decoration: BoxDecoration(
                                                     borderRadius:
                                                         BorderRadius.only(
-                                                      topLeft: Radius.circular(
-                                                          32.0), // Adjust the radius as needed
+                                                      topLeft:
+                                                          Radius.circular(32.0),
+                                                      // Adjust the radius as needed
                                                       topRight: Radius.circular(
                                                           32.0), // Adjust the radius as needed
                                                     ),
@@ -245,7 +284,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                                                       try {
                                                                         await _cubit.removeHotel(
                                                                             myHotel:
-                                                                                _cubit.myHotelsUI[index].base);
+                                                                                _cubit.models[index].base);
                                                                         controllers
                                                                             .removeAt(index);
 
@@ -287,8 +326,8 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: profileImageOMyfHotel(
-                                          _cubit.myHotelsUI[index].base,
-                                          _cubit.myHotelsUI[index].files)),
+                                          _cubit.models[index].base,
+                                          _cubit.models[index].files)),
                                   Expanded(
                                       child: Padding(
                                           padding: EdgeInsets.only(left: 18),
@@ -298,7 +337,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                             children: [
                                               SizedBox(height: 4),
                                               Text(
-                                                "Создано: ${formatDate(stringToDate(_cubit.myHotelsUI[index].base.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
+                                                "Создано: ${formatDate(stringToDate(_cubit.models[index].base.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
                                                 style: textStyle(
                                                     size: 12,
                                                     color: Color.fromRGBO(
@@ -306,8 +345,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                               ),
                                               SizedBox(height: 6),
                                               Text(
-                                                _cubit.myHotelsUI[index].base
-                                                    .name,
+                                                _cubit.models[index].base.name,
                                                 style: textStyle(
                                                     size: 19,
                                                     weight: FontWeight.bold),
@@ -317,7 +355,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                               ),
                                               SizedBox(height: 6),
                                               Text(
-                                                "${_cubit.myHotelsUI[index].country}, ${_cubit.myHotelsUI[index].resort}",
+                                                "${_cubit.models[index].country}, ${_cubit.models[index].resort}",
                                                 style: textStyle(
                                                     size: 12,
                                                     color: Color.fromRGBO(
@@ -330,20 +368,20 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                                       IMG.icons.iconMediaFile,
                                                       fit: BoxFit.scaleDown),
                                                   Text(
-                                                    " ${_cubit.myHotelsUI[index].files.length} медиафайлов",
+                                                    " ${_cubit.models[index].files.length} медиафайлов",
                                                     style: textStyle(size: 14),
                                                   )
                                                 ],
                                               ),
-                                              if (_cubit.myHotelsUI[index]
-                                                          .locations.length >
+                                              if (_cubit.models[index].files
+                                                          .length >
                                                       0 &&
-                                                  _cubit.myHotelsUI[index]
+                                                  _cubit.models[index]
                                                           .percentUploaded !=
                                                       -1)
                                                 IndicatorOfUploading(
                                                     percentUploaded: _cubit
-                                                        .myHotelsUI[index]
+                                                        .models[index]
                                                         .percentUploaded)
                                             ],
                                           )))
@@ -396,20 +434,21 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
               ),
               child: HotelsBottomSheet(
                 onTapCallback: (selectedHotel) async {
-                  if (selectedHotel != null)
-                    await _cubit.addHotel(hotel: selectedHotel);
-                  MyHotelModel myNewHotelModel = MyHotelModel.fromMap(
-                      (await (await _cubit.db.myHotelsDao())
-                          .findMyHotelById(selectedHotel!.id))!);
-                  pushToHotelLocationsScreen(
-                    context: context,
-                    model: myNewHotelModel,
-                    db: _cubit.db,
-                    updateCallback: () async {
-                      await _cubit.refresh();
-                    },
-                  );
-                  await _cubit.refresh();
+                  if (selectedHotel != null) {
+                    MyHotelModel? myNewHotelModel =
+                        await _cubit.addMyHotel(hotel: selectedHotel);
+                    if (myNewHotelModel != null) {
+                      pushToLocationsScreen(
+                        context: context,
+                        model: myNewHotelModel,
+                        db: _cubit.db,
+                        updateCallback: () async {
+                          //   await _cubit.updateSingleHotel(myNewHotelModel.id);
+                        },
+                      );
+                      //await _cubit.refresh();
+                    }
+                  }
                 },
               ));
         });

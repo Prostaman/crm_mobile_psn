@@ -44,12 +44,12 @@ class PaginationListView extends StatelessWidget {
       builder: (context, state) {
         return Stack(
           children: [
-            NotificationListener(
+            NotificationListener<ScrollNotification>(
               child: poolToRefresh == true
                   ? _buildRefreshIndicator()
                   : _buildListView(),
-              // onNotification: (notification) => _onNotification(
-              //     notification: notification, state: state as BaseCubitState),
+              onNotification: (notification) => _onNotification(
+                  notification: notification, state: state as BaseCubitState),
             ),
             if (state is LoadingState)
               DefaultFullScreenIndicator
@@ -61,12 +61,12 @@ class PaginationListView extends StatelessWidget {
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
                 emptyViewPlug != null &&
-                cubit.query.searching == false)
+                cubit.query.is_searching == false)
               Center(child: emptyViewPlug)
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
                 emptySearchViewPlug != null &&
-                cubit.query.searching == true)
+                cubit.query.is_searching == true)
               Center(child: emptySearchViewPlug)
             else if (state is ErrorState && errorViewPlug != null)
               Center(child: errorViewPlug),
@@ -76,6 +76,17 @@ class PaginationListView extends StatelessWidget {
       listener: (context, state) {
         if (state is ErrorState) {
           showSnackBar(context: context, message: state.error ?? "Empty");
+        }
+        // Если данные загрузились, но список всё еще слишком короткий, чтобы его можно было скроллить,
+        // и при этом в базе есть еще страницы - подгружаем следующую автоматически.
+        if (state is SuccessListState &&
+            cubit.query.currentPage < cubit.query.lastPage) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (scrollController.hasClients &&
+                scrollController.position.maxScrollExtent < 100) {
+              cubit.loadMore();
+            }
+          });
         }
       },
     );
@@ -89,46 +100,72 @@ class PaginationListView extends StatelessWidget {
   }
 
   Widget _buildListView() {
+    Widget listView;
     if (separatorBuilder != null) {
-      return ListView.separated(
+      listView = ListView.separated(
         controller: scrollController,
         padding: padding,
         physics: AlwaysScrollableScrollPhysics(),
         scrollDirection: scrollDirection,
         reverse: reverse,
         shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLenght,
+        itemCount: cubit.modelsLength,
         itemBuilder: itemBuilder,
         separatorBuilder: separatorBuilder!,
       );
     } else {
-      return ListView.builder(
+      listView = ListView.builder(
         controller: scrollController,
         padding: padding,
         physics: AlwaysScrollableScrollPhysics(),
         scrollDirection: scrollDirection,
         reverse: reverse,
         shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLenght,
+        itemCount: cubit.modelsLength,
         itemBuilder: itemBuilder,
       );
     }
+
+    return Scrollbar(
+      controller: scrollController,
+      child: listView,
+    );
   }
 
-  // bool _onNotification(
-  //     {required var notification, required BaseCubitState state}) {
-  //   if (!(state is LoadingState) &&
-  //       !(state is LoadingMoreState) &&
-  //       notification is ScrollNotification) {
-  //     // if (scrollController.position.extentAfter <= 400 &&
-  //     //     scrollController.position.maxScrollExtent >= 20) {
-  //       cubit.loadMore();
-  //       print("was loadMore from pagination list view");
-  //       // print(_scrollController.position.maxScrollExtent);
-  //       return false;
+  bool _onNotification(
+      {required ScrollNotification notification,
+      required BaseCubitState state}) {
+    if (notification is! ScrollUpdateNotification) return false;
 
-  //   }
+    final bool canLoadMore = state is! LoadingState &&
+        state is! LoadingMoreState &&
+        cubit.query.currentPage < cubit.query.lastPage;
 
-  //   return true;
-  // }
+    if (canLoadMore) {
+      final metrics = notification.metrics;
+      // Если до конца списка осталось меньше 300 пикселей
+      if (metrics.extentAfter <= 300 && metrics.maxScrollExtent > 0) {
+        cubit.loadMore();
+      }
+    }
+
+    return true;
+  }
+
+//   bool _onNotification(
+//       {required ScrollNotification notification,
+//         required BaseCubitState state}) {
+//     if (state is! LoadingState &&
+//         state is! LoadingMoreState &&
+//         notification is ScrollUpdateNotification) {
+//       if (scrollController.position.extentAfter <= 300 &&
+//           scrollController.position.maxScrollExtent >= 20) {
+//         debugPrint("was loadMore from pagination list view");
+//         cubit.loadMore();
+//       }
+//     }
+//
+//     return true;
+//   }
+// }
 }

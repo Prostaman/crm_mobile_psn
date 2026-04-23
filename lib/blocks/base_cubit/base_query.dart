@@ -20,7 +20,7 @@ class BaseQuery {
     return _query;
   }
 
-  bool get searching {
+  bool get is_searching {
     if (search.isNotEmpty) {
       return true;
     } else {

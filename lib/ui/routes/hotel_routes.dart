@@ -18,7 +18,7 @@ pushToHotelSettings(
       context: context);
 }
 
-pushToHotelLocationsScreen({
+pushToLocationsScreen({
   required BuildContext context,
   required MyHotelModel model,
   required VoidCallback updateCallback,

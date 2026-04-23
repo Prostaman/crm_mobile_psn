@@ -25,8 +25,6 @@ class FlowCubit extends Cubit<FlowState> {
     emit(FlowState.Loading);
   }
 
-
-
   Future<void> onboarding() async {
     emit(FlowState.Onboarding);
   }

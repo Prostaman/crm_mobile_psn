@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/authentication/sign_in_cubit.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
 import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
@@ -142,7 +141,7 @@ class PoehalisnamiApp extends StatelessWidget {
       );
     } else if (state == FlowState.Home) {
       return BlocProvider(
-        create: (context) => MyHotelsCubit()..initial(query: BaseQuery()),
+        create: (context) => MyHotelsCubit(),
         child: MyHotelsScreen(),
       );
     } else if (state == FlowState.Onboarding) {
@@ -165,14 +164,7 @@ class PoehalisnamiApp extends StatelessWidget {
     return true;
   }
 
-  _listener(context, state) {
-    if (state == FlowState.Home) {
-      BlocProvider.of<HotelsDialogCubit>(context).initial(query: BaseQuery());
-    }
-    if (state == FlowState.Onboarding) {
-      BlocProvider.of<HotelsDialogCubit>(context).initial(query: BaseQuery());
-    }
-  }
+  _listener(context, state) {}
 }
 
 class MainBlocDelegate extends BlocObserver {

@@ -5,7 +5,8 @@ abstract class PickerCubitProtocol<Model extends BaseModel> {
   late Model selected;
 }
 
-mixin PickerCubitMixit<Model extends BaseModel> implements PickerCubitProtocol<Model> {
+mixin PickerCubitMixit<Model extends BaseModel>
+    implements PickerCubitProtocol<Model> {
   ListCubit get cubit;
 
   bool isSelected(Model model) {
@@ -14,6 +15,6 @@ mixin PickerCubitMixit<Model extends BaseModel> implements PickerCubitProtocol<M
 
   Future<void> select(Model model) async {
     selected = model;
-    cubit.update();
+    cubit.updateList();
   }
 }

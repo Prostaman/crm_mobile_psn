@@ -24,8 +24,10 @@ import 'repository_container.dart';
 class HotelListRepository {
   // ключ покажет дату последнего обновления
   final String _kLastUpdated = "kLastUpdated";
+
   // объект для работы с API
   final HotelApi hotelApi = ApiContainer().hotelApi;
+
   // shared preferences
   SharedPrefUtils sharedPrefUtils = SharedPrefUtils();
 
@@ -89,9 +91,9 @@ class HotelListRepository {
             position.latitude, position.longitude, qtyToShow, searchText);
     debugPrint(
         "getHotelsWithOffsetAndSortedByDistance:\n" + hotels.length.toString());
-    hotels.forEach((element) {
-      debugPrint(" ${element.name}");
-    });
+    // hotels.forEach((element) {
+    //   debugPrint(" ${element.name}");
+    // });
     return hotels;
   }
 
@@ -112,37 +114,47 @@ class HotelListRepository {
   StreamController observerOfLoadingHotels =
       new StreamController<bool>.broadcast();
   int attempt = 0;
+  bool _isDownloading = false;
+
   // Загрузит отели из ПСН БД
   Future<bool> downloadAllHotels() async {
-    // получим дату последнего обновления
-    String? lastUpdated = await _loadLastUpdatedDate();
-    // закачаем отели
-    var response = await hotelApi.getAll(lastUpdated, false);
-    if (response != null && response.success == true && response.list != null) {
-      var items = await compute(computeGenerateItems, response);
-      debugPrint("Items that will put to db: ${items.length}");
-      if (items.isNotEmpty) {
-        await (await db.hotelsDao()).insertOrUpdateHotels(items);
-      }
+    if (_isDownloading) return false; // Проверка
+    _isDownloading = true;
+    try {
+      // получим дату последнего обновления
+      String? lastUpdated = await _loadLastUpdatedDate();
+      // закачаем отели
+      var response = await hotelApi.getAll(lastUpdated, false);
+      if (response != null &&
+          response.success == true &&
+          response.list != null) {
+        var items = await compute(computeGenerateItems, response);
+        debugPrint("Items that will put to db: ${items.length}");
+        if (items.isNotEmpty) {
+          await (await db.hotelsDao()).insertOrUpdateHotels(items);
+        }
 
-      //и установим дату обновления
-      await _saveLastUpdatedDate();
-      attempt = 0;
-      return true;
-    } else {
-      FirebaseCrashlyticsHelper.recordApiError(
-          response, "Attempt: $attempt. getAllHotels");
-      attempt++;
-      if (attempt < 4) {
-        await Future.delayed(Duration(seconds: 3));
-        await downloadAllHotels();
-      } else {
+        //и установим дату обновления
+        await _saveLastUpdatedDate();
         attempt = 0;
-        observerOfLoadingHotels.add(true);
-        return false;
+        return true;
+      } else {
+        FirebaseCrashlyticsHelper.recordApiError(
+            response, "Attempt: $attempt. getAllHotels");
+        attempt++;
+        if (attempt < 4) {
+          await Future.delayed(Duration(seconds: 3));
+          await downloadAllHotels();
+        } else {
+          attempt = 0;
+          observerOfLoadingHotels.add(true);
+          return false;
+        }
       }
+      return false;
+    } finally {
+      _isDownloading = false; // Сброс флага
     }
-    return false;
   }
 
   Future<void> deleteRussianAndBelorusianHotels() async {

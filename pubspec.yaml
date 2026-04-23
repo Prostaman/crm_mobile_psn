@@ -85,6 +85,8 @@ flutter_icons:
   image_path: "assets/app/icon_launcher.jpg"
   android: true
   ios: true
+  #adaptive_icon_background: "#FFFFFF"  # Цвет фона для Android
+  #adaptive_icon_foreground: "assets/app/icon_launcher.jpg" # Лого без фона
 
 
 flutter:

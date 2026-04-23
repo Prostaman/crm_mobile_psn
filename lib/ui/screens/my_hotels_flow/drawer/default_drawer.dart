@@ -42,7 +42,8 @@ class AppDrawer extends StatelessWidget {
                 icon: IMG.icons.iconSettings,
                 text: 'Настройки',
                 onTap: () {
-                  pushToHotelSettings(context: context, setStateCallback: setStateCallback);
+                  pushToHotelSettings(
+                      context: context, setStateCallback: setStateCallback);
                 },
               ),
 
@@ -50,7 +51,8 @@ class AppDrawer extends StatelessWidget {
               Expanded(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end, // Align children to the bottom
+                      mainAxisAlignment:
+                          MainAxisAlignment.end, // Align children to the bottom
                       children: [
                     Divider(color: ColorDivider),
                     _createDrawerItemWithCustomIcon(
@@ -60,18 +62,21 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pop(context);
                         try {
                           await browser.open(
-                              url: WebUri('https://www.poehalisnami.ua/user_agreement'),
+                              url: WebUri(
+                                  'https://www.poehalisnami.ua/user_agreement'),
                               settings: ChromeSafariBrowserSettings(
                                 shareState: CustomTabsShareState.SHARE_STATE_ON,
                                 barCollapsingEnabled: true,
                               ));
                         } catch (e) {
-                          debugPrint("Failed to open Chrome Custom Tabs. Opening WebView instead.");
+                          debugPrint(
+                              "Failed to open Chrome Custom Tabs. Opening WebView instead.");
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => WebViewPage(
-                                url: "https://www.poehalisnami.ua/user_agreement",
+                                url:
+                                    "https://www.poehalisnami.ua/user_agreement",
                               ),
                             ),
                           );
@@ -85,9 +90,11 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pop(context);
                         try {
                           await browser.open(
-                              url: WebUri("https://www.poehalisnami.ua/privacy"),
+                              url:
+                                  WebUri("https://www.poehalisnami.ua/privacy"),
                               settings: ChromeSafariBrowserSettings(
-                                shareState: CustomTabsShareState.SHARE_STATE_OFF,
+                                shareState:
+                                    CustomTabsShareState.SHARE_STATE_OFF,
                                 barCollapsingEnabled: true,
                               ));
                         } catch (e) {
@@ -113,8 +120,10 @@ class AppDrawer extends StatelessWidget {
                           builder: (context) {
                             return AlertDialog(
                               surfaceTintColor: Colors.white,
-                              insetPadding: const EdgeInsets.symmetric(vertical: 80, horizontal: 16),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              insetPadding: const EdgeInsets.symmetric(
+                                  vertical: 80, horizontal: 16),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                               content: Container(
                                 width: double.maxFinite,
                                 child: Column(
@@ -123,7 +132,10 @@ class AppDrawer extends StatelessWidget {
                                     SizedBox(height: 16),
                                     Text(
                                       "Вы уверенны что хотите выйти?",
-                                      style: textStyle(size: 18, weight: FontWeight.w300, color: ColorTextBlackAlertDialog),
+                                      style: textStyle(
+                                          size: 18,
+                                          weight: FontWeight.w300,
+                                          color: ColorTextBlackAlertDialog),
                                       textAlign: TextAlign.center,
                                     ),
                                     SizedBox(height: 26),
@@ -134,7 +146,12 @@ class AppDrawer extends StatelessWidget {
                                             onPressed: () {
                                               Navigator.pop(context);
                                             },
-                                            child: Text("Нет", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextBlackAlertDialog)),
+                                            child: Text("Нет",
+                                                style: textStyle(
+                                                    size: 18,
+                                                    weight: FontWeight.w400,
+                                                    color:
+                                                        ColorTextBlackAlertDialog)),
                                           ),
                                         ),
                                         SizedBox(width: 16),
@@ -142,10 +159,19 @@ class AppDrawer extends StatelessWidget {
                                           child: TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
-                                              ServiceContainer().sinkService.connectivity.cancel();
-                                              ServiceContainer().authService.logout();
+                                              ServiceContainer()
+                                                  .sinkService
+                                                  .connectivity
+                                                  ?.cancel();
+                                              ServiceContainer()
+                                                  .authService
+                                                  .logout();
                                             },
-                                            child: Text("Да", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
+                                            child: Text("Да",
+                                                style: textStyle(
+                                                    size: 18,
+                                                    weight: FontWeight.w400,
+                                                    color: ColorTextOrange)),
                                           ),
                                         ),
                                       ],
@@ -198,7 +224,8 @@ class AppDrawer extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             IconButton(
-              icon: SvgPicture.asset(IMG.icons.iconClose, fit: BoxFit.scaleDown),
+              icon:
+                  SvgPicture.asset(IMG.icons.iconClose, fit: BoxFit.scaleDown),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -212,13 +239,15 @@ class AppDrawer extends StatelessWidget {
         ;
   }
 
-  Widget _createDrawerItemWithCustomIcon({required String icon, String? text, GestureTapCallback? onTap}) {
+  Widget _createDrawerItemWithCustomIcon(
+      {required String icon, String? text, GestureTapCallback? onTap}) {
     return Column(
       children: <Widget>[
         ListTile(
           title: Row(
             children: <Widget>[
-              SvgPicture.asset(icon, width: 24, height: 24, fit: BoxFit.scaleDown),
+              SvgPicture.asset(icon,
+                  width: 24, height: 24, fit: BoxFit.scaleDown),
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(left: 8.0),
@@ -237,7 +266,8 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _createDrawerLogout({required String icon, String? text, GestureTapCallback? onTap}) {
+  Widget _createDrawerLogout(
+      {required String icon, String? text, GestureTapCallback? onTap}) {
     return ListTile(
       title: Row(
         children: <Widget>[

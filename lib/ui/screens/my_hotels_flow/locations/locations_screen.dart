@@ -222,7 +222,7 @@ class _LocationsScreenState extends State<LocationsScreen>
                                                                 "startSinc update description of my hotel");
                                                             ServiceContainer()
                                                                 .sinkService
-                                                                .startSinc();
+                                                                .startSynchronization();
                                                           },
                                                         ));
                                                   });

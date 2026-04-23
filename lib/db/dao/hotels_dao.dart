@@ -9,10 +9,13 @@ import 'package:sqflite/sqflite.dart';
 class HotelsDao {
   final String tableName;
   final Database _database;
+
   // Database db = await _database;
   HotelsDao(this._database, this.tableName);
 
-  StreamController observerOfInsertingHotels = new StreamController<int>.broadcast();
+  StreamController observerOfInsertingHotels =
+      new StreamController<int>.broadcast();
+
   // Hotels
   Future<void> insertOrUpdateHotels(Map<dynamic, HotelModel> hotels) async {
     try {
@@ -20,10 +23,13 @@ class HotelsDao {
       debugPrint("start inserting database");
       const int limitOfInsertingOrUpdating = 30000;
       int onePercentOfLoading = (hotels.entries.length / 100).ceil();
-      int quantityOfIteration = (hotels.entries.length / limitOfInsertingOrUpdating).ceil();
+      int quantityOfIteration =
+          (hotels.entries.length / limitOfInsertingOrUpdating).ceil();
       for (var i = 0; i < quantityOfIteration; i++) {
         Batch batch = _database.batch();
-        for (var entry in hotels.entries.skip(limitOfInsertingOrUpdating * i).take(limitOfInsertingOrUpdating)) {
+        for (var entry in hotels.entries
+            .skip(limitOfInsertingOrUpdating * i)
+            .take(limitOfInsertingOrUpdating)) {
           var hotel = entry.value;
           batch.insert(
             tableName,
@@ -32,13 +38,16 @@ class HotelsDao {
           );
         }
         await batch.commit(noResult: true);
-        debugPrint("inserted to db: ${(i * limitOfInsertingOrUpdating / onePercentOfLoading).round()} %");
-        observerOfInsertingHotels.add((i * limitOfInsertingOrUpdating / onePercentOfLoading).round());
+        debugPrint(
+            "inserted to db: ${(i * limitOfInsertingOrUpdating / onePercentOfLoading).round()} %");
+        observerOfInsertingHotels.add(
+            (i * limitOfInsertingOrUpdating / onePercentOfLoading).round());
       }
       debugPrint("inserted to db: 100 %");
       observerOfInsertingHotels.add((100));
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "insertOrUpdateHotels");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "insertOrUpdateHotels");
       throw e;
     }
   }
@@ -59,7 +68,8 @@ class HotelsDao {
         hotelsList.add(location);
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "Удаление белорусских и русских отелей");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "Удаление белорусских и русских отелей");
     }
     return hotelsList;
   }
@@ -72,13 +82,16 @@ class HotelsDao {
         whereArgs: [id],
       );
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "deleteFile");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "deleteFile");
       throw e;
     }
   }
 
   Future<bool> isTableHotelsEmpty() async {
-    int count = Sqflite.firstIntValue(await _database.rawQuery('SELECT COUNT(*) FROM $tableName')) ?? 0;
+    int count = Sqflite.firstIntValue(
+            await _database.rawQuery('SELECT COUNT(*) FROM $tableName')) ??
+        0;
     return count == 0;
   }
 
@@ -95,12 +108,14 @@ class HotelsDao {
         return null;
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "findHotelById");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findHotelById");
       throw e;
     }
   }
 
-  Future<List<HotelModel>> getHotelsSortedByDistance(double userLat, double userLong, int qtyToShow, String searchText) async {
+  Future<List<HotelModel>> getHotelsSortedByDistance(
+      double userLat, double userLong, int qtyToShow, String searchText) async {
     try {
       bool hasCyrillic(String text) {
         RegExp regex = RegExp(r'[а-яА-Я]');
@@ -108,9 +123,11 @@ class HotelsDao {
       }
 
       if (Platform.isIOS && hasCyrillic(searchText)) {
-        List<Map<String, dynamic>> mapListAllHotels = await _database.query(tableName);
+        List<Map<String, dynamic>> mapListAllHotels =
+            await _database.query(tableName);
 
-        List<HotelModel> allHotels = mapListAllHotels.map((map) => HotelModel.fromMap(map)).toList();
+        List<HotelModel> allHotels =
+            mapListAllHotels.map((map) => HotelModel.fromMap(map)).toList();
 
         List<HotelModel> filteredHotels = allHotels.where((hotel) {
           String name = hotel.name.toLowerCase();
@@ -118,8 +135,10 @@ class HotelsDao {
         }).toList();
 
         filteredHotels.sort((a, b) {
-          double distanceA = (a.lat - userLat) * (a.lat - userLat) + (a.long - userLong) * (a.long - userLong);
-          double distanceB = (b.lat - userLat) * (b.lat - userLat) + (b.long - userLong) * (b.long - userLong);
+          double distanceA = (a.lat - userLat) * (a.lat - userLat) +
+              (a.long - userLong) * (a.long - userLong);
+          double distanceB = (b.lat - userLat) * (b.lat - userLat) +
+              (b.long - userLong) * (b.long - userLong);
           return distanceA.compareTo(distanceB); //sorting by distance to User
         });
         return filteredHotels.take(qtyToShow).toList();
@@ -140,7 +159,8 @@ class HotelsDao {
         return hotelList;
       }
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "getHotelsSortedByDistance");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getHotelsSortedByDistance");
       throw e;
     }
   }
