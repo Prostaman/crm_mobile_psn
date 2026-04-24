@@ -129,9 +129,11 @@ class HotelsDao {
         List<HotelModel> allHotels =
             mapListAllHotels.map((map) => HotelModel.fromMap(map)).toList();
 
+        List<String> searchWords =
+            searchText.trim().toLowerCase().split(RegExp(r'\s+'));
         List<HotelModel> filteredHotels = allHotels.where((hotel) {
           String name = hotel.name.toLowerCase();
-          return name.contains(searchText.toLowerCase());
+          return searchWords.every((word) => name.contains(word));
         }).toList();
 
         filteredHotels.sort((a, b) {
@@ -144,14 +146,23 @@ class HotelsDao {
         return filteredHotels.take(qtyToShow).toList();
       } else {
         List<Map<String, dynamic>> hotels = [];
+        String whereClause = '';
+        List<dynamic> args = [];
+        if (searchText.trim().isNotEmpty) {
+          List<String> words = searchText.trim().split(RegExp(r'\s+'));
+          whereClause =
+              'WHERE ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
+          args = words.map((w) => '%${w.toLowerCase()}%').toList();
+        }
+
         hotels.addAll(await _database.rawQuery('''
         SELECT *, 
         ((lat - $userLat) * (lat - $userLat) + (long - $userLong) * (long - $userLong)) as distance
     FROM $tableName
-    WHERE LOWER(name) LIKE '%${searchText.toLowerCase()}%'
+    $whereClause
     ORDER BY distance
     LIMIT $qtyToShow OFFSET 0
-  '''));
+  ''', args));
         List<HotelModel> hotelList = [];
         for (var hotel in hotels) {
           hotelList.add(HotelModel.fromMap(hotel));

@@ -106,427 +106,421 @@ class _LocationsScreenState extends State<LocationsScreen>
         child: BlocBuilder<LocationsCubit, BaseCubitState>(
             bloc: _cubit,
             builder: (context, state) {
-              if (state is LoadingState) {
-                return Center(child: CircularProgressIndicator());
-              } else if (state is ErrorState) {
-                return Center(child: Text('Error: ${state.error}'));
-              } else {
-                return BaseScreen(
-                  state: state,
-                  scrollController: _cubit.scrollController,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 10, top: 34, left: 22, right: 22),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: ColorWhite,
-                          ),
-                          child: Column(
-                            // crossAxisAlignment: CrossAxisAlignment.start,
-                            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(children: [
+              return BaseScreen(
+                state: state,
+                scrollController: _cubit.scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      bottom: 10, top: 34, left: 22, right: 22),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: ColorWhite,
+                        ),
+                        child: Column(
+                          // crossAxisAlignment: CrossAxisAlignment.start,
+                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(children: [
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                    Text(
+                                      "Создано: ${formatDate(stringToDate(_cubit.myHotel.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
+                                      style: textStyle(
+                                          size: 12, color: ColorGreyV2),
+                                    ),
+                                    SizedBox(height: 14),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        SvgPicture.asset(
+                                            IMG.icons.iconMediaFile,
+                                            fit: BoxFit.scaleDown),
+                                        Text(
+                                          " ${_cubit.locationsData.allFilesLength} медиафайлов",
+                                          style: textStyle(size: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                  ])),
+                              if (_cubit.locationsData.locations.length > 0 &&
+                                  _cubit.locationsData
+                                          .percentOfLoadingAllFiles !=
+                                      -1)
                                 Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                      Text(
-                                        "Создано: ${formatDate(stringToDate(_cubit.myHotel.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
-                                        style: textStyle(
-                                            size: 12, color: ColorGreyV2),
-                                      ),
-                                      SizedBox(height: 14),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          SvgPicture.asset(
-                                              IMG.icons.iconMediaFile,
-                                              fit: BoxFit.scaleDown),
-                                          Text(
-                                            " ${_cubit.locationsData.allFilesLength} медиафайлов",
-                                            style: textStyle(size: 14),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 8),
-                                    ])),
-                                if (_cubit.locationsData.locations.length > 0 &&
-                                    _cubit.locationsData
-                                            .percentOfLoadingAllFiles !=
-                                        -1)
+                                    child: IndicatorOfUploading(
+                                        percentUploaded: _cubit.locationsData
+                                            .percentOfLoadingAllFiles))
+                            ]),
+                            Divider(
+                              color: Color.fromRGBO(108, 106, 106, 0.2),
+                            ),
+                            Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Row(children: [
                                   Expanded(
-                                      child: IndicatorOfUploading(
-                                          percentUploaded: _cubit.locationsData
-                                              .percentOfLoadingAllFiles))
-                              ]),
-                              Divider(
-                                color: Color.fromRGBO(108, 106, 106, 0.2),
-                              ),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Row(children: [
-                                    Expanded(
-                                        child: Text("Описание",
-                                            style: textStyle(
-                                                color: ColorGreyV2, size: 12),
-                                            textAlign: TextAlign.start)),
-                                    Expanded(
-                                        child: InkWell(
-                                            onTap: () {
-                                              showModalBottomSheet(
-                                                  context: context,
-                                                  isScrollControlled: true,
-                                                  backgroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                              topLeft: Radius
-                                                                  .circular(32),
-                                                              topRight: Radius
-                                                                  .circular(
-                                                                      32))),
-                                                  builder: (BuildContext bc) {
-                                                    return Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius.only(
-                                                            topLeft:
-                                                                Radius.circular(
-                                                                    32.0), // Adjust the radius as needed
+                                      child: Text("Описание",
+                                          style: textStyle(
+                                              color: ColorGreyV2, size: 12),
+                                          textAlign: TextAlign.start)),
+                                  Expanded(
+                                      child: InkWell(
+                                          onTap: () {
+                                            showModalBottomSheet(
+                                                context: context,
+                                                isScrollControlled: true,
+                                                backgroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                            topLeft: Radius
+                                                                .circular(32),
                                                             topRight:
                                                                 Radius.circular(
-                                                                    32.0), // Adjust the radius as needed
-                                                          ),
-                                                          color: Colors.white,
+                                                                    32))),
+                                                builder: (BuildContext bc) {
+                                                  return Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          topLeft: Radius.circular(
+                                                              32.0), // Adjust the radius as needed
+                                                          topRight: Radius.circular(
+                                                              32.0), // Adjust the radius as needed
                                                         ),
-                                                        child:
-                                                            HotelDescriptionBottomSheet(
-                                                          description: _cubit
-                                                              .myHotel
-                                                              .description,
-                                                          saveCallback:
-                                                              (newValue) async {
-                                                            _cubit.myHotel
-                                                                    .description =
-                                                                newValue;
-                                                            await _cubit
-                                                                .updateHotel();
-                                                            debugPrint(
-                                                                "startSinc update description of my hotel");
-                                                            ServiceContainer()
-                                                                .sinkService
-                                                                .startSynchronization();
-                                                          },
-                                                        ));
-                                                  });
-                                            },
-                                            child: Text("Изменить",
-                                                style: textStyle(
-                                                    color: Colors.orange,
-                                                    size: 14),
-                                                textAlign: TextAlign.end)))
-                                  ])),
-                              if (_cubit.myHotel.description != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 16),
-                                  child: Text(
-                                    "${_cubit.myHotel.description}",
-                                    style: textStyle(size: 14, h: 1.3),
-                                  ),
+                                                        color: Colors.white,
+                                                      ),
+                                                      child:
+                                                          HotelDescriptionBottomSheet(
+                                                        description: _cubit
+                                                            .myHotel
+                                                            .description,
+                                                        saveCallback:
+                                                            (newValue) async {
+                                                          _cubit.myHotel
+                                                                  .description =
+                                                              newValue;
+                                                          await _cubit
+                                                              .updateHotel();
+                                                          debugPrint(
+                                                              "startSinc update description of my hotel");
+                                                          ServiceContainer()
+                                                              .sinkService
+                                                              .startSynchronization();
+                                                        },
+                                                      ));
+                                                });
+                                          },
+                                          child: Text("Изменить",
+                                              style: textStyle(
+                                                  color: Colors.orange,
+                                                  size: 14),
+                                              textAlign: TextAlign.end)))
+                                ])),
+                            if (_cubit.myHotel.description != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Text(
+                                  "${_cubit.myHotel.description}",
+                                  style: textStyle(size: 14, h: 1.3),
                                 ),
-                              Divider(
-                                color: Color.fromRGBO(108, 106, 106, 0.2),
                               ),
-                            ],
-                          ),
+                            Divider(
+                              color: Color.fromRGBO(108, 106, 106, 0.2),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 8),
-                        _cubit.locationsData.locations.isNotEmpty
-                            ? SlidableAutoCloseBehavior(
-                                child: Column(
-                                children: _cubit.locationsData.locations
-                                    .mapIndexed((index, location) {
-                                  controllers.add(SlidableController(this));
-                                  return Column(children: [
-                                    InkWell(
-                                        onTap: () {
-                                          controllers.forEach((controller) {
-                                            controller.close();
-                                          });
-                                          pushToEditHotelLocation(
-                                              context: context,
-                                              hotel: _cubit.myHotel,
-                                              location: location,
-                                              saveCallback: () async {
-                                                await _cubit.updateHotel();
-                                                await _cubit.refresh();
-                                                widget.updateCallback();
-                                              },
-                                              db: _cubit.db);
-                                        },
-                                        child: Slidable(
-                                          key: ValueKey(index),
-                                          controller: controllers[index],
-                                          endActionPane: ActionPane(
-                                            motion: ScrollMotion(),
-                                            extentRatio: 0.25,
-                                            children: [
-                                              Expanded(
-                                                  child: Container(
+                      ),
+                      SizedBox(height: 8),
+                      _cubit.locationsData.locations.isNotEmpty
+                          ? SlidableAutoCloseBehavior(
+                              child: Column(
+                              children: _cubit.locationsData.locations
+                                  .mapIndexed((index, location) {
+                                controllers.add(SlidableController(this));
+                                return Column(children: [
+                                  InkWell(
+                                      onTap: () {
+                                        controllers.forEach((controller) {
+                                          controller.close();
+                                        });
+                                        pushToEditHotelLocation(
+                                            context: context,
+                                            hotel: _cubit.myHotel,
+                                            location: location,
+                                            saveCallback: () async {
+                                              await _cubit.updateHotel();
+                                              await _cubit.refresh();
+                                              widget.updateCallback();
+                                            },
+                                            db: _cubit.db);
+                                      },
+                                      child: Slidable(
+                                        key: ValueKey(index),
+                                        controller: controllers[index],
+                                        endActionPane: ActionPane(
+                                          motion: ScrollMotion(),
+                                          extentRatio: 0.25,
+                                          children: [
+                                            Expanded(
+                                                child: Container(
+                                              height: 150,
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                              ),
+                                              child: IconButton(
+                                                icon: SvgPicture.asset(
+                                                    IMG.icons.iconDelete,
+                                                    fit: BoxFit.scaleDown),
+                                                onPressed: () {
+                                                  showModalBottomSheet(
+                                                      context: context,
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                      builder:
+                                                          (BuildContext bc) {
+                                                        return Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .only(
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        32.0),
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        32.0),
+                                                              ),
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                            child: Wrap(
+                                                                children: [
+                                                                  Padding(
+                                                                      padding: EdgeInsets.only(
+                                                                          bottom:
+                                                                              60,
+                                                                          left:
+                                                                              16,
+                                                                          right:
+                                                                              16,
+                                                                          top:
+                                                                              16),
+                                                                      child:
+                                                                          Column(
+                                                                        children: [
+                                                                          SvgPicture.asset(
+                                                                              IMG.icons.iconDelete,
+                                                                              colorFilter: ColorFilter.mode(
+                                                                                Colors.red,
+                                                                                BlendMode.srcIn,
+                                                                              ),
+                                                                              fit: BoxFit.scaleDown),
+                                                                          SizedBox(
+                                                                              height: 12),
+                                                                          Text(
+                                                                              "Удаление записи",
+                                                                              style: textStyle(size: 22, weight: FontWeight.bold)),
+                                                                          SizedBox(
+                                                                              height: 20),
+                                                                          Text(
+                                                                              "Вы действительно хотите\nудалить запись?",
+                                                                              textAlign: TextAlign.center,
+                                                                              style: textStyle(size: 18)),
+                                                                          SizedBox(
+                                                                              height: 49),
+                                                                          Row(
+                                                                            children: [
+                                                                              Expanded(
+                                                                                child: DefaultButton(
+                                                                                  textSize: 18,
+                                                                                  height: 55,
+                                                                                  title: "Отменить",
+                                                                                  scheme: DefaultButtonScheme.White,
+                                                                                  onPressed: () {
+                                                                                    controllers[index].close();
+                                                                                    Navigator.pop(context);
+                                                                                  },
+                                                                                ),
+                                                                              ),
+                                                                              SizedBox(width: 16),
+                                                                              Expanded(
+                                                                                child: DefaultButton(
+                                                                                  title: "Да, удалить",
+                                                                                  textSize: 18,
+                                                                                  height: 55,
+                                                                                  scheme: DefaultButtonScheme.Orange,
+                                                                                  onPressed: () async {
+                                                                                    try {
+                                                                                      await _cubit.deleteLocation(locationModel: location);
+                                                                                      controllers.removeAt(index);
+                                                                                      Navigator.pop(mainContext);
+                                                                                      // _cubit.updateHotel();
+
+                                                                                      widget.updateCallback();
+                                                                                    } catch (e) {
+                                                                                      debugPrint("UI Deleting location: $e");
+                                                                                      FirebaseCrashlytics.instance.log("ui deleting location $e");
+                                                                                      FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+                                                                                    }
+                                                                                  },
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          )
+                                                                        ],
+                                                                      ))
+                                                                ]));
+                                                      });
+                                                },
+                                              ),
+                                            ))
+                                          ],
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                                width: 150,
                                                 height: 150,
                                                 decoration: BoxDecoration(
-                                                  color: Colors.red,
+                                                  color: applyOpacity(
+                                                      ColorLightGrey, 0.5),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                child: IconButton(
-                                                  icon: SvgPicture.asset(
-                                                      IMG.icons.iconDelete,
-                                                      fit: BoxFit.scaleDown),
-                                                  onPressed: () {
-                                                    showModalBottomSheet(
-                                                        context: context,
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        builder:
-                                                            (BuildContext bc) {
-                                                          return Container(
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .only(
-                                                                  topLeft: Radius
-                                                                      .circular(
-                                                                          32.0),
-                                                                  topRight: Radius
-                                                                      .circular(
-                                                                          32.0),
-                                                                ),
-                                                                color: Colors
-                                                                    .white,
-                                                              ),
-                                                              child: Wrap(
-                                                                  children: [
-                                                                    Padding(
-                                                                        padding: EdgeInsets.only(
-                                                                            bottom:
-                                                                                60,
-                                                                            left:
-                                                                                16,
-                                                                            right:
-                                                                                16,
-                                                                            top:
-                                                                                16),
-                                                                        child:
-                                                                            Column(
-                                                                          children: [
-                                                                            SvgPicture.asset(IMG.icons.iconDelete,
-                                                                                colorFilter: ColorFilter.mode(
-                                                                                  Colors.red,
-                                                                                  BlendMode.srcIn,
-                                                                                ),
-                                                                                fit: BoxFit.scaleDown),
-                                                                            SizedBox(height: 12),
-                                                                            Text("Удаление записи",
-                                                                                style: textStyle(size: 22, weight: FontWeight.bold)),
-                                                                            SizedBox(height: 20),
-                                                                            Text("Вы действительно хотите\nудалить запись?",
-                                                                                textAlign: TextAlign.center,
-                                                                                style: textStyle(size: 18)),
-                                                                            SizedBox(height: 49),
-                                                                            Row(
-                                                                              children: [
-                                                                                Expanded(
-                                                                                  child: DefaultButton(
-                                                                                    textSize: 18,
-                                                                                    height: 55,
-                                                                                    title: "Отменить",
-                                                                                    scheme: DefaultButtonScheme.White,
-                                                                                    onPressed: () {
-                                                                                      controllers[index].close();
-                                                                                      Navigator.pop(context);
-                                                                                    },
-                                                                                  ),
-                                                                                ),
-                                                                                SizedBox(width: 16),
-                                                                                Expanded(
-                                                                                  child: DefaultButton(
-                                                                                    title: "Да, удалить",
-                                                                                    textSize: 18,
-                                                                                    height: 55,
-                                                                                    scheme: DefaultButtonScheme.Orange,
-                                                                                    onPressed: () async {
-                                                                                      try {
-                                                                                        await _cubit.deleteLocation(locationModel: location);
-                                                                                        controllers.removeAt(index);
-                                                                                        Navigator.pop(mainContext);
-                                                                                        // _cubit.updateHotel();
-
-                                                                                        widget.updateCallback();
-                                                                                      } catch (e) {
-                                                                                        debugPrint("UI Deleting location: $e");
-                                                                                        FirebaseCrashlytics.instance.log("ui deleting location $e");
-                                                                                        FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
-                                                                                      }
-                                                                                    },
-                                                                                  ),
-                                                                                ),
-                                                                              ],
-                                                                            )
-                                                                          ],
-                                                                        ))
-                                                                  ]));
-                                                        });
-                                                  },
-                                                ),
-                                              ))
-                                            ],
-                                          ),
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Container(
-                                                  width: 150,
-                                                  height: 150,
-                                                  decoration: BoxDecoration(
-                                                    color: applyOpacity(
-                                                        ColorLightGrey, 0.5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                  ),
-                                                  child: profileImageOfLocation(
-                                                      index,
-                                                      location,
-                                                      _cubit.locationsData
-                                                          .listOflistOfFiles)),
-                                              Expanded(
-                                                  child: Padding(
-                                                      padding: EdgeInsets.only(
-                                                          left: 16),
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          SizedBox(height: 8),
-                                                          Text(
-                                                            "Создано: ${formatDate(stringToDate(location.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
-                                                            style: textStyle(
-                                                                size: 12,
-                                                                color: Color
-                                                                    .fromRGBO(
-                                                                        108,
-                                                                        106,
-                                                                        106,
-                                                                        1)),
-                                                          ),
-                                                          SizedBox(height: 8),
-                                                          Row(
-                                                            children: [
-                                                              SvgPicture.asset(
-                                                                  getIconPathCategoty(
-                                                                      location
-                                                                          .idCategory),
-                                                                  fit: BoxFit
-                                                                      .scaleDown),
-                                                              Expanded(
-                                                                  child: Text(
-                                                                " ${_cubit.locationsData.descriptionCategories[index]}",
+                                                child: profileImageOfLocation(
+                                                    index,
+                                                    location,
+                                                    _cubit.locationsData
+                                                        .listOflistOfFiles)),
+                                            Expanded(
+                                                child: Padding(
+                                                    padding: EdgeInsets.only(
+                                                        left: 16),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        SizedBox(height: 8),
+                                                        Text(
+                                                          "Создано: ${formatDate(stringToDate(location.createdAt) ?? DateTime(2000, 1, 1, 00, 00), format: DateFormatType.Date)}",
+                                                          style: textStyle(
+                                                              size: 12,
+                                                              color: Color
+                                                                  .fromRGBO(
+                                                                      108,
+                                                                      106,
+                                                                      106,
+                                                                      1)),
+                                                        ),
+                                                        SizedBox(height: 8),
+                                                        Row(
+                                                          children: [
+                                                            SvgPicture.asset(
+                                                                getIconPathCategoty(
+                                                                    location
+                                                                        .idCategory),
+                                                                fit: BoxFit
+                                                                    .scaleDown),
+                                                            Expanded(
+                                                                child: Text(
+                                                              " ${_cubit.locationsData.descriptionCategories[index]}",
+                                                              style: textStyle(
+                                                                  size: 19,
+                                                                  weight:
+                                                                      FontWeight
+                                                                          .bold),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .left,
+                                                              maxLines: 1,
+                                                              //overflow: TextOverflow.ellipsis,
+                                                            )),
+                                                          ],
+                                                        ),
+                                                        SizedBox(
+                                                            height: location
+                                                                    .name
+                                                                    .isNotEmpty
+                                                                ? 3
+                                                                : 0),
+                                                        location.name.isNotEmpty
+                                                            ? Text(
+                                                                location.name,
                                                                 style: textStyle(
-                                                                    size: 19,
+                                                                    size: 14,
                                                                     weight:
                                                                         FontWeight
-                                                                            .bold),
+                                                                            .w500),
                                                                 textAlign:
                                                                     TextAlign
                                                                         .left,
-                                                                maxLines: 1,
-                                                                //overflow: TextOverflow.ellipsis,
-                                                              )),
-                                                            ],
-                                                          ),
-                                                          SizedBox(
-                                                              height: location
-                                                                      .name
-                                                                      .isNotEmpty
-                                                                  ? 3
-                                                                  : 0),
-                                                          location.name
-                                                                  .isNotEmpty
-                                                              ? Text(
-                                                                  location.name,
-                                                                  style: textStyle(
-                                                                      size: 14,
-                                                                      weight: FontWeight
-                                                                          .w500),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .left,
-                                                                  maxLines: 2)
-                                                              : Container(),
-                                                          SizedBox(height: 8),
-                                                          Row(
-                                                            children: [
-                                                              SvgPicture.asset(
-                                                                  IMG.icons
-                                                                      .iconMediaFile,
-                                                                  fit: BoxFit
-                                                                      .scaleDown),
-                                                              Text(
-                                                                " ${_cubit.locationsData.listOflistOfFiles[index].length} медиафайлов",
-                                                                style:
-                                                                    textStyle(
-                                                                        size:
-                                                                            14),
-                                                              )
-                                                            ],
-                                                          ),
-                                                          SizedBox(height: 8),
-                                                          if (_cubit.locationsData
-                                                                      .listOfPercentLoaded[
-                                                                  index] !=
-                                                              -1)
-                                                            IndicatorOfUploading(
-                                                                percentUploaded: _cubit
-                                                                    .locationsData
-                                                                    .listOfPercentLoaded[index])
-                                                        ],
-                                                      )))
-                                            ],
-                                          ),
-                                        )),
-                                    SizedBox(height: 16)
-                                  ]);
-                                }).toList(),
-                              ))
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(height: 132),
-                                  SvgPicture.asset(IMG.icons.iconNoLocations,
-                                      fit: BoxFit.scaleDown),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    "Вы еще не добавили локацию.\nДля добавления нажмите +",
-                                    style: textStyle(size: 16),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              )
-                      ],
-                    ),
+                                                                maxLines: 2)
+                                                            : Container(),
+                                                        SizedBox(height: 8),
+                                                        Row(
+                                                          children: [
+                                                            SvgPicture.asset(
+                                                                IMG.icons
+                                                                    .iconMediaFile,
+                                                                fit: BoxFit
+                                                                    .scaleDown),
+                                                            Text(
+                                                              " ${_cubit.locationsData.listOflistOfFiles[index].length} медиафайлов",
+                                                              style: textStyle(
+                                                                  size: 14),
+                                                            )
+                                                          ],
+                                                        ),
+                                                        SizedBox(height: 8),
+                                                        if (_cubit.locationsData
+                                                                    .listOfPercentLoaded[
+                                                                index] !=
+                                                            -1)
+                                                          IndicatorOfUploading(
+                                                              percentUploaded: _cubit
+                                                                  .locationsData
+                                                                  .listOfPercentLoaded[index])
+                                                      ],
+                                                    )))
+                                          ],
+                                        ),
+                                      )),
+                                  SizedBox(height: 16)
+                                ]);
+                              }).toList(),
+                            ))
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(height: 132),
+                                SvgPicture.asset(IMG.icons.iconNoLocations,
+                                    fit: BoxFit.scaleDown),
+                                SizedBox(height: 16),
+                                Text(
+                                  "Вы еще не добавили локацию.\nДля добавления нажмите +",
+                                  style: textStyle(size: 16),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            )
+                    ],
                   ),
-                );
-              }
+                ),
+              );
             }));
   }
 }

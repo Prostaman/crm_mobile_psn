@@ -66,7 +66,7 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   Future<void> loadMore() async {
     final int nextPage = query.currentPage + 1;
     if (nextPage <= query.lastPage) {
-      emit(LoadingMoreState());
+      emit(LoadingMoreState<Model>(models: List.from(_models)));
       debugPrint("$runtimeType: getModels from load More");
       final result = await getModels(page: nextPage);
       if (result != null) {
@@ -130,16 +130,19 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   insert({required Model model, int? byIndex}) {
     debugPrint('insert');
     try {
+      final newModels = List.of(_models);
       var index = indexBy(model: model);
       if (index != null && index != -1) {
         debugPrint('Модель найдена, её индекс: $index');
-        _models.removeAt(index);
-        _models.insert(index, model);
+        newModels.removeAt(index);
+        newModels.insert(index, model);
       } else {
         debugPrint('Модель не найдена, добавляем новую модель');
-        _models.insert(byIndex ?? _models.length, model);
+        newModels.insert(byIndex ?? newModels.length, model);
       }
-      updateList();
+      //updateList(newModels);
+      debugPrint('updateList cubit');
+      emit(SuccessListState<Model>(models: newModels));
     } catch (e) {
       catchError(e);
     }

@@ -348,7 +348,8 @@ class SinkService {
       List<MyHotelModel> myHotels =
           await myHotelsDao.findMyHotelsWithChangedProfilePhoto();
       for (var myHotel in myHotels) {
-        debugPrint("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
+        debugPrint(
+            "synchronization myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
         FileModel file =
             await filesDao.findFileByLocalPath(myHotel.pathOfProfilePhoto);
         if (file.deleted == false && file.synced == true && file.cloudId != 0) {

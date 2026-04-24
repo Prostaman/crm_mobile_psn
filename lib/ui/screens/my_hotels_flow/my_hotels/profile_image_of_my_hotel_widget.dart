@@ -9,15 +9,19 @@ import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/ui/items/image_item.dart';
 
 Widget? profileImageOMyfHotel(MyHotelModel myHotel, List<FileModel> files) {
-  print("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
-  if (myHotel.pathOfProfilePhoto.isNotEmpty && File(myHotel.pathOfProfilePhoto).existsSync()) {
+  //print("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
+  if (myHotel.pathOfProfilePhoto.isNotEmpty &&
+      File(myHotel.pathOfProfilePhoto).existsSync()) {
     return ImageItem(imagePath: myHotel.pathOfProfilePhoto);
   } else if (files.isEmpty) {
-    return SvgPicture.asset(IMG.icons.noImageSVG, fit: BoxFit.scaleDown, width: 36, height: 36);
+    return SvgPicture.asset(IMG.icons.noImageSVG,
+        fit: BoxFit.scaleDown, width: 36, height: 36);
   } else {
     for (var file in files) {
       if (file.type == FileModelType.Video) {
-        if (File(file.thumb ?? '').existsSync() && File(file.localPath).existsSync() && file.deleted != true) {
+        if (File(file.thumb ?? '').existsSync() &&
+            File(file.localPath).existsSync() &&
+            file.deleted != true) {
           return ImageItem(imagePath: file.thumb ?? '');
         }
       } else {
@@ -26,6 +30,7 @@ Widget? profileImageOMyfHotel(MyHotelModel myHotel, List<FileModel> files) {
         }
       }
     }
-    return SvgPicture.asset(IMG.icons.noImageSVG, fit: BoxFit.scaleDown, width: 36, height: 36);
+    return SvgPicture.asset(IMG.icons.noImageSVG,
+        fit: BoxFit.scaleDown, width: 36, height: 36);
   }
 }

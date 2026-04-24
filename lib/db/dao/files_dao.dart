@@ -97,7 +97,6 @@ class FilesDao {
   }
 
   Future<List<FileModel>?> findFilesByLocationId(int localLocationId) async {
-    //Database db = await database;
     try {
       List<Map<String, dynamic>> mapList = await _database.query(
         tableName,
@@ -108,6 +107,22 @@ class FilesDao {
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "findFilesByLocationId");
+      throw e;
+    }
+  }
+
+  Future<List<FileModel>?> findNotDeletedFilesByLocationId(
+      int localLocationId) async {
+    try {
+      List<Map<String, dynamic>> mapList = await _database.query(
+        tableName,
+        where: 'localLocationId = ? AND deleted = 0',
+        whereArgs: [localLocationId],
+      );
+      return mapList.map((map) => FileModel.fromMap(map)).toList();
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findNotDeletedFilesByLocationId");
       throw e;
     }
   }

@@ -28,7 +28,8 @@ class BaseCubit extends Cubit<BaseCubitState> {
   catchError(final e) {
     emit(ErrorState(error: _catchError(e) ?? "Unknown error"));
     FirebaseCrashlytics.instance.log(e);
-    FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+    FirebaseCrashlytics.instance
+        .recordFlutterError(FlutterErrorDetails(exception: e));
   }
 
   String? _catchError(final e) {
@@ -39,13 +40,15 @@ class BaseCubit extends Cubit<BaseCubitState> {
       }
       if (e.response != null) {
         if (e.response!.statusCode == 413) {
-          return "File too large. Maximum file size - " + ApiEnvironment.getMaxFileSizeText();
+          return "File too large. Maximum file size - " +
+              ApiEnvironment.getMaxFileSizeText();
         } else if (e.response!.statusCode == 401) {
           ServiceContainer().authService.authUserCubit.logout();
         } else if (e.response!.statusCode == 404) {
           return "Page not found";
         } else if (e.response!.data != null) {
-          final parsedJson = JsonMapper.deserialize<BaseModelResponse>(e.response!.data);
+          final parsedJson =
+              JsonMapper.deserialize<BaseModelResponse>(e.response!.data);
           if (parsedJson != null) {
             return _parsedBaseResponseModel(parsedJson);
           }

@@ -1,75 +1,101 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/ui/items/loading_more_indicator.dart';
 import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 
-class PaginationListView extends StatelessWidget {
+class PaginationListView<Model> extends StatefulWidget {
   final ScrollController scrollController;
-
   final ListCubit cubit;
-  final Widget? Function(BuildContext, int) itemBuilder;
+  final Widget? Function(BuildContext, List<Model>, int) itemBuilder;
   final Widget Function(BuildContext, int)? separatorBuilder;
-
   final Widget? emptyViewPlug;
   final Widget? emptySearchViewPlug;
   final Widget? errorViewPlug;
-
-  final bool poolToRefresh = true;
+  final bool poolToRefresh;
   final Axis scrollDirection;
   final bool reverse;
   final bool shrinkWrap;
   final EdgeInsetsGeometry? padding;
+  final Widget? floatingActionButton;
 
-  PaginationListView(
-      {Key? key,
-      required this.cubit,
-      required this.itemBuilder,
-      required this.scrollController,
-      this.separatorBuilder,
-      this.scrollDirection = Axis.vertical,
-      this.reverse = false,
-      this.shrinkWrap = false,
-      this.emptyViewPlug,
-      this.emptySearchViewPlug,
-      this.errorViewPlug,
-      this.padding})
-      : super(key: key);
+  PaginationListView({
+    Key? key,
+    required this.cubit,
+    required this.itemBuilder,
+    required this.scrollController,
+    this.separatorBuilder,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+    this.shrinkWrap = false,
+    this.emptyViewPlug,
+    this.emptySearchViewPlug,
+    this.errorViewPlug,
+    this.padding,
+    this.poolToRefresh = true,
+    this.floatingActionButton,
+  }) : super(key: key);
+
+  @override
+  State<PaginationListView<Model>> createState() =>
+      _PaginationListViewState<Model>();
+}
+
+class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
+  bool _isFabVisible = true;
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer(
-      bloc: cubit,
+      bloc: widget.cubit,
       builder: (context, state) {
+        List<Model> currentModels = [];
+        if (state is SuccessListState<Model>) {
+          currentModels = state.models;
+        }
+
         return Stack(
           children: [
             NotificationListener<ScrollNotification>(
-              child: poolToRefresh == true
-                  ? _buildRefreshIndicator()
-                  : _buildListView(),
-              onNotification: (notification) => _onNotification(
-                  notification: notification, state: state as BaseCubitState),
+              child: widget.poolToRefresh == true
+                  ? _buildRefreshIndicator(currentModels)
+                  : _buildListView(currentModels),
+              onNotification: (notification) =>
+                  _onNotification(notification, state as BaseCubitState),
             ),
             if (state is LoadingState)
               DefaultFullScreenIndicator
             else if (state is LoadingMoreState)
               LoadingMoreInsicator(
-                  alignment: reverse == false
+                  alignment: widget.reverse == false
                       ? Alignment.bottomCenter
                       : Alignment.topCenter)
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
-                emptyViewPlug != null &&
-                cubit.query.is_searching == false)
-              Center(child: emptyViewPlug)
+                widget.emptyViewPlug != null &&
+                widget.cubit.query.is_searching == false)
+              Center(child: widget.emptyViewPlug)
             else if (state is SuccessListState &&
                 state.models.length == 0 &&
-                emptySearchViewPlug != null &&
-                cubit.query.is_searching == true)
-              Center(child: emptySearchViewPlug)
-            else if (state is ErrorState && errorViewPlug != null)
-              Center(child: errorViewPlug),
+                widget.emptySearchViewPlug != null &&
+                widget.cubit.query.is_searching == true)
+              Center(child: widget.emptySearchViewPlug)
+            else if (state is ErrorState && widget.errorViewPlug != null)
+              Center(child: widget.errorViewPlug)
+            else if (state is ErrorState && widget.errorViewPlug == null)
+              Center(child: Text('Error: ${state.error}')),
+            if (widget.floatingActionButton != null)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: AnimatedScale(
+                  scale: _isFabVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: widget.floatingActionButton!,
+                ),
+              ),
           ],
         );
       },
@@ -77,14 +103,12 @@ class PaginationListView extends StatelessWidget {
         if (state is ErrorState) {
           showSnackBar(context: context, message: state.error ?? "Empty");
         }
-        // Если данные загрузились, но список всё еще слишком короткий, чтобы его можно было скроллить,
-        // и при этом в базе есть еще страницы - подгружаем следующую автоматически.
         if (state is SuccessListState &&
-            cubit.query.currentPage < cubit.query.lastPage) {
+            widget.cubit.query.currentPage < widget.cubit.query.lastPage) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (scrollController.hasClients &&
-                scrollController.position.maxScrollExtent < 100) {
-              cubit.loadMore();
+            if (widget.scrollController.hasClients &&
+                widget.scrollController.position.maxScrollExtent < 100) {
+              widget.cubit.loadMore();
             }
           });
         }
@@ -92,80 +116,70 @@ class PaginationListView extends StatelessWidget {
     );
   }
 
-  Widget _buildRefreshIndicator() {
+  Widget _buildRefreshIndicator(List<Model> models) {
     return RefreshIndicator(
-      onRefresh: cubit.refresh,
-      child: _buildListView(),
+      onRefresh: widget.cubit.refresh,
+      child: _buildListView(models),
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<Model> models) {
     Widget listView;
-    if (separatorBuilder != null) {
+    if (widget.separatorBuilder != null) {
       listView = ListView.separated(
-        controller: scrollController,
-        padding: padding,
+        controller: widget.scrollController,
+        padding: widget.padding,
         physics: AlwaysScrollableScrollPhysics(),
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLength,
-        itemBuilder: itemBuilder,
-        separatorBuilder: separatorBuilder!,
+        scrollDirection: widget.scrollDirection,
+        reverse: widget.reverse,
+        shrinkWrap: widget.shrinkWrap,
+        itemCount: models.length,
+        itemBuilder: (context, index) =>
+            widget.itemBuilder(context, models, index),
+        separatorBuilder: widget.separatorBuilder!,
       );
     } else {
       listView = ListView.builder(
-        controller: scrollController,
-        padding: padding,
+        controller: widget.scrollController,
+        padding: widget.padding,
         physics: AlwaysScrollableScrollPhysics(),
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        shrinkWrap: shrinkWrap,
-        itemCount: cubit.modelsLength,
-        itemBuilder: itemBuilder,
+        scrollDirection: widget.scrollDirection,
+        reverse: widget.reverse,
+        shrinkWrap: widget.shrinkWrap,
+        itemCount: models.length,
+        itemBuilder: (context, index) =>
+            widget.itemBuilder(context, models, index),
       );
     }
 
     return Scrollbar(
-      controller: scrollController,
+      controller: widget.scrollController,
       child: listView,
     );
   }
 
-  bool _onNotification(
-      {required ScrollNotification notification,
-      required BaseCubitState state}) {
+  bool _onNotification(ScrollNotification notification, BaseCubitState state) {
+    if (notification is UserScrollNotification) {
+      if (notification.direction == ScrollDirection.reverse) {
+        if (_isFabVisible) setState(() => _isFabVisible = false);
+      } else if (notification.direction == ScrollDirection.forward) {
+        if (!_isFabVisible) setState(() => _isFabVisible = true);
+      }
+    }
+
     if (notification is! ScrollUpdateNotification) return false;
 
     final bool canLoadMore = state is! LoadingState &&
         state is! LoadingMoreState &&
-        cubit.query.currentPage < cubit.query.lastPage;
+        widget.cubit.query.currentPage < widget.cubit.query.lastPage;
 
     if (canLoadMore) {
       final metrics = notification.metrics;
-      // Если до конца списка осталось меньше 300 пикселей
       if (metrics.extentAfter <= 300 && metrics.maxScrollExtent > 0) {
-        cubit.loadMore();
+        widget.cubit.loadMore();
       }
     }
 
-    return true;
+    return false;
   }
-
-//   bool _onNotification(
-//       {required ScrollNotification notification,
-//         required BaseCubitState state}) {
-//     if (state is! LoadingState &&
-//         state is! LoadingMoreState &&
-//         notification is ScrollUpdateNotification) {
-//       if (scrollController.position.extentAfter <= 300 &&
-//           scrollController.position.maxScrollExtent >= 20) {
-//         debugPrint("was loadMore from pagination list view");
-//         cubit.loadMore();
-//       }
-//     }
-//
-//     return true;
-//   }
-// }
 }

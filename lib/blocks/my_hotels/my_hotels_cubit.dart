@@ -58,7 +58,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
       // 3. Собираем данные
       List<MyHotelState> newItems = [];
       for (var myHotelModel in myHotels) {
-        List<FileModel> files = await getAllFilesOfMyHotel(myHotelModel);
+        List<FileModel> files = await myHotelModel.getFilesOfMyHotel(db);
         double percentUploaded =
             await getPercentLoadedOfAllFilesOfMyHotel(myHotelModel);
         List<String> countryAndResort =
@@ -81,9 +81,6 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
     }
   }
 
-  @override
-  int get modelsLength => models.length;
-
   Future<void> updateSingleHotel(int hotelId) async {
     try {
       var dao = await db.myHotelsDao();
@@ -92,7 +89,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
       if (hotelMap != null) {
         var myHotelModel = MyHotelModel.fromMap(hotelMap);
 
-        List<FileModel> files = await getAllFilesOfMyHotel(myHotelModel);
+        List<FileModel> files = await myHotelModel.getFilesOfMyHotel(db);
         double percentUploaded =
             await getPercentLoadedOfAllFilesOfMyHotel(myHotelModel);
         List<String> countryAndResort =
@@ -137,10 +134,8 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
     return await myHotelModel.getLocations(db) ?? [];
   }
 
-  Future<List<FileModel>> getAllFilesOfMyHotel(
-      MyHotelModel? myHotelModel) async {
-    if (myHotelModel == null) return [];
-    return await myHotelModel.getAllFiles(db);
+  Future<List<FileModel>> getFilesOfMyHotel(MyHotelModel myHotelModel) async {
+    return await myHotelModel.getFilesOfMyHotel(db);
   }
 
   Future<MyHotelModel?> addMyHotel({required HotelModel hotel}) async {

@@ -11,7 +11,9 @@ class InitialState extends BaseCubitState {}
 
 class LoadingState extends BaseCubitState {}
 
-class LoadingMoreState extends BaseCubitState {}
+class LoadingMoreState<Model> extends SuccessListState<Model> {
+  LoadingMoreState({required super.models});
+}
 
 class RefreshState extends BaseCubitState {}
 
@@ -19,6 +21,7 @@ class SuccessModelState<Model> extends BaseCubitState {
   final Model model;
   final DateTime? date;
   final String? hash;
+
   SuccessModelState({required this.model, this.date, this.hash});
 
   @override
@@ -27,10 +30,13 @@ class SuccessModelState<Model> extends BaseCubitState {
 
 class SuccessListState<Model> extends BaseCubitState {
   final List<Model> models;
+
   SuccessListState({required this.models});
 
   @override
-  List<Object?> get props => [models];
+  List<Object?> get props => [
+        ...models,
+      ];
 }
 
 class ErrorState extends BaseCubitState {

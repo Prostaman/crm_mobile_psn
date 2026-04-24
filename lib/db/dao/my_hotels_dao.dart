@@ -108,9 +108,11 @@ class MyHotelsDao {
       String? where;
       List<dynamic>? whereArgs;
 
-      if (search != null && search.isNotEmpty) {
-        where = 'name LIKE ? AND deleted = 0';
-        whereArgs = ['%$search%'];
+      if (search != null && search.trim().isNotEmpty) {
+        List<String> words = search.trim().split(RegExp(r'\s+'));
+        where = words.map((w) => 'LOWER(name) LIKE ?').join(' AND ') +
+            ' AND deleted = 0';
+        whereArgs = words.map((w) => '%${w.toLowerCase()}%').toList();
       } else {
         where = 'deleted = 0';
       }
@@ -148,9 +150,10 @@ class MyHotelsDao {
     try {
       String sql = 'SELECT COUNT(*) FROM $tableName WHERE deleted = 0';
       List<dynamic> args = [];
-      if (search != null && search.isNotEmpty) {
-        sql += ' AND name LIKE ?';
-        args.add('%$search%');
+      if (search != null && search.trim().isNotEmpty) {
+        List<String> words = search.trim().split(RegExp(r'\s+'));
+        sql += ' AND ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
+        args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
       }
       var result = await _database.rawQuery(sql, args);
       return Sqflite.firstIntValue(result) ?? 0;

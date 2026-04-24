@@ -45,21 +45,17 @@ class MyHotelModel extends BaseModel {
     return (await (await db.locationsDao()).getLocationsCount());
   }
 
-  Future<List<FileModel>> getAllFiles(DBManager db) async {
+  Future<List<FileModel>> getFilesOfMyHotel(DBManager db) async {
     List<FileModel> files = [];
     final locationsData =
         await (await db.locationsDao()).findLocationsByHotelId(id);
     if (locationsData != null && locationsData.isNotEmpty) {
       for (var element in locationsData) {
         final locationModel = LocationModel.fromMap(element);
-        final viewFiles = await (await db.filesDao())
-                .findFilesByLocationId(locationModel.localId) ??
+        final notDeletedFiles = await (await db.filesDao())
+                .findNotDeletedFilesByLocationId(locationModel.localId) ??
             [];
-        for (var viewFile in viewFiles) {
-          if (viewFile.deleted == false) {
-            files.add(viewFile);
-          }
-        }
+        files.addAll(notDeletedFiles);
       }
     }
 
