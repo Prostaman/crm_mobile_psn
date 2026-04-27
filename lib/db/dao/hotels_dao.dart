@@ -114,8 +114,8 @@ class HotelsDao {
     }
   }
 
-  Future<List<HotelModel>> getHotelsSortedByDistance(
-      double userLat, double userLong, int qtyToShow, String searchText) async {
+  Future<List<HotelModel>> getHotelsSortedByDistance(double userLat,
+      double userLong, int limit, int offset, String searchText) async {
     try {
       bool hasCyrillic(String text) {
         RegExp regex = RegExp(r'[а-яА-Я]');
@@ -143,7 +143,7 @@ class HotelsDao {
               (b.long - userLong) * (b.long - userLong);
           return distanceA.compareTo(distanceB); //sorting by distance to User
         });
-        return filteredHotels.take(qtyToShow).toList();
+        return filteredHotels.skip(offset).take(limit).toList();
       } else {
         List<Map<String, dynamic>> hotels = [];
         String whereClause = '';
@@ -161,7 +161,7 @@ class HotelsDao {
     FROM $tableName
     $whereClause
     ORDER BY distance
-    LIMIT $qtyToShow OFFSET 0
+    LIMIT $limit OFFSET $offset
   ''', args));
         List<HotelModel> hotelList = [];
         for (var hotel in hotels) {
@@ -174,5 +174,32 @@ class HotelsDao {
           e.toString(), "getHotelsSortedByDistance");
       throw e;
     }
+  }
+
+  Future<int> getHotelsCount({String? search}) async {
+    try {
+      String sql = 'SELECT COUNT(*) FROM $tableName';
+      List<dynamic> args = [];
+      if (search != null && search.trim().isNotEmpty) {
+        List<String> words = search.trim().split(RegExp(r'\s+'));
+        sql += ' WHERE ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
+        args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
+      }
+      var result = await _database.rawQuery(sql, args);
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getHotelsCount");
+      throw e;
+    }
+  }
+
+  Future<List<String>> getCountryAndResort(int hotelId) async {
+    List<String> countryAndResort = [];
+    var hotelMap = await findHotelById(hotelId);
+    var hotel = HotelModel.fromMap(hotelMap!);
+    countryAndResort.add(hotel.country);
+    countryAndResort.add(hotel.resort);
+    return countryAndResort;
   }
 }

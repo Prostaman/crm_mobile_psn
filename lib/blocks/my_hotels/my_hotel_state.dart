@@ -7,16 +7,9 @@ class MyHotelState extends BaseModel with EquatableMixin {
   final MyHotelModel base;
   final List<FileModel> files;
   final double percentUploaded;
-  final String country;
-  final String resort;
 
-  MyHotelState({
-    required this.base,
-    required this.files,
-    required this.percentUploaded,
-    required this.country,
-    required this.resort,
-  });
+  MyHotelState(
+      {required this.base, required this.files, required this.percentUploaded});
 
   @override
   dynamic get baseId => base.id;
@@ -26,8 +19,8 @@ class MyHotelState extends BaseModel with EquatableMixin {
         base.id,
         files.length,
         percentUploaded,
-        country,
-        resort,
+        base.country,
+        base.resort,
         base.createdAt,
         base.name,
         base.pathOfProfilePhoto,

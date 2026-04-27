@@ -91,13 +91,15 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
 
     _models.addAll(data);
     //sortIfNeeded();
-    updateList();
+    updateList(_models);
   }
 
-  Future<void> updateList() async {
+  Future<void> updateList(List<Model> newList) async {
     debugPrint('updateList cubit');
-    emit(SuccessListState<Model>(models: List.from(_models)));
+    emit(SuccessListState<Model>(models: List.from(newList)));
   }
+
+  Future<void> updateModel(int index, Model newModel) async {}
 
   List<Model> get models {
     return _models;
@@ -106,6 +108,7 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   remove({required Model model}) {
     try {
       _models.remove(model);
+      updateList(_models);
     } catch (e) {
       catchError(e);
     }
@@ -130,27 +133,25 @@ abstract class ListCubit<Query extends BaseQuery, Model extends BaseModel>
   insert({required Model model, int? byIndex}) {
     debugPrint('insert');
     try {
-      final newModels = List.of(_models);
       var index = indexBy(model: model);
       if (index != null && index != -1) {
         debugPrint('Модель найдена, её индекс: $index');
-        newModels.removeAt(index);
-        newModels.insert(index, model);
+        _models.removeAt(index);
+        _models.insert(index, model);
       } else {
         debugPrint('Модель не найдена, добавляем новую модель');
-        newModels.insert(byIndex ?? newModels.length, model);
+        _models.insert(byIndex ?? _models.length, model);
       }
-      //updateList(newModels);
+      updateList(_models);
       debugPrint('updateList cubit');
-      emit(SuccessListState<Model>(models: newModels));
     } catch (e) {
       catchError(e);
     }
   }
 
-  int get modelsLength {
-    return _models.length;
-  }
+  // int get modelsLength {
+  //   return _models.length;
+  // }
 
   Model? modelById({required int id}) {
     return _models.firstWhereOrNull((element) {

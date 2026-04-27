@@ -15,6 +15,6 @@ mixin PickerCubitMixit<Model extends BaseModel>
 
   Future<void> select(Model model) async {
     selected = model;
-    cubit.updateList();
+    cubit.updateList(cubit.models);
   }
 }

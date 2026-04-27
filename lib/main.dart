@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/authentication/sign_in_cubit.dart';
 import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
-import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
+import 'package:psn.hotels.hub/blocks/hotels_search/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';

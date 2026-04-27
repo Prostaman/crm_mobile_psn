@@ -7,9 +7,9 @@ import 'package:psn.hotels.hub/ui/items/loading_more_indicator.dart';
 import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 
 class PaginationListView<Model> extends StatefulWidget {
-  final ScrollController scrollController;
   final ListCubit cubit;
   final Widget? Function(BuildContext, List<Model>, int) itemBuilder;
+  final ScrollController? scrollController; // Сделали опциональным
   final Widget Function(BuildContext, int)? separatorBuilder;
   final Widget? emptyViewPlug;
   final Widget? emptySearchViewPlug;
@@ -25,7 +25,7 @@ class PaginationListView<Model> extends StatefulWidget {
     Key? key,
     required this.cubit,
     required this.itemBuilder,
-    required this.scrollController,
+    this.scrollController,
     this.separatorBuilder,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
@@ -44,7 +44,24 @@ class PaginationListView<Model> extends StatefulWidget {
 }
 
 class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
+  late ScrollController _scrollController;
   bool _isFabVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Используем переданный контроллер или создаем свой
+    _scrollController = widget.scrollController ?? ScrollController();
+  }
+
+  @override
+  void dispose() {
+    // Закрываем контроллер только если мы его сами создали
+    if (widget.scrollController == null) {
+      _scrollController.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,8 +123,8 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
         if (state is SuccessListState &&
             widget.cubit.query.currentPage < widget.cubit.query.lastPage) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (widget.scrollController.hasClients &&
-                widget.scrollController.position.maxScrollExtent < 100) {
+            if (_scrollController.hasClients &&
+                _scrollController.position.maxScrollExtent < 100) {
               widget.cubit.loadMore();
             }
           });
@@ -127,7 +144,7 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
     Widget listView;
     if (widget.separatorBuilder != null) {
       listView = ListView.separated(
-        controller: widget.scrollController,
+        controller: _scrollController,
         padding: widget.padding,
         physics: AlwaysScrollableScrollPhysics(),
         scrollDirection: widget.scrollDirection,
@@ -140,7 +157,7 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
       );
     } else {
       listView = ListView.builder(
-        controller: widget.scrollController,
+        controller: _scrollController,
         padding: widget.padding,
         physics: AlwaysScrollableScrollPhysics(),
         scrollDirection: widget.scrollDirection,
@@ -153,7 +170,7 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
     }
 
     return Scrollbar(
-      controller: widget.scrollController,
+      controller: _scrollController,
       child: listView,
     );
   }

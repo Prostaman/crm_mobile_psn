@@ -287,13 +287,10 @@ class SinkService {
                     response, "deleteFile");
               }
             } else if (file.synced == false && file.deleted == false) {
-              int hotelId = (await locationsDao
-                      .findLocationByLocalId(file.localLocationId))!
-                  .hotelId;
               var r = await RepositoryContainer()
                   .locationsRepository
                   .filesApi
-                  .send(file: file, hotelId: hotelId);
+                  .send(file: file, hotelId: file.hotelId!);
 
               debugPrint("sent file");
               if (r != null && r.success == true) {
@@ -307,7 +304,8 @@ class SinkService {
                 file.synced = true;
                 file.uploadedAt = DateTime.now().toIso8601String();
                 await filesDao.updateFile(file.localId, file);
-                _notifyFileChanged(file.localId, file.localLocationId, hotelId);
+                _notifyFileChanged(
+                    file.localId, file.localLocationId, file.hotelId!);
               } else {
                 file.syncError = true;
                 await filesDao.updateFile(file.localId, file);

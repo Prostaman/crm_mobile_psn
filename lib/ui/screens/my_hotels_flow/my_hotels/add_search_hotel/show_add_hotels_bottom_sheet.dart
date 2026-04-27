@@ -3,7 +3,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/ui/routes/hotel_routes.dart';
-import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/add_hotels_bottom_sheet.dart';
+
+import 'add_search_hotel_bottom_sheet.dart';
 
 void showAddHotelsBottomSheet({
   required BuildContext context,
@@ -24,22 +25,20 @@ void showAddHotelsBottomSheet({
               ),
               color: Colors.white,
             ),
-            child: HotelsBottomSheet(
-              onTapCallback: (selectedHotel) async {
-                if (selectedHotel != null) {
-                  MyHotelModel? myNewHotelModel =
-                      await cubit.addMyHotel(hotel: selectedHotel);
-                  if (myNewHotelModel != null) {
-                    if (context.mounted) {
-                      pushToLocationsScreen(
-                        context: context,
-                        model: myNewHotelModel,
-                        db: cubit.db,
-                        updateCallback: () async {
-                          // await cubit.updateSingleHotel(myNewHotelModel.id);
-                        },
-                      );
-                    }
+            child: AddSearchHotelBottomSheet(
+              onTapCallback: (idSelectedHotel) async {
+                MyHotelModel? myNewHotelModel =
+                    await cubit.addMyHotel(hotelID: idSelectedHotel);
+                if (myNewHotelModel != null) {
+                  if (context.mounted) {
+                    pushToLocationsScreen(
+                      context: context,
+                      model: myNewHotelModel,
+                      db: cubit.db,
+                      updateCallback: () async {
+                        // await cubit.updateSingleHotel(myNewHotelModel.id);
+                      },
+                    );
                   }
                 }
               },

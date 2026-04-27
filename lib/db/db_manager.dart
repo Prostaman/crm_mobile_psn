@@ -41,7 +41,7 @@ class DBManager {
     debugPrint("path db: ${documentsDirectory.path}");
     Database database = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion == 1) {
@@ -65,6 +65,35 @@ class DBManager {
           ''');
 
           oldVersion = 3;
+        }
+
+        if (oldVersion == 3) {
+          // 1. Добавляем колонки в таблицу моих отелей
+          await db.execute(
+              'ALTER TABLE $nameOfTableMyHotels ADD COLUMN country TEXT');
+          await db.execute(
+              'ALTER TABLE $nameOfTableMyHotels ADD COLUMN resort TEXT');
+
+          // 2. Добавляем колонку в таблицу файлов
+          await db.execute(
+              'ALTER TABLE $nameOfTableFiles ADD COLUMN hotelId INTEGER');
+
+          // 3. Заполняем данные в my_hotels из основной таблицы hotels
+          await db.execute('''
+            UPDATE $nameOfTableMyHotels 
+            SET 
+              country = (SELECT country FROM $nameOfTableHotels WHERE $nameOfTableHotels.id = $nameOfTableMyHotels.id),
+              resort = (SELECT resort FROM $nameOfTableHotels WHERE $nameOfTableHotels.id = $nameOfTableMyHotels.id)
+          ''');
+
+          // 4. Заполняем hotelId в файлах через таблицу локаций
+          await db.execute('''
+            UPDATE $nameOfTableFiles 
+            SET 
+              hotelId = (SELECT hotelId FROM $nameOfTableLocations WHERE $nameOfTableLocations.localId = $nameOfTableFiles.localLocationId)
+          ''');
+
+          oldVersion = 4;
         }
       },
     );
@@ -106,7 +135,9 @@ class DBManager {
         deleted INTEGER,
         name TEXT,
         pathOfProfilePhoto TEXT,
-        profilePhotoIsChanged INTEGER
+        profilePhotoIsChanged INTEGER,
+        country TEXT,
+        resort TEXT
         )
     ''');
 
@@ -118,7 +149,7 @@ class DBManager {
         name TEXT,
         description TEXT,
         createdAt TEXT,
-        synced INTEGER,
+        synced INTEGER, 
         deleted INTEGER,
         pathOfProfilePhoto TEXT,
         profilePhotoIsChanged INTEGER,
@@ -134,6 +165,7 @@ class DBManager {
     cloudId INTEGER,
     localLocationId INTEGER,
     cloudLocationId INTEGER,
+    hotelId INTEGER,
     name TEXT,
     format TEXT,
     localPath TEXT,
@@ -150,7 +182,8 @@ class DBManager {
     )
   ''');
     } catch (e) {
-      FirebaseCrashlyticsHelper.recordDaoLocalDBError(e.toString(), "Creating tables");
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "Creating tables");
       throw e;
     }
   }

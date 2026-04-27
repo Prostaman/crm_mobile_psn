@@ -5,11 +5,11 @@ import 'package:psn.hotels.hub/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/ui/items/loading_more_indicator.dart';
 import 'package:psn.hotels.hub/helpers/ui_helper.dart';
 
-class PaginationGridView extends StatelessWidget {
+class PaginationGridView<Model> extends StatelessWidget {
   final ScrollController scrollController;
 
   final ListCubit cubit;
-  final Widget? Function(BuildContext, int) itemBuilder;
+  final Widget? Function(BuildContext, List<Model>, int) itemBuilder;
 
   final Widget? emptyViewPlug;
   final Widget? emptySearchViewPlug;
@@ -51,13 +51,18 @@ class PaginationGridView extends StatelessWidget {
     return BlocConsumer(
       bloc: cubit,
       builder: (context, state) {
+        List<Model> currentModels = [];
+        if (state is SuccessListState<Model>) {
+          currentModels = state.models;
+        }
+
         return Stack(
           children: [
             if (state is BaseCubitState)
-              NotificationListener(
+              NotificationListener<ScrollNotification>(
                 child: poolToRefresh == true
-                    ? _buildRefreshIndicator()
-                    : _buildListView(),
+                    ? _buildRefreshIndicator(currentModels)
+                    : _buildListView(currentModels),
                 onNotification: (notification) =>
                     _onNotification(notification: notification, state: state),
               ),
@@ -65,7 +70,6 @@ class PaginationGridView extends StatelessWidget {
               Center(
                   child: Container(
                       height: 200, child: Center(child: DefaultIndicator)))
-            // DefaultFullScreenIndicator
             else if (state is LoadingMoreState)
               LoadingMoreInsicator(
                   alignment: reverse == false
@@ -94,46 +98,41 @@ class PaginationGridView extends StatelessWidget {
     );
   }
 
-  Widget _buildRefreshIndicator() {
+  Widget _buildRefreshIndicator(List<Model> models) {
     return RefreshIndicator(
       onRefresh: cubit.refresh,
-      child: _buildListView(),
+      child: _buildListView(models),
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<Model> models) {
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: mainAxisSpacing,
         childAspectRatio: childAspectRatio,
       ),
-      itemBuilder: itemBuilder,
+      itemBuilder: (context, index) => itemBuilder(context, models, index),
       controller: scrollController,
       padding: padding,
-      physics: physics != null ? physics : AlwaysScrollableScrollPhysics(),
+      physics: physics ?? AlwaysScrollableScrollPhysics(),
       scrollDirection: scrollDirection,
       shrinkWrap: shrinkWrap,
-      itemCount:
-          appendToLast == true ? cubit.modelsLength + 1 : cubit.modelsLength,
+      itemCount: appendToLast == true ? models.length + 1 : models.length,
     );
   }
 
   bool _onNotification(
-      {required var notification, required BaseCubitState state}) {
-    if (!(state is LoadingState) &&
-        !(state is LoadingMoreState) &&
-        notification is ScrollNotification) {
-      // if (notification is ScrollEndNotification) {
+      {required ScrollNotification notification,
+      required BaseCubitState state}) {
+    if (state is! LoadingState &&
+        state is! LoadingMoreState &&
+        notification is ScrollUpdateNotification) {
       if (scrollController.position.extentAfter <= 400 &&
           scrollController.position.maxScrollExtent >= 20) {
         cubit.loadMore();
-
-        // print(_scrollController.position.maxScrollExtent);
-
         return false;
       }
-      // }
     }
 
     return true;

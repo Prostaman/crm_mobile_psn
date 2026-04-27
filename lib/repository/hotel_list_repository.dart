@@ -57,7 +57,7 @@ class HotelListRepository {
 
   // Вернет список отсортированых отелей по дистанции к пользователю  из локальной базы данных
   Future<List<HotelModel>> getHotelsBySearchTextAndSortedByDistanceRepository(
-      int qtyToShow, String searchText) async {
+      {int limit = 30, int offset = 0, String search = ""}) async {
     late Position position;
     try {
       // получим текущую позицию пользователя(телефона)
@@ -88,13 +88,17 @@ class HotelListRepository {
     }
     List<HotelModel> hotels = await (await db.hotelsDao())
         .getHotelsSortedByDistance(
-            position.latitude, position.longitude, qtyToShow, searchText);
+            position.latitude, position.longitude, limit, offset, search);
     debugPrint(
         "getHotelsWithOffsetAndSortedByDistance:\n" + hotels.length.toString());
     // hotels.forEach((element) {
     //   debugPrint(" ${element.name}");
     // });
     return hotels;
+  }
+
+  Future<int> getHotelsCountBySearchText({String search = ""}) async {
+    return await (await db.hotelsDao()).getHotelsCount(search: search);
   }
 
   // Вернет отель по id из локальной базы данных

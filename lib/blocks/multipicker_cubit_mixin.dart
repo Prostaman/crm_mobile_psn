@@ -24,6 +24,6 @@ mixin MultiPickerCubitMixit<Model extends BaseModel>
     } else {
       selected.add(model);
     }
-    cubit.updateList();
+    cubit.updateList(cubit.models);
   }
 }

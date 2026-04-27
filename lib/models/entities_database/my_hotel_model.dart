@@ -4,8 +4,6 @@ import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/models/response_models/base_model.dart';
 import 'package:collection/collection.dart';
 
-import 'hotel_model.dart';
-
 class MyHotelModel extends BaseModel {
   late int id;
   String? description;
@@ -14,19 +12,12 @@ class MyHotelModel extends BaseModel {
   bool synced = true;
   bool deleted = false;
   late String name;
+  late String country;
+  late String resort;
   String pathOfProfilePhoto = "";
   bool profilePhotoIsChanged = false;
 
   MyHotelModel();
-
-  Future<List<String>> getCountryAndResort(DBManager db) async {
-    List<String> countryAndResort = [];
-    var hotelMap = await (await db.hotelsDao()).findHotelById(id);
-    var hotel = HotelModel.fromMap(hotelMap!);
-    countryAndResort.add(hotel.country);
-    countryAndResort.add(hotel.resort);
-    return countryAndResort;
-  }
 
   Future<List<LocationModel>?> getLocations(DBManager db) async {
     List<Map<String, dynamic>>? locationMaps =
@@ -106,7 +97,9 @@ class MyHotelModel extends BaseModel {
       'deleted': deleted ? 1 : 0,
       'name': name,
       'pathOfProfilePhoto': pathOfProfilePhoto,
-      'profilePhotoIsChanged': profilePhotoIsChanged ? 1 : 0
+      'profilePhotoIsChanged': profilePhotoIsChanged ? 1 : 0,
+      'country': country,
+      'resort': resort
     };
   }
 
@@ -120,5 +113,7 @@ class MyHotelModel extends BaseModel {
     name = map['name'];
     pathOfProfilePhoto = map['pathOfProfilePhoto'];
     profilePhotoIsChanged = map['profilePhotoIsChanged'] == 1;
+    country = map['country'];
+    resort = map['resort'];
   }
 }

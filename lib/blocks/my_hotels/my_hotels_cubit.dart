@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/db/db_manager.dart';
@@ -17,16 +16,14 @@ import 'my_hotel_state.dart';
 class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
   final DBManager db = DBManager();
   StreamSubscription? _subscriptionSynchronization;
-  late ScrollController scrollController;
   double scrollPosition = 0;
 
   MyHotelsCubit() : super(InitialState()) {
-    scrollController = ScrollController();
     FirebaseCrashlytics.instance.setUserIdentifier(
         ServiceContainer().authService.user?.userName ?? "No auth");
     _subscriptionSynchronization =
         services.sinkService.syncMyHotelsObserver.stream.listen((id) {
-      updateSingleHotel(id);
+      updateSingleMyHotel(id);
     });
 
     //init();
@@ -61,16 +58,11 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
         List<FileModel> files = await myHotelModel.getFilesOfMyHotel(db);
         double percentUploaded =
             await getPercentLoadedOfAllFilesOfMyHotel(myHotelModel);
-        List<String> countryAndResort =
-            await getCountryAndResortOfMyHotel(myHotelModel);
 
         newItems.add(MyHotelState(
-          base: myHotelModel,
-          files: files,
-          percentUploaded: percentUploaded,
-          country: countryAndResort[0],
-          resort: countryAndResort[1],
-        ));
+            base: myHotelModel,
+            files: files,
+            percentUploaded: percentUploaded));
       }
 
       // Возвращаем результат обернутым в ListResult
@@ -81,7 +73,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
     }
   }
 
-  Future<void> updateSingleHotel(int hotelId) async {
+  Future<void> updateSingleMyHotel(int hotelId) async {
     try {
       var dao = await db.myHotelsDao();
       var hotelMap = await dao.findMyHotelById(hotelId);
@@ -92,16 +84,9 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
         List<FileModel> files = await myHotelModel.getFilesOfMyHotel(db);
         double percentUploaded =
             await getPercentLoadedOfAllFilesOfMyHotel(myHotelModel);
-        List<String> countryAndResort =
-            await getCountryAndResortOfMyHotel(myHotelModel);
 
         var updatedState = MyHotelState(
-          base: myHotelModel,
-          files: files,
-          percentUploaded: percentUploaded,
-          country: countryAndResort[0],
-          resort: countryAndResort[1],
-        );
+            base: myHotelModel, files: files, percentUploaded: percentUploaded);
 
         insert(model: updatedState);
       }
@@ -113,13 +98,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
   @override
   Future<void> close() {
     _subscriptionSynchronization?.cancel();
-    scrollController.dispose();
     return super.close();
-  }
-
-  Future<List<String>> getCountryAndResortOfMyHotel(
-      MyHotelModel? myHotelModel) async {
-    return await myHotelModel?.getCountryAndResort(db) ?? [];
   }
 
   Future<double> getPercentLoadedOfAllFilesOfMyHotel(
@@ -138,19 +117,16 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
     return await myHotelModel.getFilesOfMyHotel(db);
   }
 
-  Future<MyHotelModel?> addMyHotel({required HotelModel hotel}) async {
+  Future<MyHotelModel?> addMyHotel({required int hotelID}) async {
     try {
-      MyHotelModel? myNewHotel = await RepositoryContainer()
-          .myHotelRepository
-          .addMyHotel(hotel: hotel);
+      RepositoryContainer repositoryContainer = await RepositoryContainer();
+      HotelModel? hotel = await repositoryContainer.hotelListRepository
+          .findHotelFromLocalDBById(hotelID);
+      MyHotelModel? myNewHotel =
+          await repositoryContainer.myHotelRepository.addMyHotel(hotel: hotel!);
 
-      var newState = MyHotelState(
-        base: myNewHotel,
-        files: [],
-        percentUploaded: -1,
-        country: hotel.country,
-        resort: hotel.resort,
-      );
+      var newState =
+          MyHotelState(base: myNewHotel, files: [], percentUploaded: -1);
       insert(model: newState, byIndex: 0);
 
       return myNewHotel;
@@ -173,7 +149,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
       var modelToRemove = modelById(id: myHotel.id);
       if (modelToRemove != null) {
         remove(model: modelToRemove);
-        updateList(); // Обновляем UI
+        // Обновляем UI
       }
     } catch (e) {
       catchError(e);

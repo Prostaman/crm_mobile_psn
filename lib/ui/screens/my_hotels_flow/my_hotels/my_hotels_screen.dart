@@ -11,12 +11,13 @@ import 'package:psn.hotels.hub/ui/routes/hotel_routes.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/drawer/default_drawer.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/profile_image_of_my_hotel_widget.dart';
-import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/add_hotel_dialog.dart';
 import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/delete_hotel_dialog.dart';
 
 import '../../../../blocks/base_cubit/base_cubit.dart';
 import '../../../items/indicator_of_uploading.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
+import 'add_search_hotel/show_add_hotels_bottom_sheet.dart';
 
 class MyHotelsScreen extends StatefulWidget {
   MyHotelsScreen({Key? key}) : super(key: key);
@@ -38,14 +39,12 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
   void initState() {
     super.initState();
     _cubit = BlocProvider.of<MyHotelsCubit>(context);
-    _cubit.scrollController = ScrollController();
     _cubit.initial(query: BaseQuery());
     controllers = [];
   }
 
   @override
   void dispose() {
-    _cubit.scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -114,7 +113,6 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
       child: PaginationListView<MyHotelState>(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         cubit: _cubit,
-        scrollController: _cubit.scrollController,
         floatingActionButton: Padding(
             padding: EdgeInsets.only(bottom: 24, right: 24),
             child: FloatingActionButton(
@@ -138,6 +136,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
         itemBuilder: (context, models, index) {
           controllers.add(SlidableController(this));
           return InkWell(
+            key: ValueKey(models[index].base.id),
             onTap: () {
               controllers.forEach((controller) => controller.close());
               pushToLocationsScreen(
@@ -145,7 +144,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                 model: models[index].base,
                 db: _cubit.db,
                 updateCallback: () async {
-                  await _cubit.updateSingleHotel(models[index].base.id);
+                  await _cubit.updateSingleMyHotel(models[index].base.id);
                 },
               );
             },
@@ -155,7 +154,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Slidable(
-                  key: ValueKey(models[index].baseId),
+                  key: ValueKey(models[index].base.id),
                   controller: controllers[index],
                   endActionPane: ActionPane(
                     motion: ScrollMotion(),
@@ -216,7 +215,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    "${models[index].country}, ${models[index].resort}",
+                                    "${models[index].base.country}, ${models[index].base.resort}",
                                     style: textStyle(
                                         size: 12,
                                         color:

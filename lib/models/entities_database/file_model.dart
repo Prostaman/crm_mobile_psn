@@ -21,6 +21,7 @@ class FileModel extends BaseModel {
   String? createdAt;
   int localLocationId = 0;
   int cloudLocationId = 0;
+  int? hotelId;
 
   //for checking editing photo
   bool isEdited = false;
@@ -78,6 +79,7 @@ class FileModel extends BaseModel {
     long = map['long'];
     uploadedAt = map['uploadedAt'];
     createdAt = map['createdAt'] ?? '2000-01-01T00:00:00';
+    hotelId = map['hotelId'];
   }
 
   Map<String, dynamic> toMap() {
@@ -85,6 +87,7 @@ class FileModel extends BaseModel {
       'localLocationId': localLocationId,
       'cloudLocationId': cloudLocationId,
       'cloudId': cloudId,
+      'hotelId': hotelId,
       'name': name,
       //'format': format,
       'localPath': localPath,
