@@ -9,7 +9,6 @@ class LocationsDao {
   LocationsDao(this._database, this.tableName);
 
   Future<int> insertLocation(LocationModel location) async {
-    //Database db = await database;
     try {
       int id = await _database.insert(tableName, location.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -21,18 +20,51 @@ class LocationsDao {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> findLocationsByHotelId(
-      int hotelId) async {
-    //Database db = await database;
+  Future<int> getLocationsCountByHotelId(int hotelId) async {
+    try {
+      return Sqflite.firstIntValue(await _database.rawQuery(
+              'SELECT COUNT(*) FROM $tableName WHERE hotelId = ?',
+              [hotelId])) ??
+          0;
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "getLocationsCountByHotelId");
+      throw e;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> findLocationsByHotelId(int hotelId,
+      {int? limit, int? offset}) async {
     try {
       return await _database.query(
         tableName,
         where: 'hotelId = ?',
         whereArgs: [hotelId],
+        limit: limit,
+        offset: offset,
       );
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "findLocationsByHotelId");
+      throw e;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> findNotDeletedLocationsByHotelId(
+      int hotelId,
+      {int? limit,
+      int? offset}) async {
+    try {
+      return await _database.query(
+        tableName,
+        where: 'hotelId = ? AND deleted = 0',
+        whereArgs: [hotelId],
+        limit: limit,
+        offset: offset,
+      );
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findNotDeletedLocationsByHotelId");
       throw e;
     }
   }

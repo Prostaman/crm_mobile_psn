@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
+import 'package:psn.hotels.hub/blocks/list_cubit.dart';
+import 'package:psn.hotels.hub/blocks/locations/states/location_state.dart';
 
 import 'package:psn.hotels.hub/db/db_manager.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
@@ -9,77 +10,158 @@ import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/repository/repository_container.dart';
 
-class LocationsCubit extends BaseCubit {
+import 'states/location_screen_state.dart';
+
+class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
   final DBManager db;
   MyHotelModel myHotel;
-  StreamSubscription? _subscriptionSinc;
-  LocationsState locationsData = LocationsState(
-    locations: [],
-    listOflistOfFiles: [],
-    listOfPercentLoaded: [],
-    descriptionCategories: [],
-    allFilesLength: 0,
-    percentOfLoadingAllFiles: 0.0,
-    percentLoaded: 0.0,
-  );
+  StreamSubscription? _subscriptionLocationsSynchronization;
 
-  late ScrollController scrollController;
-  double scrollPosition = 0;
+  // Данные сводки по отелю
+  int allFilesLength = 0;
+  double percentLoadedFiles = -1;
 
   LocationsCubit({
     required this.myHotel,
     required this.db,
   }) : super(InitialState()) {
-    _subscriptionSinc =
-        services.sinkService.syncLocationsObserver.stream.listen((item) {
-      refresh();
+    query = BaseQuery();
+    _subscriptionLocationsSynchronization =
+        services.sinkService.syncLocationsObserver.stream.listen((id) {
+      if (id == -1) {
+        allFilesLength = 0;
+        percentLoadedFiles = 0;
+        reload();
+      } else {
+        updateSingleLocation(id);
+      }
     });
-    init();
   }
 
-  Future<void> init() async {
-    emit(LoadingState());
-    try {
-      locationsData = await getAllData();
-      emit(SuccessModelState<LocationsState>(
-        model: locationsData,
+  @override
+  Future<void> initial({required BaseQuery query}) async {
+    await _updateHotelSummary();
+    super.initial(query: query);
+  }
+
+  Future<void> _updateHotelSummary() async {
+    final dao = await db.filesDao();
+    final stats = await dao.getNotDeletedFilesCountByHotelId(myHotel.id);
+    allFilesLength = stats.total;
+    percentLoadedFiles =
+        stats.total == 0 ? -1 : (100 * stats.synced / stats.total);
+  }
+
+  @override
+  Future<void> updateList(List<LocationState> newList) async {
+    if (state is LocationsListSuccessState) {
+      emit((state as LocationsListSuccessState).copyWith(
+        models: List.from(newList),
+        allFilesLength: allFilesLength,
+        percentLoadedFiles: percentLoadedFiles,
       ));
+    } else {
+      emit(LocationsListSuccessState(
+        models: List.from(newList),
+        myHotel: myHotel,
+        allFilesLength: allFilesLength,
+        percentLoadedFiles: percentLoadedFiles,
+      ));
+    }
+  }
+
+  Future<void> updateSingleLocation(int localId) async {
+    try {
+      var dao = await db.locationsDao();
+      LocationModel? location = await dao.findLocationByLocalId(localId);
+
+      if (location != null) {
+        final categoryDesc =
+            await findDescriptionOfCategoryById(location.idCategory);
+        final files = await findNotDeletedFilesByLocationId(location.localId);
+        final percent = await getPercentOfLoadedFilesOfLocationByLocationId(
+            location.localId);
+
+        var updatedState = LocationState(
+          location: location,
+          files: files,
+          percentLoaded: percent,
+          categoryDescription: categoryDesc,
+        );
+
+        insert(model: updatedState);
+      }
     } catch (e) {
       catchError(e);
-      emit(ErrorState(error: e.toString()));
+    }
+  }
+
+  @override
+  Future<ListResult<LocationState>?> getModels({int page = 0}) async {
+    try {
+      const int limit = 10;
+      int offset = page * limit;
+
+      // 1. Получаем локации из БД
+      final locationsData = await (await db.locationsDao())
+              .findLocationsByHotelId(myHotel.id,
+                  limit: limit, offset: offset) ??
+          [];
+
+      final locations = locationsData
+          .map((locationMap) => LocationModel.fromMap(locationMap))
+          .where((location) => location.deleted == false)
+          .toList();
+
+      // 2. Считаем общее количество и последнюю страницу
+      int totalCount = await (await db.locationsDao())
+          .getLocationsCountByHotelId(myHotel.id);
+      int lastPage = (totalCount / limit).ceil() - 1;
+      if (lastPage < 0) lastPage = 0;
+
+      // 3. Собираем сводные данные по отелю
+      //await _updateHotelSummary();
+
+      // 4. Преобразуем в LocationState
+      List<LocationState> items = [];
+      for (var location in locations) {
+        final categoryDesc =
+            await findDescriptionOfCategoryById(location.idCategory);
+        final files = await findNotDeletedFilesByLocationId(location.localId);
+        final percent = await getPercentOfLoadedFilesOfLocationByLocationId(
+            location.localId);
+
+        items.add(LocationState(
+          location: location,
+          files: files,
+          percentLoaded: percent,
+          categoryDescription: categoryDesc,
+        ));
+      }
+
+      return ListResult(models: items, lastPage: lastPage);
+    } catch (e) {
+      catchError(e);
+      return null;
     }
   }
 
   @override
   Future<void> close() {
-    _subscriptionSinc?.cancel();
+    _subscriptionLocationsSynchronization?.cancel();
     return super.close();
   }
 
-  Future<void> updateHotel() async {
+  Future<void> updateDescriptionMyHotel(String description) async {
     try {
-      emit(LoadingState());
+      myHotel = myHotel.copyWith(description: description);
       myHotel = await RepositoryContainer()
           .myHotelRepository
           .updateMyHotel(model: myHotel);
-
-      emit(SuccessModelState(model: myHotel));
+      emit((state as LocationsListSuccessState).copyWith(myHotel: myHotel));
     } catch (e) {
       catchError(e);
     }
-  }
-
-  Future<List<LocationModel>?> getLocations() async {
-    final locationsData =
-        await (await db.locationsDao()).findLocationsByHotelId(myHotel.id) ??
-            [];
-    // Фильтруем список, чтобы оставить только не удаленные локации
-    final locations = locationsData
-        .map((locationMap) => LocationModel.fromMap(locationMap))
-        .where((location) => location.deleted == false)
-        .toList();
-
-    return locations;
   }
 
   Future<String> findDescriptionOfCategoryById(int id) async {
@@ -91,18 +173,18 @@ class LocationsCubit extends BaseCubit {
     }
   }
 
-  Future<List<FileModel>> findFilesByLocationId(int locationId) async {
-    return await (await db.filesDao()).findFilesByLocationId(locationId) ?? [];
+  Future<List<FileModel>> findNotDeletedFilesByLocationId(
+      int locationId) async {
+    return await (await db.filesDao())
+            .findNotDeletedFilesByLocationId(locationId) ??
+        [];
   }
 
   Future<double> getPercentOfLoadedFilesOfLocationByLocationId(
       int locationId) async {
-    var x = await findFilesByLocationId(locationId);
+    var x = await findNotDeletedFilesByLocationId(locationId);
     if (x.isNotEmpty) {
-      var loaded = x
-          .where(
-              (element) => element.synced == true && element.deleted == false)
-          .length;
+      var loaded = x.where((element) => element.synced == true).length;
       var i = (100 / x.length) * loaded;
       if (i > 100) {
         return 100;
@@ -115,85 +197,21 @@ class LocationsCubit extends BaseCubit {
     return -1;
   }
 
-  Future<double> getPercentLoadedOfAllFilesOfMyHotel() async {
-    return await myHotel.getPercentLoadedOfAllFilesOfMyHotel(db);
-  }
-
-  Future<void> refresh() async {
-    scrollController = ScrollController(initialScrollOffset: scrollPosition);
-    await init();
-  }
-
   Future<void> deleteLocation({required LocationModel locationModel}) async {
     try {
       emit(LoadingState());
       await RepositoryContainer()
           .locationsRepository
           .deleteLocation(hotelModel: myHotel, locationModel: locationModel);
-      // emit(SuccessModelState<LocationsState>(
-      //   model: locationsData,
-      // )); почему-то лучше работает без этого
+
+      var itemToRemove = models
+          .where((m) => m.location.localId == locationModel.localId)
+          .first;
+      remove(model: itemToRemove);
+
+      updateList(models);
     } catch (e) {
       catchError(e);
     }
   }
-
-  Future<LocationsState> getAllData() async {
-    final locations = (await getLocations() ?? []).reversed.toList();
-    double percentLoaded = await getPercentLoadedOfAllFilesOfMyHotel();
-
-    List<List<FileModel>> listOflistOfFiles = [];
-    List<double> listOfPercentLoaded = [];
-    List<String> descriptionCategories = [];
-    int allFilesLoaded = 0;
-    int allFilesLength = 0;
-
-    for (var location in locations) {
-      descriptionCategories
-          .add(await findDescriptionOfCategoryById(location.idCategory));
-      var files = await findFilesByLocationId(location.localId);
-      var notDeletedFiles = files.where((f) => !f.deleted).toList();
-      listOflistOfFiles.add(notDeletedFiles);
-
-      allFilesLength += notDeletedFiles.length;
-      allFilesLoaded += notDeletedFiles.where((f) => f.synced).length;
-
-      listOfPercentLoaded.add(
-          await getPercentOfLoadedFilesOfLocationByLocationId(
-              location.localId));
-    }
-
-    double percentOfLoadingAllFiles =
-        allFilesLength == 0 ? -1 : 100 * allFilesLoaded / allFilesLength;
-
-    return LocationsState(
-      locations: locations,
-      listOflistOfFiles: listOflistOfFiles,
-      listOfPercentLoaded: listOfPercentLoaded,
-      descriptionCategories: descriptionCategories,
-      allFilesLength: allFilesLength,
-      percentOfLoadingAllFiles: percentOfLoadingAllFiles,
-      percentLoaded: percentLoaded,
-    );
-  }
-}
-
-class LocationsState {
-  final List<LocationModel> locations;
-  final List<List<FileModel>> listOflistOfFiles;
-  final List<double> listOfPercentLoaded;
-  final List<String> descriptionCategories;
-  final int allFilesLength;
-  final double percentOfLoadingAllFiles;
-  final double percentLoaded;
-
-  LocationsState({
-    required this.locations,
-    required this.listOflistOfFiles,
-    required this.listOfPercentLoaded,
-    required this.descriptionCategories,
-    required this.allFilesLength,
-    required this.percentOfLoadingAllFiles,
-    required this.percentLoaded,
-  });
 }

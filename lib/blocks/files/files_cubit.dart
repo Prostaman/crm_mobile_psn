@@ -202,7 +202,8 @@ class FilesCubit extends BaseCubit {
     selectedFiles.clear();
     emit(RefreshState());
     emit(SuccessModelState(
-        model: myHotelModel)); // если один и тот же State, то ui не обновляется
+        model:
+            myHotelModel)); // если один и тот же State, то presentation не обновляется
     //files.remove(file);
   }
 

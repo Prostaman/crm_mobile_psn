@@ -127,6 +127,45 @@ class FilesDao {
     }
   }
 
+  Future<List<FileModel>?> findNotDeletedFilesByHotelId(int hotelId) async {
+    try {
+      List<Map<String, dynamic>> mapList = await _database.query(
+        tableName,
+        where: 'hotelId = ? AND deleted = 0',
+        whereArgs: [hotelId],
+      );
+      return mapList.map((map) => FileModel.fromMap(map)).toList();
+    } catch (e) {
+      FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+          e.toString(), "findNotDeletedFilesByLocationId");
+      throw e;
+    }
+  }
+
+  Future<({int total, int synced})> getNotDeletedFilesCountByHotelId(
+      int hotelId) async {
+    try {
+      // Один запрос, который вернет сразу две цифры
+      var result = await _database.rawQuery('''
+      SELECT 
+        COUNT(*) as total, 
+        SUM(CASE WHEN synced = 1 THEN 1 ELSE 0 END) as synced 
+      FROM $tableName 
+      WHERE hotelId = ? AND deleted = 0
+    ''', [hotelId]);
+
+      if (result.isNotEmpty) {
+        return (
+          total: result.first['total'] as int? ?? 0,
+          synced: result.first['synced'] as int? ?? 0
+        );
+      }
+      return (total: 0, synced: 0);
+    } catch (e) {
+      return (total: 0, synced: 0);
+    }
+  }
+
   // Future<bool> isExistsFileByLocalPath(String localPath) async {
   //   try {
   //     List<Map<String, dynamic>> mapList = await _database.query(tableName, where: 'localPath = ?', whereArgs: [localPath], limit: 1);

@@ -49,7 +49,7 @@ dependencies {
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:6.0.1")
     testImplementation ("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    //androidTestImplementation("androidx.compose.presentation:presentation-test-junit4")
     implementation("io.appium:java-client:10.0.0")
     implementation ("org.slf4j:slf4j-nop:2.0.17")
 }

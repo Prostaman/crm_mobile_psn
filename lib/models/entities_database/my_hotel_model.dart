@@ -61,30 +61,15 @@ class MyHotelModel extends BaseModel {
   }
 
   Future<double> getPercentLoadedOfAllFilesOfMyHotel(DBManager db) async {
-    int allFilesLength = 0;
-    int allLoadedFilesLengh = 0;
-    var locationsMap =
-        await (await db.locationsDao()).findLocationsByHotelId(id) ?? [];
-    var locations =
-        locationsMap.map((map) => LocationModel.fromMap(map)).toList();
-    for (var location in locations) {
-      var files =
-          await (await db.filesDao()).findFilesByLocationId(location.localId) ??
-              [];
-      files.forEach((file) {
-        if (file.deleted == false) {
-          allFilesLength++;
-          if (file.synced) {
-            allLoadedFilesLengh += 1;
-          }
-        }
-      });
-    }
-    if (allFilesLength != 0) {
-      return 100 * allLoadedFilesLengh / allFilesLength;
-    } else {
-      return -1;
-    }
+    final count =
+        (await ((await db.filesDao()).getNotDeletedFilesCountByHotelId(id)));
+    int totalFiles = count.total;
+    int totalSynced = count.synced;
+
+    double percentOfLoadedAllFiles =
+        totalFiles == 0 ? -1 : (100 * totalSynced / totalFiles);
+
+    return percentOfLoadedAllFiles;
   }
 
   Map<String, dynamic> toMap() {
@@ -115,5 +100,36 @@ class MyHotelModel extends BaseModel {
     profilePhotoIsChanged = map['profilePhotoIsChanged'] == 1;
     country = map['country'];
     resort = map['resort'];
+  }
+
+  MyHotelModel copyWith({
+    int? id,
+    String? description,
+    String? createdAt,
+    String? updatedAt,
+    bool? synced,
+    bool? deleted,
+    String? name,
+    String? country,
+    String? resort,
+    String? pathOfProfilePhoto,
+    bool? profilePhotoIsChanged,
+  }) {
+    final model = MyHotelModel();
+
+    model.id = id ?? this.id;
+    model.description = description ?? this.description;
+    model.createdAt = createdAt ?? this.createdAt;
+    model.updatedAt = updatedAt ?? this.updatedAt;
+    model.synced = synced ?? this.synced;
+    model.deleted = deleted ?? this.deleted;
+    model.name = name ?? this.name;
+    model.country = country ?? this.country;
+    model.resort = resort ?? this.resort;
+    model.pathOfProfilePhoto = pathOfProfilePhoto ?? this.pathOfProfilePhoto;
+    model.profilePhotoIsChanged =
+        profilePhotoIsChanged ?? this.profilePhotoIsChanged;
+
+    return model;
   }
 }

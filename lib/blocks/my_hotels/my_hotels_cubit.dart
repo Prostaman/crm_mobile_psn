@@ -23,7 +23,11 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
         ServiceContainer().authService.user?.userName ?? "No auth");
     _subscriptionSynchronization =
         services.sinkService.syncMyHotelsObserver.stream.listen((id) {
-      updateSingleMyHotel(id);
+      if (id == -1) {
+        reload();
+      } else {
+        updateSingleMyHotel(id);
+      }
     });
 
     //init();
@@ -33,7 +37,7 @@ class MyHotelsCubit extends ListCubit<BaseQuery, MyHotelState> {
   @override
   Future<ListResult<MyHotelState>?> getModels({int page = 0}) async {
     try {
-      const int limit = 6;
+      const int limit = 12;
       int offset = page * limit;
 
       // 1. Получаем отели из БД
