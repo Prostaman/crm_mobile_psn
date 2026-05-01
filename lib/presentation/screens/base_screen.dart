@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+
+import '../items/loading_indicator.dart';
 
 class BaseScreen extends StatelessWidget {
   final Widget? child;
@@ -10,7 +11,8 @@ class BaseScreen extends StatelessWidget {
   const BaseScreen({
     Key? key,
     required this.child,
-     this.state, this.scrollController,
+    this.state,
+    this.scrollController,
   })  : assert(child != null),
         super(key: key);
 
@@ -31,7 +33,7 @@ class BaseScreen extends StatelessWidget {
             );
           },
         ),
-        if (state is LoadingState) DefaultFullScreenIndicator
+        if (state is LoadingState) const LoadingIndicatorWidget()
       ],
     );
   }

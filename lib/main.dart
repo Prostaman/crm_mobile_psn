@@ -19,7 +19,7 @@ import 'helpers/firebase/firebase_initialization.dart';
 import 'helpers/location_helper.dart';
 import 'helpers/shared_preferences_utils.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'helpers/ui_helper.dart';
+import 'presentation/ui_helper.dart';
 import 'main.reflectable.dart';
 import 'presentation/theme/color_schemes.g.dart';
 

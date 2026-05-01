@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 Widget zoomCircle(double _currentScale) {
   return Container(

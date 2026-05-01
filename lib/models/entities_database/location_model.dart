@@ -18,8 +18,8 @@ class LocationModel extends BaseModel {
       required this.profilePhotoIsChanged,
       required this.idCategory});
 
-  int localId = 0;
-  int cloudId = 0;
+  int localId = -1;
+  int cloudId = -1;
   int hotelId = -1;
   String name = "";
   String description = "";
@@ -52,12 +52,15 @@ class LocationModel extends BaseModel {
           synced: json["synced"] != null ? json["synced"] : true,
           deleted: json["deleted"] != null ? json["deleted"] : false,
           pathOfProfilePhoto: json["pathOfProfilePhoto"] ?? "",
-          profilePhotoIsChanged: json["profilePhotoIsChanged"] != null ? json["profilePhotoIsChanged"] : true,
-          idCategory: 9); 
+          profilePhotoIsChanged: json["profilePhotoIsChanged"] != null
+              ? json["profilePhotoIsChanged"]
+              : true,
+          idCategory: 9);
     } catch (e) {
       debugPrint(e.toString());
       FirebaseCrashlytics.instance.log(e.toString());
-      FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
       throw e;
     }
   }
@@ -92,5 +95,32 @@ class LocationModel extends BaseModel {
     };
   }
 
+  LocationModel copyWith({
+    int? localId,
+    int? cloudId,
+    int? hotelId,
+    String? name,
+    String? description,
+    String? createdAt,
+    bool? synced,
+    bool? deleted,
+    String? pathOfProfilePhoto,
+    bool? profilePhotoIsChanged,
+    int? idCategory,
+  }) {
+    return LocationModel.params(
+      localId: localId ?? this.localId,
+      cloudId: cloudId ?? this.cloudId,
+      hotelId: hotelId ?? this.hotelId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      synced: synced ?? this.synced,
+      deleted: deleted ?? this.deleted,
+      pathOfProfilePhoto: pathOfProfilePhoto ?? this.pathOfProfilePhoto,
+      profilePhotoIsChanged:
+          profilePhotoIsChanged ?? this.profilePhotoIsChanged,
+      idCategory: idCategory ?? this.idCategory,
+    );
+  }
 }
-

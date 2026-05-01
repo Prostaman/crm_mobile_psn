@@ -11,7 +11,7 @@ import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/presentation/items/filters.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:video_player/video_player.dart';
@@ -86,11 +86,11 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
   }
 
   void overrideImage(String newFilePath) {
-    widget._cubit.files[currentIndexOfFile].oldLocalPath =
-        widget._cubit.files[currentIndexOfFile].localPath;
-    widget._cubit.files[currentIndexOfFile].localPath = newFilePath;
-    widget._cubit.files[currentIndexOfFile].synced = false;
-    widget._cubit.files[currentIndexOfFile].isEdited = true;
+    final file = widget._cubit.models[currentIndexOfFile].base;
+    file.oldLocalPath = file.localPath;
+    file.localPath = newFilePath;
+    file.synced = false;
+    file.isEdited = true;
   }
 
   final GlobalKey _globalKey = GlobalKey();
@@ -105,7 +105,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     ByteData? byteData =
         await boxImage.toByteData(format: ui.ImageByteFormat.png);
     Uint8List uint8list = byteData!.buffer.asUint8List();
-    String oldFilePath = widget._cubit.files[currentIndexOfFile].localPath;
+    String oldFilePath =
+        widget._cubit.models[currentIndexOfFile].base.localPath;
     var availablePath = oldFilePath.substring(0, oldFilePath.lastIndexOf('/'));
     String newFilePath =
         "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
@@ -146,7 +147,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
 
   Future<void> _cropImage() async {
     final croppedFile = await ImageCropper().cropImage(
-      sourcePath: widget._cubit.files[currentIndexOfFile].localPath,
+      sourcePath: widget._cubit.models[currentIndexOfFile].base.localPath,
       compressFormat: ImageCompressFormat.jpg,
       compressQuality: 100,
       uiSettings: [
@@ -169,7 +170,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
         });
       } else if (Platform.isIOS) {
         //print("New file path:${croppedFile.path}");
-        String newPath = widget._cubit.files[currentIndexOfFile].localPath;
+        String newPath =
+            widget._cubit.models[currentIndexOfFile].base.localPath;
         overrideImage(await FileUtility.moveFile(File(croppedFile.path),
             newPath.substring(0, newPath.lastIndexOf('/'))));
         setState(() {});
@@ -199,20 +201,20 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
             builder: (context, state) {
               widgets.clear();
               models.clear();
-              widget._cubit.files.forEach((fileModel) {
-                if (fileModel.deleted == false) {
-                  var file = File(fileModel.localPath);
+              widget._cubit.models.forEach((fileState) {
+                if (fileState.base.deleted == false) {
+                  var file = File(fileState.base.localPath);
                   if (file.existsSync()) {
-                    if (fileModel.type == FileModelType.Image) {
+                    if (fileState.base.type == FileModelType.Image) {
                       widgets.add(Image.file(file));
-                      models.add(fileModel);
-                    } else if (fileModel.type == FileModelType.Video) {
+                      models.add(fileState.base);
+                    } else if (fileState.base.type == FileModelType.Video) {
                       widgets.add(
                         ChewieDemo(
-                          file: fileModel,
+                          file: fileState.base,
                         ),
                       );
-                      models.add(fileModel);
+                      models.add(fileState.base);
                     }
                     // debugPrint("length: ${models.length}");
                   }
@@ -330,7 +332,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                   ]));
                                 },
                               ),
-                              widget._cubit.files[currentIndexOfFile].type ==
+                              widget._cubit.models[currentIndexOfFile].base
+                                          .type ==
                                       FileModelType.Image
                                   ? PopupMenuButton(
                                       iconColor: Colors.white,
@@ -400,9 +403,11 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                       onPressed: () async {
                                                         widget._cubit
                                                             .setProfileImageOfLocation(
-                                                                widget._cubit
-                                                                        .files[
-                                                                    currentIndexOfFile]);
+                                                                widget
+                                                                    ._cubit
+                                                                    .models[
+                                                                        currentIndexOfFile]
+                                                                    .base);
                                                         Navigator.pop(context);
                                                       },
                                                       child: Text("Да",
@@ -448,9 +453,11 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                       onPressed: () async {
                                                         widget._cubit
                                                             .setProfileImageOfMyHotel(
-                                                                widget._cubit
-                                                                        .files[
-                                                                    currentIndexOfFile]);
+                                                                widget
+                                                                    ._cubit
+                                                                    .models[
+                                                                        currentIndexOfFile]
+                                                                    .base);
                                                         Navigator.pop(context);
                                                       },
                                                       child: Text("Да",
@@ -472,7 +479,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                           )
                         : null,
                     floatingActionButton: widget
-                                ._cubit.files[currentIndexOfFile].type ==
+                                ._cubit.models[currentIndexOfFile].base.type ==
                             FileModelType.Image
                         ? Padding(
                             padding: EdgeInsets.only(
@@ -550,8 +557,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                   final imageBytes = await File(
                                                           widget
                                                               ._cubit
-                                                              .files[
+                                                              .models[
                                                                   currentIndexOfFile]
+                                                              .base
                                                               .localPath)
                                                       .readAsBytes();
                                                   final rotatedBytes =
@@ -563,7 +571,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                                       .toInt());
                                                   String oldImagePath = widget
                                                       ._cubit
-                                                      .files[currentIndexOfFile]
+                                                      .models[
+                                                          currentIndexOfFile]
+                                                      .base
                                                       .localPath;
                                                   var availablePath =
                                                       oldImagePath.substring(

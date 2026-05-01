@@ -8,7 +8,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:psn.hotels.hub/helpers/gallery_saver_wrapper.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'package:psn.hotels.hub/helpers/location_helper.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
@@ -429,7 +430,7 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
                           ),
                           if (showFocusCircle) showCircle(x, y),
                           _loading == true
-                              ? DefaultFullScreenIndicator
+                              ? LoadingIndicatorWidget()
                               : Container()
                         ],
                       ))

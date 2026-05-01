@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:psn.hotels.hub/helpers/getter_icon_path_category.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/category_of_location_model.dart';
 
 class CategoriesBottomSheet extends StatefulWidget {
   final Function(CategoryModel?) onTapCallback;
   final List<CategoryModel> categories;
-  const CategoriesBottomSheet({Key? key, required this.onTapCallback, required this.categories}) : super(key: key);
+  const CategoriesBottomSheet(
+      {Key? key, required this.onTapCallback, required this.categories})
+      : super(key: key);
 
   @override
   _CategoriesBottomSheetState createState() => _CategoriesBottomSheetState();
@@ -40,7 +42,8 @@ class _CategoriesBottomSheetState extends State<CategoriesBottomSheet> {
             SizedBox(height: 16),
             Expanded(
                 child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     child: RawScrollbar(
                         thumbColor: const Color.fromARGB(255, 248, 166, 166),
                         radius: Radius.circular(8),
@@ -73,7 +76,9 @@ class _CategoriesBottomSheetState extends State<CategoriesBottomSheet> {
               ),
               child: Row(
                 children: [
-                  SvgPicture.asset(getIconPathCategoty(widget.categories[index].id), fit: BoxFit.scaleDown),
+                  SvgPicture.asset(
+                      getIconPathCategoty(widget.categories[index].id),
+                      fit: BoxFit.scaleDown),
                   SizedBox(
                     width: 17,
                   ),

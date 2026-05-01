@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 

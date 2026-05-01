@@ -12,6 +12,7 @@ import 'package:psn.hotels.hub/services/auth_service.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 
 part 'base_state.dart';
+
 part 'base_query.dart';
 
 class BaseCubit extends Cubit<BaseCubitState> {
@@ -25,39 +26,51 @@ class BaseCubit extends Cubit<BaseCubitState> {
     return ServiceContainer().authService;
   }
 
-  catchError(final e) {
-    emit(ErrorState(error: _catchError(e) ?? "Unknown error"));
-    FirebaseCrashlytics.instance.log(e);
-    FirebaseCrashlytics.instance
-        .recordFlutterError(FlutterErrorDetails(exception: e));
+  void catchError(Object e, [StackTrace? stackTrace]) {
+    final message = mapError(e);
+
+    emit(ErrorState(error: message));
+
+    debugPrint(e.toString());
+    FirebaseCrashlytics.instance.recordError(e, stackTrace);
   }
 
-  String? _catchError(final e) {
+  String? mapError(Object e) {
     print(e);
     if (e is DioException) {
       if (e.error is SocketException) {
         return "Нет соединения с сервером.";
       }
-      if (e.response != null) {
-        if (e.response!.statusCode == 413) {
-          return "File too large. Maximum file size - " +
-              ApiEnvironment.getMaxFileSizeText();
-        } else if (e.response!.statusCode == 401) {
-          ServiceContainer().authService.authUserCubit.logout();
-        } else if (e.response!.statusCode == 404) {
-          return "Page not found";
-        } else if (e.response!.data != null) {
-          final parsedJson =
-              JsonMapper.deserialize<BaseModelResponse>(e.response!.data);
-          if (parsedJson != null) {
-            return _parsedBaseResponseModel(parsedJson);
+
+      final response = e.response;
+
+      if (response != null) {
+        switch (response.statusCode) {
+          case 413:
+            return "File too large. Max size - 100 MB" +
+                ApiEnvironment.getMaxFileSizeText();
+          case 401:
+            ServiceContainer().authService.authUserCubit.logout();
+            return "Unauthorized";
+          case 404:
+            return "Page not found";
+        }
+
+        final data = response.data;
+
+        if (data != null) {
+          final parsed = JsonMapper.deserialize<BaseModelResponse>(data);
+
+          if (parsed != null) {
+            return _parsedBaseResponseModel(parsed);
           }
         }
-      } else if (e.error != null) {
-        print(e.error.toString());
-        return e.error.toString();
       }
-    } else if (e is BaseModelResponse) {
+
+      return e.error?.toString() ?? "Network error";
+    }
+
+    if (e is BaseModelResponse) {
       return _parsedBaseResponseModel(e);
     }
     return "Unexpected error. $e";
@@ -81,43 +94,43 @@ class BaseCubit extends Cubit<BaseCubitState> {
     return null;
   }
 
-  // Future<List<FileModel>> sendFiles(List<FileModel> files, String path) async {
-  //   try {
-  //     files.removeWhere((element) => element == null);
-  //     if (files != null && files.length > 0) {
-  //       List<FileModel> alreadyUploaded = files.where((element) => (element.localPath == null)).toList();
-  //       List<FileModel> uploading = files.where((element) => (element.localPath != null)).toList();
+// Future<List<FileModel>> sendFiles(List<FileModel> files, String path) async {
+//   try {
+//     files.removeWhere((element) => element == null);
+//     if (files != null && files.length > 0) {
+//       List<FileModel> alreadyUploaded = files.where((element) => (element.localPath == null)).toList();
+//       List<FileModel> uploading = files.where((element) => (element.localPath != null)).toList();
 
-  //       List<FileResponse> sendedFiles = await Future.wait(uploading.map(
-  //         (e) => ApiContainer().filesApi.send(e, path),
-  //       ));
-  //       List<FileModel> uploaded = sendedFiles.map((response) {
-  //         response.model.sid = response.sid;
+//       List<FileResponse> sendedFiles = await Future.wait(uploading.map(
+//         (e) => ApiContainer().filesApi.send(e, path),
+//       ));
+//       List<FileModel> uploaded = sendedFiles.map((response) {
+//         response.model.sid = response.sid;
 
-  //         return response.model;
-  //       }).toList();
+//         return response.model;
+//       }).toList();
 
-  //       List<FileModel> allFiles = [];
+//       List<FileModel> allFiles = [];
 
-  //       allFiles.addAll(alreadyUploaded);
-  //       allFiles.addAll(uploaded);
+//       allFiles.addAll(alreadyUploaded);
+//       allFiles.addAll(uploaded);
 
-  //       var correctFiles = allFiles.where((element) => element.id != null).toList();
+//       var correctFiles = allFiles.where((element) => element.id != null).toList();
 
-  //       if (correctFiles != null && correctFiles.length > 0) {
-  //         return correctFiles;
-  //       }
-  //     }
-  //     return [];
+//       if (correctFiles != null && correctFiles.length > 0) {
+//         return correctFiles;
+//       }
+//     }
+//     return [];
 
-  //     // List<FileResponse> sendedFiles = await Future.wait(files.map(
-  //     //   (e) => ApiContainer().filesApi.send(e, path),
-  //     // ));
-  //     // return sendedFiles.map((response) {
-  //     //   return response;
-  //     // }).toList();
-  //   } catch (error) {
-  //     throw (error);
-  //   }
-  // }
+//     // List<FileResponse> sendedFiles = await Future.wait(files.map(
+//     //   (e) => ApiContainer().filesApi.send(e, path),
+//     // ));
+//     // return sendedFiles.map((response) {
+//     //   return response;
+//     // }).toList();
+//   } catch (error) {
+//     throw (error);
+//   }
+// }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 const lightColorScheme = ColorScheme(
   brightness: Brightness.light,

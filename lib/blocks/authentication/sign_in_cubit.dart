@@ -12,7 +12,7 @@ class SignInCubit extends BaseCubit {
     try {
       emit(LoadingState());
 
-      debugPrint("checking intertnet");
+      debugPrint("checking Intertnet");
       var typeOfConnectionWithInternet =
           await (Connectivity().checkConnectivity());
       if (typeOfConnectionWithInternet == ConnectivityResult.none) {

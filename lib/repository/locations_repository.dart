@@ -57,10 +57,9 @@ class LocationsRepository {
   }
 
   Future<int> addLocation(
-      {required MyHotelModel hotelModel,
-      required LocationModel locationModel}) async {
+      {required int hotelId, required LocationModel locationModel}) async {
     try {
-      locationModel.hotelId = hotelModel.id;
+      locationModel.hotelId = hotelId;
       locationModel.synced = false;
       locationModel.createdAt = DateTime.now().toIso8601String();
 
@@ -72,13 +71,10 @@ class LocationsRepository {
     }
   }
 
-  Future<void> updateLocation(
-      {required MyHotelModel hotelModel,
-      required LocationModel locationModel}) async {
+  Future<void> updateLocation({required LocationModel locationModel}) async {
     try {
       locationModel.synced = false;
-      await (await db.locationsDao())
-          .updateLocation(locationModel.localId, locationModel);
+      await (await db.locationsDao()).updateLocation(locationModel);
     } catch (e) {
       throw e;
     }
@@ -90,8 +86,7 @@ class LocationsRepository {
     try {
       locationModel.synced = false;
       locationModel.deleted = true;
-      await (await db.locationsDao())
-          .updateLocation(locationModel.localId, locationModel);
+      await (await db.locationsDao()).updateLocation(locationModel);
       var files = await (await db.filesDao())
               .findFilesByLocationId(locationModel.localId) ??
           [];

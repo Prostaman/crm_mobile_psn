@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 class DefaultBorderedTextField extends StatefulWidget {
   final String text;
@@ -25,7 +25,8 @@ class DefaultBorderedTextField extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _DefaultBorderedTextFieldState createState() => _DefaultBorderedTextFieldState();
+  _DefaultBorderedTextFieldState createState() =>
+      _DefaultBorderedTextFieldState();
 }
 
 class _DefaultBorderedTextFieldState extends State<DefaultBorderedTextField> {
@@ -53,7 +54,8 @@ class _DefaultBorderedTextFieldState extends State<DefaultBorderedTextField> {
       enabled: !widget.readOnly,
       placeholder: widget.placeholder,
       obscureText: widget.obscureText,
-      placeholderStyle: textStyle(weight: Regular4, color: ColorTextDefault, size: 16, h: 1.2),
+      placeholderStyle: textStyle(
+          weight: Regular4, color: ColorTextDefault, size: 16, h: 1.2),
       keyboardType: TextInputType.emailAddress,
       decoration: BoxDecoration(
           color: CupertinoDynamicColor.withBrightness(

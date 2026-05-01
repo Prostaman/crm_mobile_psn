@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 import 'package:psn.hotels.hub/presentation/items/default_cupertino_text_field.dart';
 

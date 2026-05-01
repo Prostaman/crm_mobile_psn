@@ -34,7 +34,6 @@ void showAddHotelsBottomSheet({
                     pushToLocationsScreen(
                       context: context,
                       model: myNewHotelModel,
-                      db: cubit.db,
                       updateCallback: () async {
                         // await cubit.updateSingleHotel(myNewHotelModel.id);
                       },

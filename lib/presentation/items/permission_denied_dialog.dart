@@ -2,12 +2,13 @@ import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 // import 'package:geolocator/geolocator.dart';
 // import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 class PermissionDeniedDialog extends StatelessWidget {
   //final MyPermissionStatus status;
   final String target;
-  const PermissionDeniedDialog({Key? key, required this.target}) : super(key: key);
+  const PermissionDeniedDialog({Key? key, required this.target})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +18,13 @@ class PermissionDeniedDialog extends StatelessWidget {
     if (target == 'camera') {
       // if (status == MyPermissionStatus.DeniedCamera || status == MyPermissionStatus.DeniedMicrophone) {
       title = "Доступ к камере или микрофону запрещен";
-      description = "Пожалуйста зайдите в настройки и разрешите доступ к камере и микрофону";
+      description =
+          "Пожалуйста зайдите в настройки и разрешите доступ к камере и микрофону";
       // }
     } else {
       title = "Доступ к галерее запрещен";
-      description = "Пожалуйста зайдите в настройки и разрешите доступ к галереи";
+      description =
+          "Пожалуйста зайдите в настройки и разрешите доступ к галереи";
     }
 
     // else if (status == MyPermissionStatus.DeniedLocation) {
@@ -31,11 +34,16 @@ class PermissionDeniedDialog extends StatelessWidget {
 
     return AlertDialog(
         surfaceTintColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        titlePadding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 0),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        titlePadding:
+            const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 0),
         title: Text(
           title,
-          style: textStyle(size: 18, weight: FontWeight.w300, color: ColorTextBlackAlertDialog),
+          style: textStyle(
+              size: 18,
+              weight: FontWeight.w300,
+              color: ColorTextBlackAlertDialog),
         ),
         content: Text(description),
         actions: [
@@ -43,14 +51,20 @@ class PermissionDeniedDialog extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text("Отмена", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextBlackAlertDialog)),
+            child: Text("Отмена",
+                style: textStyle(
+                    size: 18,
+                    weight: FontWeight.w400,
+                    color: ColorTextBlackAlertDialog)),
           ),
           TextButton(
             onPressed: () async {
               AppSettings.openAppSettings();
               Navigator.pop(context);
             },
-            child: Text("Настройки", style: textStyle(size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
+            child: Text("Настройки",
+                style: textStyle(
+                    size: 18, weight: FontWeight.w400, color: ColorTextOrange)),
           ),
         ]
         // content: Container(

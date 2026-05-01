@@ -7,7 +7,7 @@ import 'package:psn.hotels.hub/blocks/authentication/sign_in_cubit.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/items/default_cupertino_text_field.dart';
 import 'package:psn.hotels.hub/presentation/screens/base_screen.dart';
 
@@ -93,9 +93,6 @@ class _SignInScreenState extends State<SignInScreen> {
                     onChanged: (newValue) {
                       _cubit.signInRequest.login = newValue;
                     },
-                    validator: (value) {
-                      return state is ErrorState ? 'Неверный логин' : null;
-                    },
                   ),
                   SizedBox(height: 16),
                   DefaultTextField(
@@ -106,9 +103,6 @@ class _SignInScreenState extends State<SignInScreen> {
                     keyboardType: TextInputType.visiblePassword,
                     onChanged: (newValue) {
                       _cubit.signInRequest.password = newValue;
-                    },
-                    validator: (value) {
-                      return state is ErrorState ? 'Неверный пароль' : null;
                     },
                   ),
                   SizedBox(height: 14),

@@ -129,14 +129,13 @@ class LocationsDao {
     }
   }
 
-  Future<void> updateLocation(int localId, LocationModel newLocation) async {
-    //Database db = await database;
+  Future<void> updateLocation(LocationModel newLocation) async {
     try {
       await _database.update(
         tableName,
         newLocation.toMap(),
         where: 'localId = ?',
-        whereArgs: [localId],
+        whereArgs: [newLocation.localId],
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {

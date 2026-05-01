@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 

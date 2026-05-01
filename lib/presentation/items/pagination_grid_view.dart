@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/presentation/items/loading_more_indicator.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
+
+import 'loading_indicator.dart';
 
 class PaginationGridView<Model> extends StatelessWidget {
   final ScrollController scrollController;
@@ -69,7 +71,8 @@ class PaginationGridView<Model> extends StatelessWidget {
             if (state is LoadingState)
               Center(
                   child: Container(
-                      height: 200, child: Center(child: DefaultIndicator)))
+                      height: 200,
+                      child: Center(child: LoadingIndicatorWidget())))
             else if (state is LoadingMoreState)
               LoadingMoreInsicator(
                   alignment: reverse == false

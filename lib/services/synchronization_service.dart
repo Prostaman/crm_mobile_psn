@@ -228,7 +228,7 @@ class SinkService {
                 location.synced = true;
                 var oldLocationCloudId = location.cloudId;
                 location.cloudId = r.item?.cloudId ?? 0;
-                await locationsDao.updateLocation(location.localId, location);
+                await locationsDao.updateLocation(location);
                 _notifyLocationChanged(location.localId, location.hotelId);
                 debugPrint("oldLocationCloudId: $oldLocationCloudId");
                 if (oldLocationCloudId == 0) {
@@ -386,7 +386,7 @@ class SinkService {
               .changeProfilePhoto(cloudId: file.cloudId, isHotel: true);
           if (response != null && response.success == true) {
             location.profilePhotoIsChanged = false;
-            await locationsDao.updateLocation(location.localId, location);
+            await locationsDao.updateLocation(location);
             syncLocationsObserver.add(location.localId);
           } else {
             FirebaseCrashlyticsHelper.recordApiError(

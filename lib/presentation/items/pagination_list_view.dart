@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/presentation/items/loading_more_indicator.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
+
+import 'loading_indicator.dart';
 
 class PaginationListView<Model> extends StatefulWidget {
   final ListCubit cubit;
@@ -20,23 +22,25 @@ class PaginationListView<Model> extends StatefulWidget {
   final bool shrinkWrap;
   final EdgeInsetsGeometry? padding;
   final Widget? floatingActionButton;
+  final Widget? header;
 
-  PaginationListView({
-    Key? key,
-    required this.cubit,
-    required this.itemBuilder,
-    this.scrollController,
-    this.separatorBuilder,
-    this.scrollDirection = Axis.vertical,
-    this.reverse = false,
-    this.shrinkWrap = false,
-    this.emptyViewPlug,
-    this.emptySearchViewPlug,
-    this.errorViewPlug,
-    this.padding,
-    this.poolToRefresh = true,
-    this.floatingActionButton,
-  }) : super(key: key);
+  PaginationListView(
+      {Key? key,
+      required this.cubit,
+      required this.itemBuilder,
+      this.scrollController,
+      this.separatorBuilder,
+      this.scrollDirection = Axis.vertical,
+      this.reverse = false,
+      this.shrinkWrap = false,
+      this.emptyViewPlug,
+      this.emptySearchViewPlug,
+      this.errorViewPlug,
+      this.padding,
+      this.poolToRefresh = true,
+      this.floatingActionButton,
+      this.header})
+      : super(key: key);
 
   @override
   State<PaginationListView<Model>> createState() =>
@@ -83,7 +87,7 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
                   _onNotification(notification, state as BaseCubitState),
             ),
             if (state is LoadingState)
-              DefaultFullScreenIndicator
+              LoadingIndicatorWidget()
             else if (state is LoadingMoreState)
               LoadingMoreInsicator(
                   alignment: widget.reverse == false
@@ -150,9 +154,15 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
         scrollDirection: widget.scrollDirection,
         reverse: widget.reverse,
         shrinkWrap: widget.shrinkWrap,
-        itemCount: models.length,
-        itemBuilder: (context, index) =>
-            widget.itemBuilder(context, models, index),
+        itemCount: models.length + (widget.header != null ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (widget.header != null && index == 0) {
+            return widget.header!;
+          }
+
+          final modelIndex = widget.header != null ? index - 1 : index;
+          return widget.itemBuilder(context, models, modelIndex);
+        },
         separatorBuilder: widget.separatorBuilder!,
       );
     } else {

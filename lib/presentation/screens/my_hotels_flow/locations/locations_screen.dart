@@ -4,13 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:psn.hotels.hub/blocks/locations/states/location_screen_state.dart';
 import 'package:psn.hotels.hub/blocks/locations/states/location_state.dart';
 import 'package:psn.hotels.hub/blocks/locations/locations_cubit.dart';
 import 'package:psn.hotels.hub/helpers/format_date.dart';
 import 'package:psn.hotels.hub/helpers/getter_icon_path_category.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
@@ -51,15 +50,10 @@ class _LocationsScreenState extends State<LocationsScreen>
     return BlocBuilder<LocationsCubit, BaseCubitState>(
       bloc: _cubit,
       builder: (context, state) {
-        // Получаем актуальные данные из стейта один раз для всего экрана
-        final MyHotelModel hotel =
-            state is LocationsListSuccessState ? state.myHotel : _cubit.myHotel;
-        final int allFilesCount = state is LocationsListSuccessState
-            ? state.allFilesLength
-            : _cubit.allFilesLength;
-        final double percent = state is LocationsListSuccessState
-            ? state.percentLoadedFiles
-            : _cubit.percentLoadedFiles;
+        // В идеале сделать чистый блок, чтобы данные ниже брались из state
+        final MyHotelModel hotel = _cubit.myHotel;
+        final int allFilesCount = _cubit.allFilesLength;
+        final double percent = _cubit.percentLoadedFiles;
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -74,31 +68,22 @@ class _LocationsScreenState extends State<LocationsScreen>
             ),
             systemOverlayStyle: SystemUiOverlayStyle.dark,
           ),
-          body: Column(
-            children: [
-              _buildHeader(context, hotel, allFilesCount, percent),
-              Expanded(
-                child: SlidableAutoCloseBehavior(
-                  child: PaginationListView<LocationState>(
-                    cubit: _cubit,
-                    padding:
-                        const EdgeInsets.only(bottom: 10, left: 22, right: 22),
-                    floatingActionButton: _buildFAB(hotel),
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 16),
-                    itemBuilder: (context, models, index) {
-                      final item = models[index];
-                      if (controllers.length <= index) {
-                        controllers.add(SlidableController(this));
-                      }
-                      return _buildLocationItem(
-                          context, item, index, models, hotel);
-                    },
-                    emptyViewPlug: _buildEmptyState(),
-                  ),
-                ),
-              ),
-            ],
+          body: SlidableAutoCloseBehavior(
+            child: PaginationListView<LocationState>(
+              cubit: _cubit,
+              header: _buildHeader(context, hotel, allFilesCount, percent),
+              padding: const EdgeInsets.only(bottom: 10, left: 22, right: 22),
+              floatingActionButton: _buildFAB(hotel),
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, models, index) {
+                final item = models[index];
+                if (controllers.length <= index) {
+                  controllers.add(SlidableController(this));
+                }
+                return _buildLocationItem(context, item, index, models, hotel);
+              },
+              emptyViewPlug: _buildEmptyState(),
+            ),
           ),
         );
       },
@@ -114,10 +99,9 @@ class _LocationsScreenState extends State<LocationsScreen>
             width: 30, height: 30, fit: BoxFit.scaleDown),
         onPressed: () {
           controllers.forEach((controller) => controller.close());
-          pushToAddFilesAndInformationScreen(
+          pushToCreateLocationWithContentScreen(
             context: context,
             hotel: hotel,
-            db: _cubit.db,
             saveCallback: () {
               _cubit.reload();
               widget.updateCallback();
@@ -207,11 +191,10 @@ class _LocationsScreenState extends State<LocationsScreen>
       key: ValueKey(location.localId),
       onTap: () {
         controllers.forEach((controller) => controller.close());
-        pushToEditHotelLocation(
+        pushToEditLocationContent(
           context: context,
           hotel: hotel,
           location: location,
-          db: _cubit.db,
           saveCallback: () async {
             _cubit.reload();
             widget.updateCallback();

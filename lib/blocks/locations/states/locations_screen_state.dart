@@ -8,11 +8,11 @@ class LocationsListSuccessState extends SuccessListState<LocationState> {
   final double percentLoadedFiles;
 
   LocationsListSuccessState({
-    required List<LocationState> models,
+    required super.models,
     required this.myHotel,
     required this.allFilesLength,
     required this.percentLoadedFiles,
-  }) : super(models: models);
+  });
 
   LocationsListSuccessState copyWith({
     List<LocationState>? models,

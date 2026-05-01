@@ -10,10 +10,10 @@ import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/repository/repository_container.dart';
 
-import 'states/location_screen_state.dart';
+import 'states/locations_screen_state.dart';
 
 class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
-  final DBManager db;
+  late final DBManager db;
   MyHotelModel myHotel;
   StreamSubscription? _subscriptionLocationsSynchronization;
 
@@ -21,10 +21,8 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
   int allFilesLength = 0;
   double percentLoadedFiles = -1;
 
-  LocationsCubit({
-    required this.myHotel,
-    required this.db,
-  }) : super(InitialState()) {
+  LocationsCubit({required this.myHotel}) : super(InitialState()) {
+    db = DBManager();
     query = BaseQuery();
     _subscriptionLocationsSynchronization =
         services.sinkService.syncLocationsObserver.stream.listen((id) {
@@ -54,20 +52,12 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
 
   @override
   Future<void> updateList(List<LocationState> newList) async {
-    if (state is LocationsListSuccessState) {
-      emit((state as LocationsListSuccessState).copyWith(
-        models: List.from(newList),
-        allFilesLength: allFilesLength,
-        percentLoadedFiles: percentLoadedFiles,
-      ));
-    } else {
-      emit(LocationsListSuccessState(
-        models: List.from(newList),
-        myHotel: myHotel,
-        allFilesLength: allFilesLength,
-        percentLoadedFiles: percentLoadedFiles,
-      ));
-    }
+    emit(LocationsListSuccessState(
+      models: List.from(newList),
+      myHotel: myHotel,
+      allFilesLength: allFilesLength,
+      percentLoadedFiles: percentLoadedFiles,
+    ));
   }
 
   Future<void> updateSingleLocation(int localId) async {

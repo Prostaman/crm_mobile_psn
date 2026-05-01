@@ -5,7 +5,7 @@ import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/blocks/settings/settings_cubit.dart';
 import 'package:psn.hotels.hub/blocks/settings/settings_state.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);

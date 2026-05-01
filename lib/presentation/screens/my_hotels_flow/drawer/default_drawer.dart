@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/helpers/webview_helper.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';

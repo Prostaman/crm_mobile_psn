@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
+
+import 'loading_indicator.dart';
 
 class LoadingMoreInsicator extends StatelessWidget {
   final Alignment alignment;
@@ -26,7 +28,7 @@ class LoadingMoreInsicator extends StatelessWidget {
               ]),
           width: 40,
           height: 40,
-          child: DefaultIndicator,
+          child: LoadingIndicatorWidget(),
         ),
       ),
     );

@@ -102,4 +102,48 @@ class FileModel extends BaseModel {
       'createdAt': createdAt ?? '2000-01-01T00:00:00',
     };
   }
+
+  FileModel copyWith({
+    int? localId,
+    int? cloudId,
+    String? name,
+    String? localPath,
+    double? size,
+    bool? synced,
+    bool? syncError,
+    String? thumb,
+    bool? deleted,
+    num? lat,
+    num? long,
+    String? uploadedAt,
+    String? createdAt,
+    int? localLocationId,
+    int? cloudLocationId,
+    int? hotelId,
+    bool? isEdited,
+    String? oldLocalPath,
+  }) {
+    final model = FileModel();
+
+    model.localId = localId ?? this.localId;
+    model.cloudId = cloudId ?? this.cloudId;
+    model.name = name ?? this.name;
+    model.localPath = localPath ?? this.localPath;
+    model.size = size ?? this.size;
+    model.synced = synced ?? this.synced;
+    model.syncError = syncError ?? this.syncError;
+    model.thumb = thumb ?? this.thumb;
+    model.deleted = deleted ?? this.deleted;
+    model.lat = lat ?? this.lat;
+    model.long = long ?? this.long;
+    model.uploadedAt = uploadedAt ?? this.uploadedAt;
+    model.createdAt = createdAt ?? this.createdAt;
+    model.localLocationId = localLocationId ?? this.localLocationId;
+    model.cloudLocationId = cloudLocationId ?? this.cloudLocationId;
+    model.hotelId = hotelId ?? this.hotelId;
+    model.isEdited = isEdited ?? this.isEdited;
+    model.oldLocalPath = oldLocalPath ?? this.oldLocalPath;
+
+    return model;
+  }
 }

@@ -5,7 +5,7 @@ import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
 import 'package:psn.hotels.hub/blocks/my_hotels/my_hotel_state.dart';
 import 'package:psn.hotels.hub/helpers/format_date.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/items/pagination_list_view.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/drawer/default_drawer.dart';
@@ -142,7 +142,6 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
               pushToLocationsScreen(
                 context: context,
                 model: models[index].base,
-                db: _cubit.db,
                 updateCallback: () async {
                   await _cubit.updateSingleMyHotel(models[index].base.id);
                 },

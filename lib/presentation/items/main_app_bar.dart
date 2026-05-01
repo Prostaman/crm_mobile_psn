@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 const double kToolbarHeight = 56.0;
 
@@ -14,7 +14,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? centerTitle;
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight + (bottomPreferredSize ?? 0.0));
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottomPreferredSize ?? 0.0));
 
   MainAppBar({
     Key? key,
@@ -34,7 +35,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       leadingWidth: title.length == 0 ? 60 : 86,
       leading: backButtonDisable == false
           ? InkWell(
-              onTap: () => backButtonTapped != null ? backButtonTapped!() : Navigator.pop(context),
+              onTap: () => backButtonTapped != null
+                  ? backButtonTapped!()
+                  : Navigator.pop(context),
               child: Row(
                 children: [
                   SizedBox(width: 8),
@@ -67,7 +70,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: centerTitle != null
           ? Text(
               centerTitle!,
-              style: textStyle(size: 16, color: Colors.black, weight: Semibold6),
+              style:
+                  textStyle(size: 16, color: Colors.black, weight: Semibold6),
             )
           : null,
       backgroundColor: backgroundColor,

@@ -4,14 +4,19 @@ import 'package:flutter_svg/svg.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'dart:io';
 
-import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
 class ImageItem extends StatelessWidget {
   final String imagePath;
   final BoxFit fit;
   final FilterQuality filterQuality;
   final double borderRadius;
-  const ImageItem({Key? key, required this.imagePath, this.fit = BoxFit.cover, this.filterQuality = FilterQuality.high, this.borderRadius = 10})
+  const ImageItem(
+      {Key? key,
+      required this.imagePath,
+      this.fit = BoxFit.cover,
+      this.filterQuality = FilterQuality.high,
+      this.borderRadius = 10})
       : super(key: key);
 
   @override
@@ -38,7 +43,8 @@ class ImageItem extends StatelessWidget {
         } else if (snapshot.hasError || !snapshot.hasData) {
           String error = "Showing image error: ${snapshot.error}";
           debugPrint(error);
-          FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: error));
+          FirebaseCrashlytics.instance
+              .recordFlutterError(FlutterErrorDetails(exception: error));
           // If there's an error, display an error message
           return Container(
             color: Colors.grey, // Placeholder color
@@ -62,7 +68,8 @@ class ImageItem extends StatelessWidget {
         } else if (snapshot.data == false) {
           String error = "Showing image, File not exists";
           debugPrint(error);
-          FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: error));
+          FirebaseCrashlytics.instance
+              .recordFlutterError(FlutterErrorDetails(exception: error));
           // File does not exist, return a placeholder container
           return Container(
             color: Color.fromRGBO(255, 244, 244, 1), // Placeholder color
@@ -72,7 +79,8 @@ class ImageItem extends StatelessWidget {
                 child: Wrap(
               children: [
                 Column(children: [
-                  SvgPicture.asset(IMG.icons.noImageError, fit: BoxFit.scaleDown),
+                  SvgPicture.asset(IMG.icons.noImageError,
+                      fit: BoxFit.scaleDown),
                   SizedBox(height: 6),
                   Text(
                     "Файл не найден",

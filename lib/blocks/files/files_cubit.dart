@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/db/dao/categories_dao.dart';
 import 'package:psn.hotels.hub/db/db_manager.dart';
 import 'package:psn.hotels.hub/helpers/file_utility.dart';
 import 'package:psn.hotels.hub/helpers/format_date.dart';
@@ -20,160 +18,187 @@ import 'package:video_compress/video_compress.dart';
 import '../../repository/repository_container.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:collection/collection.dart';
+//import 'package:collection/collection.dart';
+import 'states/files_screen_state.dart';
 
-class FilesCubit extends BaseCubit {
-  MyHotelModel myHotelModel;
-  final DBManager db;
+class FilesCubit extends Cubit<FilesState> {
+  FilesCubit({
+    required MyHotelModel myHotel,
+    LocationModel? location,
+  }) : super(FilesState(
+            files: [],
+            selectedIds: {},
+            myHotel: myHotel,
+            location: location ?? LocationModel(),
+            category:
+                CategoryModel(id: -1, description: 'Выберите категорию *'),
+            categories: []));
 
-  late LocationModel locationModel;
-  late bool editing;
-  List<FileModel> selectedFiles = [];
-  List<FileModel> files = [];
-  List<CategoryModel> categories = [];
-  CategoryModel category =
-      CategoryModel(id: -1, description: 'Выберите категорию *');
+  late final DBManager db;
 
-  late bool isSyncing;
-
-  FilesCubit(
-      {LocationModel? location, required this.myHotelModel, required this.db})
-      : super(InitialState()) {
-    editing = location != null;
-    locationModel = location != null ? location : LocationModel();
-    isSyncing = services.sinkService.isSyncing;
-  }
-
-  Future<void> addAndUpdateLocationWithFiles(List<FileModel> files) async {
-    Future<void> moveFilesToInternalStorage(
-        FileModel file, Directory documentsDirectory) async {
-      file.localPath = await FileUtility.moveFile(File(file.localPath),
-          documentsDirectory.path); //перемещение файла во внутренее хранилище
-      if (file.type == FileModelType.Video && ((file.thumb ?? '').isNotEmpty)) {
-        //String tempOldThumb = file.thumb!;
-
-        file.thumb = await FileUtility.moveFile(
-            File(file.thumb!),
-            documentsDirectory
-                .path); //перемещение картинки of видео во внутренее хранилище
-
-        // if (file.thumb != tempOldThumb) {
-        //   //перезаписывает thumb для всех видео у который совпадает путь к thumb
-        //   List<FileModel> theSameVideos = files.where((element) => element.type == FileModelType.Video && element.thumb == tempOldThumb).toList();
-        //   debugPrint('theSameVideos:${theSameVideos.length}');
-        //   theSameVideos.forEach((item) {
-        //     if (item.thumb == tempOldThumb) {
-        //       item.thumb = file.thumb;
-        //     }
-        //   });
-        // }
+  Future<void> init() async {
+    Future<List<FileModel>> _getFiles() async {
+      try {
+        List<FileModel> files = await (await db.filesDao())
+                .findNotDeletedFilesByLocationId(state.location.localId) ??
+            [];
+        files.sort((a, b) {
+          DateTime dateA = stringToDate(a.createdAt ?? '2000-01-01T00:00:00')!;
+          DateTime dateB = stringToDate(b.createdAt ?? '2000-01-01T00:00:00')!;
+          return dateB.compareTo(dateA);
+        });
+        return files;
+      } catch (e) {
+        _catchError(e);
+        return [];
       }
     }
 
-    Future<void> moveProfilePhotosToInternalStorage(String oldLocalPath,
-        FileModel file, LocationsRepository repository) async {
-      if (locationModel.pathOfProfilePhoto == oldLocalPath) {
-        locationModel.pathOfProfilePhoto = file
-            .localPath; //перезапись профильного фото, если оно было перемещено
-        await repository.updateLocation(
-            hotelModel: myHotelModel, locationModel: locationModel);
-      }
-
-      if (myHotelModel.pathOfProfilePhoto == oldLocalPath) {
-        myHotelModel.pathOfProfilePhoto = file
-            .localPath; //перезапись профильного фото, если оно было перемещено
-        await RepositoryContainer()
-            .myHotelRepository
-            .updateMyHotel(model: myHotelModel);
-      }
+    Future<List<CategoryModel>> _getAllCategories() async {
+      return await (await db.categoriesDao()).getAllCategories();
     }
 
-    debugPrint('addAndUpdateLocationWithFiles');
-    emit(LoadingState());
+    Future<CategoryModel> _findCategoryById(int id) async {
+      CategoryModel? categoryModel =
+          await (await db.categoriesDao()).findCategoryById(id);
+      return categoryModel ??
+          CategoryModel(id: -1, description: 'Выберите категорию *');
+    }
+
+    _showLoading();
     try {
-      LocationsRepository repository =
-          RepositoryContainer().locationsRepository;
-      Directory documentsDirectory = await getApplicationDocumentsDirectory();
-      //debugPrint('documentsDirectory: ${documentsDirectory.path}');
-      if (editing == true) {
-        var lastUpdateOfLocation =
-            await repository.getLocationFromLocalDB(locationModel.localId);
-        String tempNameOfLocation = locationModel.name;
-        String tempDescriptionOfLocation = locationModel.description;
-        String tempPathOfProfilePhoto = locationModel.pathOfProfilePhoto;
-        int tempCategoryId = locationModel.idCategory;
-        if (lastUpdateOfLocation != null) {
-          locationModel = lastUpdateOfLocation;
-          locationModel.name = tempNameOfLocation;
-          locationModel.description = tempDescriptionOfLocation;
-          locationModel.pathOfProfilePhoto = tempPathOfProfilePhoto;
-          locationModel.idCategory = tempCategoryId;
-        }
-        //debugPrint('locationModel updated: ${locationModel.pathOfProfilePhoto}');
-        await repository.updateLocation(
-            hotelModel: myHotelModel, locationModel: locationModel);
-        for (var file in files) {
-          debugPrint(
-              'mode: Edition, deleted:${file.deleted}, file.localPath: ${file.localPath}');
-          if (!file.deleted &&
-              !file.localPath.contains(documentsDirectory.path)) {
-            String oldLocalPath = file.localPath;
-            await moveFilesToInternalStorage(file, documentsDirectory);
-            if (oldLocalPath != file.localPath) {
-              await moveProfilePhotosToInternalStorage(
-                  oldLocalPath, file, repository);
-              file.isEdited = true;
-              debugPrint('Was moving to internal storage:${file.localPath}');
-            }
-          }
-
-          if (file.localLocationId == 0 && !file.deleted) {
-            file.localLocationId = locationModel.localId;
-            file.cloudLocationId = locationModel.cloudId;
-            await repository.addFile(file: file);
-          } else {
-            if (file.isEdited) {
-              //debugPrint('was changed file ${file.localId} with deleted=${file.deleted}');
-              await repository.updateFile(file: file);
-            }
-          }
-        }
+      List<CategoryModel> categories = await _getAllCategories();
+      if (state.location.localId != -1) {
+        List<FileModel> files = await _getFiles();
+        CategoryModel currentCategory =
+            await _findCategoryById(state.location.idCategory);
+        emit(state.copyWith(
+            isLoading: false,
+            error: null,
+            files: files,
+            categories: categories,
+            category: currentCategory));
       } else {
-        locationModel.hotelId = myHotelModel.id;
-        int localLocationId = await repository.addLocation(
-            hotelModel: myHotelModel,
-            locationModel:
-                locationModel); // insert location to local db and get him id
-        for (var file in files) {
-          if (file.deleted == false) {
-            debugPrint(
-                'deleted:${file.deleted}, file.localPath: ${file.localPath}');
-            if (!file.localPath.contains(documentsDirectory.path)) {
-              String oldLocalPath = file.localPath;
-              await moveFilesToInternalStorage(file, documentsDirectory);
-              if (oldLocalPath != file.localPath) {
-                await moveProfilePhotosToInternalStorage(
-                    oldLocalPath, file, repository);
-                file.isEdited = true;
-                debugPrint('Was moving to internal storage:${file.localPath}');
-              }
-            }
-            file.localLocationId = localLocationId;
-            await repository.addFile(file: file);
-          }
-        }
-      }
-      // удаление старых не используемых файлов
-      for (var file in files) {
-        if (file.isEdited) {
-          FileUtility.deleteFile(file.oldLocalPath);
-          file.isEdited = false;
-        }
+        emit(state.copyWith(
+            isLoading: false, error: null, categories: categories));
       }
     } catch (e) {
-      catchError(e);
+      _catchError(e);
     }
-    emit(SuccessModelState(model: myHotelModel));
+  }
+
+  _showLoading() {
+    emit(state.copyWith(
+      isLoading: true,
+      error: null,
+    ));
+  }
+
+  void _catchError(Object error, [StackTrace? stackTrace]) {
+    debugPrint("Error: $error");
+    emit(state.copyWith(
+      isLoading: false,
+      error: error.toString(),
+    ));
+    FirebaseCrashlytics.instance.recordError(error, stackTrace);
+  }
+
+  Future<void> save({
+    required String currentName,
+    required String currentDescription,
+  }) async {
+    Future<void> _saveProfileImageOfMyHotel() async {
+      await (await db.myHotelsDao())
+          .updateMyHotel(state.myHotel.id, state.myHotel);
+    }
+
+    Future<void> _addLocationWithContent() async {
+      /// Вспомогательный метод для обновления путей профильных фото
+      Future<void> _updateProfilePathsIfMatched(
+          String oldPath, String newPath, LocationsRepository repo) async {
+        if (state.location.pathOfProfilePhoto == oldPath) {
+          state.location.pathOfProfilePhoto = newPath;
+          await repo.updateLocation(locationModel: state.location);
+        }
+
+        if (state.myHotel.pathOfProfilePhoto == oldPath) {
+          state.myHotel.pathOfProfilePhoto = newPath;
+          await RepositoryContainer()
+              .myHotelRepository
+              .updateMyHotel(model: state.myHotel);
+        }
+      }
+
+      debugPrint('FilesCubit: Saving location with content...');
+      _showLoading();
+      try {
+        final repository = RepositoryContainer().locationsRepository;
+        final documentsDir = await getApplicationDocumentsDirectory();
+
+        // 1. Определяем, создаем или обновляем локацию
+        bool isNewLocation = state.location.localId == -1;
+        if (isNewLocation) {
+          state.location.hotelId = state.myHotel.id;
+          // Добавляем в БД и получаем новый localId
+          state.location.localId = await repository.addLocation(
+              hotelId: state.myHotel.id, locationModel: state.location);
+        } else {
+          // Обновляем существующую
+          await repository.updateLocation(locationModel: state.location);
+        }
+
+        // 2. Обрабатываем файлы (один цикл на все случаи)
+        for (var file in state.files) {
+          if (file.deleted) continue;
+
+          // А. Перемещение во внутреннее хранилище, если файл еще снаружи
+          if (!file.localPath.contains(documentsDir.path)) {
+            String oldPath = file.localPath;
+
+            // Перемещаем основной файл
+            file.localPath =
+                await FileUtility.moveFile(File(oldPath), documentsDir.path);
+
+            // Перемещаем превью видео, если есть
+            if (file.type == FileModelType.Video &&
+                (file.thumb?.isNotEmpty ?? false)) {
+              file.thumb = await FileUtility.moveFile(
+                  File(file.thumb!), documentsDir.path);
+            }
+
+            // Если этот файл был профильным — обновляем пути в моделях
+            await _updateProfilePathsIfMatched(
+                oldPath, file.localPath, repository);
+            file.isEdited = true;
+          }
+
+          // Б. Привязка к локации и сохранение в БД
+          if (file.localLocationId == -1) {
+            file.localLocationId = state.location.localId;
+            file.cloudLocationId = state.location.cloudId;
+            await repository.addFile(file: file);
+          } else if (file.isEdited) {
+            await repository.updateFile(file: file);
+          }
+        }
+
+        // 3. Удаление физических файлов, которые больше не нужны
+        for (var file in state.files) {
+          if (file.isEdited && file.oldLocalPath.isNotEmpty) {
+            FileUtility.deleteFile(file.oldLocalPath);
+            file.isEdited = false;
+          }
+        }
+      } catch (e) {
+        _catchError(e);
+      }
+    }
+
+    state.location.name = currentName;
+    state.location.description = currentDescription;
+    await _addLocationWithContent();
+    await _saveProfileImageOfMyHotel();
+    startSync();
   }
 
   Future<void> startSync() async {
@@ -181,124 +206,92 @@ class FilesCubit extends BaseCubit {
     repository.startSinc();
   }
 
-  Future<void> deleteLocation({required LocationModel model}) async {
-    try {
-      await RepositoryContainer()
-          .locationsRepository
-          .deleteLocation(hotelModel: myHotelModel, locationModel: model);
-    } catch (e) {
-      catchError(e);
-    }
-  }
-
   Future<void> deleteSelectedFiles() async {
-    //await RepositoryContainer().locationsRepository.deleteSelectedFiles(locationModel: locationModel, file: file);
-    debugPrint("selectedFiles length:${selectedFiles.length}");
-    selectedFiles.forEach((file) {
-      file.synced = false;
-      file.deleted = true;
-      file.isEdited = true;
-    });
-    selectedFiles.clear();
-    emit(RefreshState());
-    emit(SuccessModelState(
-        model:
-            myHotelModel)); // если один и тот же State, то presentation не обновляется
-    //files.remove(file);
+    _showLoading();
+
+    final selected = state.selectedIds;
+
+    final updatedFiles = state.files.map((file) {
+      if (!selected.contains(file.localId)) return file;
+
+      return file.copyWith(
+        synced: false,
+        deleted: true,
+      );
+    }).toList();
+
+    emit(state.copyWith(
+      isLoading: false,
+      files: updatedFiles,
+      selectedIds: {},
+    ));
   }
 
-  Future<void> deleteFile(FileModel file) async {
-    //await RepositoryContainer().locationsRepository.deleteSelectedFiles(locationModel: locationModel, file: file);
-    file.synced = false;
-    file.deleted = true;
-    file.isEdited = true;
-    emit(RefreshState());
-    //files.remove(file);
+  Future<void> deleteFile(FileModel target) async {
+    final updatedFiles = state.files.map((file) {
+      if (file.localId != target.localId) return file;
+
+      return file.copyWith(
+        synced: false,
+        deleted: true,
+        //isEdited:true
+      );
+    }).toList();
+
+    emit(state.copyWith(files: updatedFiles));
   }
 
   Future<void> shareSelectedFiles() async {
-    List<XFile> listForSharing = [];
-    for (var selectedFile in selectedFiles) {
-      listForSharing.add(XFile(selectedFile.localPath));
-    }
-    // Використовуємо сучасний метод
-    await SharePlus.instance.share(ShareParams(files: listForSharing));
-
-    selectedFiles.clear();
+    final selected = state.selectedIds;
+    final filesToShare = state.files
+        .where((file) => selected.contains(file.localId))
+        .map((file) => XFile(file.localPath))
+        .toList();
+    await SharePlus.instance.share(
+      ShareParams(files: filesToShare),
+    );
+    emit(state.copyWith(selectedIds: {}));
   }
 
-  Future<List<FileModel>> findFilesByLocationId() async {
-    var files = await (await db.filesDao())
-            .findFilesByLocationId(locationModel.localId) ??
-        [];
-    // Фильтруем список, чтобы оставить только не удаленные файлы
-    files.where((file) => file.deleted == false).toList();
-    // сортируем по дате создания
-    files.sort((a, b) {
-      DateTime dateA = stringToDate(a.createdAt ?? '2000-01-01T00:00:00')!;
-      DateTime dateB = stringToDate(b.createdAt ?? '2000-01-01T00:00:00')!;
-      return dateB.compareTo(dateA);
-    });
+  void selectFile(FileModel file) {
+    final updated = Set<int>.from(state.selectedIds);
 
-    files.forEach((file) {
-      debugPrint('FileDate: ${file.createdAt}');
-    });
-
-    return files;
-  }
-
-  selectFile(FileModel file) {
-    if (fileSelected(file) == true) {
-      selectedFiles.remove(file);
+    if (updated.contains(file.localId)) {
+      updated.remove(file.localId);
     } else {
-      selectedFiles.add(file);
+      updated.add(file.localId);
     }
+
+    emit(state.copyWith(selectedIds: updated));
   }
 
-  fileSelected(FileModel file) {
-    var existIndex = selectedFiles.indexOf(file);
-    if (existIndex != -1) {
-      return true;
-    } else {
-      return false;
-    }
+  bool fileSelected(int localId) {
+    return state.selectedIds.contains(localId);
   }
 
   Future<void> addFilesFromGallery() async {
-    String getNameOfFile(String path) {
-      // Find the position of the last '/'
+    String _getNameOfFile(String path) {
       int lastIndex = path.lastIndexOf('/');
-
-      // Return the substring after the last '/'
       return lastIndex != -1 ? path.substring(lastIndex + 1) : path;
     }
 
-    void deleteDuplicates(List<XFile> xfilesFromGallery) {
-      List<XFile> xfilesRemoving = [];
-      for (var xfile in xfilesFromGallery) {
-        files.forEach((file) {
-          debugPrint(
-              'xfile name:${getNameOfFile(xfile.path)} | file name:${getNameOfFile(file.localPath)} ');
-        });
-
-        debugPrint(
-            'is Duplicate?:${files.firstWhereOrNull((file) => (xfile.path == file.localPath)) != null}');
-        bool isDuplicate = files.firstWhereOrNull((file) =>
-                (getNameOfFile(xfile.path) == getNameOfFile(file.localPath))) !=
-            null;
-        if (isDuplicate == true) {
-          debugPrint('было удаление');
-          xfilesRemoving.add(xfile);
-        }
+    void _deleteDuplicates(List<XFile> xfilesFromGallery) {
+      debugPrint('Удаляем дубликаты');
+      final existingNames =
+          state.files.map((file) => _getNameOfFile(file.localPath)).toSet();
+      bool hasDuplicates = false;
+      xfilesFromGallery.removeWhere((xfile) {
+        final isDuplicate = existingNames.contains(_getNameOfFile(xfile.path));
+        if (isDuplicate) hasDuplicates = true;
+        return isDuplicate;
+      });
+      if (hasDuplicates) {
+        _catchError("Некоторые выбранные файлы уже загружены");
       }
-
-      if (xfilesRemoving.isNotEmpty) {
-        emit(ErrorState(error: "Некоторые выбранные файлы уже загружены"));
-      }
-      xfilesRemoving.forEach((xfile) => xfilesFromGallery.remove(xfile));
     }
 
-    emit(LoadingState());
+    _showLoading();
+    // TODO: optimize with limited parallelism if performance issues appear
     try {
       const double maxFileSizeInBytes =
           100 * 1048576; //100 MB limit size for files
@@ -306,86 +299,110 @@ class FilesCubit extends BaseCubit {
       final ImagePicker _picker = ImagePicker();
       List<XFile> xfilesFromGallery =
           await _picker.pickMultipleMedia(imageQuality: 100);
-      debugPrint('Удаляем дубликаты');
 
-      deleteDuplicates(xfilesFromGallery);
+      _deleteDuplicates(xfilesFromGallery);
 
       for (var xfile in xfilesFromGallery) {
-        if (await xfile.length() <= maxFileSizeInBytes) {
-          String? mimeStr = lookupMimeType(xfile.path);
-          var fileType = mimeStr?.split('/');
+        int xfileLength = await xfile.length();
+        if (xfileLength <= maxFileSizeInBytes) {
+          final mimeStr = lookupMimeType(xfile.path);
+          if (mimeStr == null) {
+            _catchError("${xfile.name} неизвестный тип файла");
+            continue;
+          }
+          var fileType = mimeStr.split('/');
           debugPrint('file type $fileType');
-          if (fileType!.contains('image') || fileType.contains('video')) {
-            FileModel file = FileModel();
-            file.localPath = xfile.path;
-            file.createdAt =
-                (await FileUtility().getFileCreationDate(xfile.path))
-                    ?.toIso8601String();
-            file.size = await xfile.length() / 1024;
-            // if (position != null) {
-            //   file.lat = position.latitude;
-            //   file.long = position.longitude;
-            // }
-            if (fileType.contains('video')) {
-              file.name = "video_" + xfile.name;
-              var thumb = await VideoCompress.getFileThumbnail(file.localPath);
+          if (fileType.contains('image') || fileType.contains('video')) {
+            final file = FileModel()
+              ..localPath = xfile.path
+              ..createdAt =
+                  (await FileUtility().getFileCreationDate(xfile.path))
+                      ?.toIso8601String()
+              ..size = xfileLength / 1024
+              ..name = "${fileType}_${xfile.name}";
+            if (fileType == 'video') {
+              final thumb =
+                  await VideoCompress.getFileThumbnail(file.localPath);
               file.thumb = thumb.path;
-            } else {
-              file.name = "image_" + xfile.name;
             }
-
             filesFromGallery.add(file);
           } else {
-            debugPrint("Файл не является медиафайлом");
-            emit(ErrorState(error: "${xfile.name} не является медиафайлом"));
+            _catchError("${xfile.name} не является медиафайлом");
           }
         } else {
-          debugPrint("Размер файла больше 100 МБ");
-          emit(ErrorState(error: "Размер ${xfile.name} больше 100 МБ"));
+          _catchError("Размер ${xfile.name} больше 100 МБ");
         }
       }
-      files = [...filesFromGallery, ...files];
+      emit(state.copyWith(
+          isLoading: false,
+          error: null,
+          files: [...filesFromGallery, ...state.files]));
     } catch (e) {
-      String error = "Pick file, error:$e";
-      debugPrint(error);
-      await FirebaseCrashlytics.instance.log(error);
-      await FirebaseCrashlytics.instance
-          .recordFlutterError(FlutterErrorDetails(exception: error));
-      emit(ErrorState(error: "Error: $e"));
+      final error = "Pick file, error:$e";
+      _catchError(error);
     }
-    emit(SuccessModelState(model: myHotelModel));
   }
 
-  Future<void> setProfileImageOfLocation(FileModel file) async {
-    locationModel.pathOfProfilePhoto = file.localPath;
-    locationModel.profilePhotoIsChanged = true;
-    //debugPrint("was setting ProfileImageOfLocation, ${myHotelModel.pathOfProfilePhoto}");
+  void setFilesFromCamera(List<FileModel> filesFromCamera) {
+    emit(state.copyWith(
+        isLoading: false,
+        error: null,
+        files: [...filesFromCamera.reversed, ...state.files]));
   }
 
-  Future<void> setProfileImageOfMyHotel(FileModel file) async {
-    myHotelModel.pathOfProfilePhoto = file.localPath;
-    //debugPrint("was setting ProfileImageOfMyHotel, ${myHotelModel.pathOfProfilePhoto}");
-    myHotelModel.profilePhotoIsChanged = true;
+  void setProfileImageOfLocation(FileModel file) {
+    emit(state.copyWith(
+        isLoading: false,
+        error: null,
+        location: state.location.copyWith(
+            pathOfProfilePhoto: file.localPath, profilePhotoIsChanged: true)));
   }
 
-  Future<void> saveProfileImageOfMyHotel() async {
-    //debugPrint("was updating ProfileImageOfMyHotel, ${myHotelModel.pathOfProfilePhoto}");
-    await (await db.myHotelsDao()).updateMyHotel(myHotelModel.id, myHotelModel);
+  void setProfileImageOfMyHotel(FileModel file) {
+    emit(state.copyWith(
+        isLoading: false,
+        error: null,
+        myHotel: state.myHotel.copyWith(
+            pathOfProfilePhoto: file.localPath, profilePhotoIsChanged: true)));
   }
 
-  Future<void> getAllCategories() async {
-    CategoriesDao categoriesDao = await db.categoriesDao();
-    categories = await categoriesDao.getAllCategories();
+  void setCategory(CategoryModel selectedCategory) {
+    emit(state.copyWith(
+        isLoading: false,
+        error: null,
+        location: state.location.copyWith(
+          idCategory: selectedCategory.id,
+        ),
+        category: selectedCategory));
   }
 
-  Future<CategoryModel> findCategoryById(int id) async {
-    emit(LoadingState());
-    //persons.firstWhere((person) => person.id == searchId, orElse: () => null);
-    //CategoryModel category = await (await db.categoriesDao()).findCategoryById(id) ?? CategoryModel(id: -1, description: 'Выберите категорию *');
-    CategoryModel category =
-        categories.firstWhereOrNull((category) => category.id == id) ??
-            CategoryModel(id: -1, description: 'Выберите категорию *');
-    emit(SuccessModelState(model: myHotelModel));
-    return category;
-  }
+  // bool wereChanges(
+  //     {required String initialProfilePhotoOfLocation,
+  //     required String initialProfilePhotoOfMyHotel,
+  //     required int initialIdCategory,
+  //     required List<FileModel> initialFiles,
+  //     required String currentName,
+  //     required String currentDescription,
+  //     required String initName,
+  //     required String initDescription}) {
+  //   bool _isExistsEditedFiles(List<FileModel> files) {
+  //     for (var file in files) {
+  //       if (file.isEdited) {
+  //         return true;
+  //       }
+  //     }
+  //     return false;
+  //   }
+  //
+  //   return (!deepComparing(initialFiles, state.files) ||
+  //       _isExistsEditedFiles(state.files) ||
+  //       currentName != initName ||
+  //       currentDescription != initDescription ||
+  //       initialProfilePhotoOfLocation != state.location.pathOfProfilePhoto ||
+  //       initialProfilePhotoOfMyHotel != state.myHotel.pathOfProfilePhoto ||
+  //       initialIdCategory != state.category.id);
+  // }
+
+  List<FileModel> get fileModels => state.files;
+  //Function deepComparing = const DeepCollectionEquality().equals;
 }
