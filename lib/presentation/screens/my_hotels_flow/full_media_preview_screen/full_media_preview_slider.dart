@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
 import 'package:psn.hotels.hub/helpers/file_utility.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
+import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
 import 'package:psn.hotels.hub/services/service_container.dart';
 import 'package:psn.hotels.hub/presentation/items/filters.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -20,17 +21,18 @@ import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'dart:math' as math;
+import '../../../../blocks/files/states/files_screen_state.dart';
 import 'semi_circle.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class FullMediaPreviewSlider extends StatefulWidget {
   final int initialPage;
   final PageController pageController;
-  final FilesCubit _cubit;
+
   final VoidCallback setStateCallback;
 
   FullMediaPreviewSlider(
-      this._cubit, this.setStateCallback, this.initialPage, this.pageController,
+      this.setStateCallback, this.initialPage, this.pageController,
       {Key? key});
 
   @override
@@ -38,6 +40,14 @@ class FullMediaPreviewSlider extends StatefulWidget {
 }
 
 class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
+  late final FilesCubit _cubit;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _cubit = context.read<FilesCubit>();
+  }
+
   int currentIndexOfFile = 0;
 
   List<List<double>> filters = [
@@ -55,6 +65,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
   double angleOfRotating = 0;
 
   var quality = ServiceContainer().settingsService.qualityOfFiles;
+
   double get pixelRatio {
     //quality for filter
     if (quality == 0) {
@@ -85,16 +96,22 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     });
   }
 
-  void overrideImage(String newFilePath) {
-    final file = widget._cubit.models[currentIndexOfFile].base;
-    file.oldLocalPath = file.localPath;
-    file.localPath = newFilePath;
-    file.synced = false;
-    file.isEdited = true;
+  void overrideImage(String newFilePath, FilesState state) {
+    final file = state.notDeletedFiles[currentIndexOfFile];
+
+    final updated = file.copyWith(
+      oldLocalPath: file.localPath,
+      localPath: newFilePath,
+      synced: false,
+      isEdited: true,
+    );
+
+    _cubit.updateFile(updated);
   }
 
   final GlobalKey _globalKey = GlobalKey();
-  Future<void> saveImageWithFiltersFromWidget() async {
+
+  Future<void> saveImageWithFiltersFromWidget(FilesState state) async {
     setState(() {
       isLoading = true;
     });
@@ -105,14 +122,13 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     ByteData? byteData =
         await boxImage.toByteData(format: ui.ImageByteFormat.png);
     Uint8List uint8list = byteData!.buffer.asUint8List();
-    String oldFilePath =
-        widget._cubit.models[currentIndexOfFile].base.localPath;
+    String oldFilePath = state.notDeletedFiles[currentIndexOfFile].localPath;
     var availablePath = oldFilePath.substring(0, oldFilePath.lastIndexOf('/'));
     String newFilePath =
         "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
     await File(newFilePath).writeAsBytes(uint8list);
+    overrideImage(newFilePath, state);
     setState(() {
-      overrideImage(newFilePath);
       isFilterModeOn = false;
       currentIndexOfFilter = 0;
       isLoading = false;
@@ -145,9 +161,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     );
   }
 
-  Future<void> _cropImage() async {
+  Future<void> _cropImage(FilesState state) async {
     final croppedFile = await ImageCropper().cropImage(
-      sourcePath: widget._cubit.models[currentIndexOfFile].base.localPath,
+      sourcePath: state.notDeletedFiles[currentIndexOfFile].localPath,
       compressFormat: ImageCompressFormat.jpg,
       compressQuality: 100,
       uiSettings: [
@@ -165,22 +181,17 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     );
     if (croppedFile != null) {
       if (Platform.isAndroid) {
-        setState(() {
-          overrideImage(croppedFile.path);
-        });
+        overrideImage(croppedFile.path, state);
       } else if (Platform.isIOS) {
         //print("New file path:${croppedFile.path}");
-        String newPath =
-            widget._cubit.models[currentIndexOfFile].base.localPath;
-        overrideImage(await FileUtility.moveFile(File(croppedFile.path),
-            newPath.substring(0, newPath.lastIndexOf('/'))));
-        setState(() {});
+        String newPath = state.notDeletedFiles[currentIndexOfFile].localPath;
+        overrideImage(
+            await FileUtility.moveFile(File(croppedFile.path),
+                newPath.substring(0, newPath.lastIndexOf('/'))),
+            state);
       }
     }
   }
-
-  List<Widget> widgets = [];
-  List<FileModel> models = [];
 
   @override
   Widget build(BuildContext context) {
@@ -196,30 +207,27 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
             return Future.value(true);
           });
         },
-        child: BlocBuilder(
-            bloc: widget._cubit,
+        child: BlocBuilder<FilesCubit, FilesState>(
+            bloc: _cubit,
             builder: (context, state) {
-              widgets.clear();
-              models.clear();
-              widget._cubit.models.forEach((fileState) {
-                if (fileState.base.deleted == false) {
-                  var file = File(fileState.base.localPath);
-                  if (file.existsSync()) {
-                    if (fileState.base.type == FileModelType.Image) {
-                      widgets.add(Image.file(file));
-                      models.add(fileState.base);
-                    } else if (fileState.base.type == FileModelType.Video) {
-                      widgets.add(
-                        ChewieDemo(
-                          file: fileState.base,
-                        ),
-                      );
-                      models.add(fileState.base);
-                    }
-                    // debugPrint("length: ${models.length}");
-                  }
+              final files = state.notDeletedFiles;
+              if (currentIndexOfFile >= files.length) {
+                currentIndexOfFile = files.isEmpty ? 0 : files.length - 1;
+              }
+              final widgets = files.map((fileModel) {
+                final file = File(fileModel.localPath);
+
+                if (!file.existsSync()) {
+                  //доверять файлам из BLoC ??
+                  return const SizedBox();
                 }
-              });
+
+                if (fileModel.type == FileModelType.Image) {
+                  return Image.file(file);
+                } else {
+                  return ChewieDemo(file: fileModel);
+                }
+              }).toList();
 
               return Stack(
                 children: [
@@ -246,7 +254,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                               ),
                             ),
                             title: Text(
-                                "${currentIndexOfFile + 1}/${models.length}",
+                                "${currentIndexOfFile + 1}/${state.notDeletedFiles.length}",
                                 style:
                                     textStyle(color: Colors.white, size: 18)),
                             actions: [
@@ -285,27 +293,47 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                             ),
                                             TextButton(
                                               onPressed: () async {
-                                                await widget._cubit.deleteFile(
-                                                    models[currentIndexOfFile]);
-                                                models.removeAt(
-                                                    currentIndexOfFile);
+                                                await _cubit.deleteFile(
+                                                    state.notDeletedFiles[
+                                                        currentIndexOfFile]);
+                                                // models.removeAt(
+                                                //     currentIndexOfFile);
                                                 currentIndexOfFile--;
                                                 if (currentIndexOfFile == -1) {
                                                   currentIndexOfFile = 0;
                                                 }
+                                                final newLength = state
+                                                    .notDeletedFiles.length;
 
-                                                if (models.length == 1) {
-                                                  currentIndexOfFile = 0;
-                                                }
-
-                                                if (models.length == 0) {
+                                                if (newLength == 0) {
                                                   widget.setStateCallback();
                                                   Navigator.pop(context);
-                                                } else {
-                                                  setState(() {});
+                                                  return;
                                                 }
 
-                                                Navigator.pop(context);
+                                                setState(() {
+                                                  if (currentIndexOfFile >=
+                                                      newLength) {
+                                                    currentIndexOfFile =
+                                                        newLength - 1;
+                                                  }
+                                                });
+                                                // if (state.notDeletedFiles
+                                                //         .length ==
+                                                //     1) {
+                                                //   currentIndexOfFile = 0;
+                                                // }
+                                                //
+                                                // if (state.notDeletedFiles
+                                                //         .length ==
+                                                //     0) {
+                                                //   widget.setStateCallback();
+                                                //   Navigator.pop(context);
+                                                // } else {
+                                                //   setState(() {});
+                                                // }
+                                                //
+                                                // Navigator.pop(context);
                                               },
                                               child: Text("Да",
                                                   style: textStyle(
@@ -328,12 +356,13 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                 ),
                                 onPressed: () {
                                   SharePlus.instance.share(ShareParams(files: [
-                                    XFile(models[currentIndexOfFile].localPath)
+                                    XFile(state
+                                        .notDeletedFiles[currentIndexOfFile]
+                                        .localPath)
                                   ]));
                                 },
                               ),
-                              widget._cubit.models[currentIndexOfFile].base
-                                          .type ==
+                              state.notDeletedFiles[currentIndexOfFile].type ==
                                       FileModelType.Image
                                   ? PopupMenuButton(
                                       iconColor: Colors.white,
@@ -377,7 +406,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                             builder: (context) {
                                               return AlertDialog(
                                                   title: Text(
-                                                    "Сделать фото главным в локации ${widget._cubit.locationModel.name}? ",
+                                                    "Сделать фото главным в локации ${state.location.name}?",
                                                     style: textStyle(
                                                         size: 18,
                                                         weight: FontWeight.w300,
@@ -401,13 +430,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                     ),
                                                     TextButton(
                                                       onPressed: () async {
-                                                        widget._cubit
-                                                            .setProfileImageOfLocation(
-                                                                widget
-                                                                    ._cubit
-                                                                    .models[
-                                                                        currentIndexOfFile]
-                                                                    .base);
+                                                        _cubit.setProfileImageOfLocation(
+                                                            state.notDeletedFiles[
+                                                                currentIndexOfFile]);
                                                         Navigator.pop(context);
                                                       },
                                                       child: Text("Да",
@@ -427,7 +452,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                             builder: (context) {
                                               return AlertDialog(
                                                   title: Text(
-                                                    "Сделать фото главным в отеле ${widget._cubit.myHotelModel.name}? ",
+                                                    "Сделать фото главным в отеле ${state.myHotel.name}?",
                                                     style: textStyle(
                                                         size: 18,
                                                         weight: FontWeight.w300,
@@ -451,13 +476,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                     ),
                                                     TextButton(
                                                       onPressed: () async {
-                                                        widget._cubit
-                                                            .setProfileImageOfMyHotel(
-                                                                widget
-                                                                    ._cubit
-                                                                    .models[
-                                                                        currentIndexOfFile]
-                                                                    .base);
+                                                        _cubit.setProfileImageOfMyHotel(
+                                                            state.notDeletedFiles[
+                                                                currentIndexOfFile]);
                                                         Navigator.pop(context);
                                                       },
                                                       child: Text("Да",
@@ -478,8 +499,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                             ],
                           )
                         : null,
-                    floatingActionButton: widget
-                                ._cubit.models[currentIndexOfFile].base.type ==
+                    floatingActionButton: state
+                                .notDeletedFiles[currentIndexOfFile].type ==
                             FileModelType.Image
                         ? Padding(
                             padding: EdgeInsets.only(
@@ -518,9 +539,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                     color: Colors.white,
                                                   ),
                                                   onPressed: () {
-                                                    setState(() {
-                                                      _cropImage();
-                                                    });
+                                                    _cropImage(state);
                                                   },
                                                 ),
                                                 if (Platform.isAndroid)
@@ -548,18 +567,17 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                               ),
                                               onPressed: () async {
                                                 if (isFilterModeOn) {
-                                                  await saveImageWithFiltersFromWidget();
+                                                  await saveImageWithFiltersFromWidget(
+                                                      state);
                                                 } else if (isRotatingMode) {
                                                   //сохранить вращение
                                                   setState(
                                                       () => isLoading = true);
 
                                                   final imageBytes = await File(
-                                                          widget
-                                                              ._cubit
-                                                              .models[
+                                                          state
+                                                              .notDeletedFiles[
                                                                   currentIndexOfFile]
-                                                              .base
                                                               .localPath)
                                                       .readAsBytes();
                                                   final rotatedBytes =
@@ -569,11 +587,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                               rotate:
                                                                   angleOfRotating
                                                                       .toInt());
-                                                  String oldImagePath = widget
-                                                      ._cubit
-                                                      .models[
+                                                  String oldImagePath = state
+                                                      .notDeletedFiles[
                                                           currentIndexOfFile]
-                                                      .base
                                                       .localPath;
                                                   var availablePath =
                                                       oldImagePath.substring(
@@ -590,10 +606,10 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
 
                                                   debugPrint(
                                                       "Rotating index of current image:$currentIndexOfFile");
+                                                  overrideImage(
+                                                      rotatedFile.path, state);
                                                   setState(() {
-                                                    // overrideImage(newFilePath);
-                                                    overrideImage(
-                                                        rotatedFile.path);
+                                                    // overrideImage(newFilePath)
                                                     isRotatingMode = false;
                                                     angleOfRotating = 0;
                                                     isLoading = false;
@@ -705,7 +721,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                         //debugPrint("Прорисовка, Index of current image:$index");
                                         return PhotoViewGalleryPageOptions
                                             .customChild(
-                                          child: widgets[currentIndexOfFile],
+                                          child: widgets[
+                                              index], //widgets[currentIndexOfFile],
                                         );
                                       },
                                       itemCount: widgets.length,
@@ -769,7 +786,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                             ]))),
                                     Visibility(
                                         visible: currentIndexOfFile !=
-                                            models.length - 1,
+                                            state.notDeletedFiles.length - 1,
                                         child: Positioned(
                                             right: 0,
                                             top: 0,
@@ -794,25 +811,25 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                               .iconArrowRight,
                                                           fit:
                                                               BoxFit.scaleDown),
-                                                      onPressed:
-                                                          currentIndexOfFile <
-                                                                  models.length -
-                                                                      1
-                                                              ? () {
-                                                                  onPageChanged(
-                                                                      ++currentIndexOfFile);
-                                                                  widget
-                                                                      .pageController
-                                                                      .animateToPage(
-                                                                    currentIndexOfFile,
-                                                                    duration: Duration(
-                                                                        milliseconds:
-                                                                            300),
-                                                                    curve: Curves
-                                                                        .easeInOut,
-                                                                  );
-                                                                }
-                                                              : null,
+                                                      onPressed: currentIndexOfFile <
+                                                              state.notDeletedFiles
+                                                                      .length -
+                                                                  1
+                                                          ? () {
+                                                              onPageChanged(
+                                                                  ++currentIndexOfFile);
+                                                              widget
+                                                                  .pageController
+                                                                  .animateToPage(
+                                                                currentIndexOfFile,
+                                                                duration: Duration(
+                                                                    milliseconds:
+                                                                        300),
+                                                                curve: Curves
+                                                                    .easeInOut,
+                                                              );
+                                                            }
+                                                          : null,
                                                     ),
                                                   ))
                                             ])))
@@ -880,11 +897,13 @@ class _ChewieDemoState extends State<ChewieDemo> {
         child: Container(
           height: 40,
           width: 40,
-          child: DefaultIndicator,
+          child: LoadingIndicatorWidget(),
         ),
       ),
     );
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

@@ -376,6 +376,17 @@ class FilesCubit extends Cubit<FilesState> {
         category: selectedCategory));
   }
 
+  void updateFile(FileModel updatedFile) {
+    final updatedFiles = state.files.map((file) {
+      if (file.localId == updatedFile.localId) {
+        return updatedFile;
+      }
+      return file;
+    }).toList();
+
+    emit(state.copyWith(files: updatedFiles));
+  }
+
   // bool wereChanges(
   //     {required String initialProfilePhotoOfLocation,
   //     required String initialProfilePhotoOfMyHotel,
@@ -403,6 +414,5 @@ class FilesCubit extends Cubit<FilesState> {
   //       initialIdCategory != state.category.id);
   // }
 
-  List<FileModel> get fileModels => state.files;
   //Function deepComparing = const DeepCollectionEquality().equals;
 }

@@ -74,6 +74,8 @@ class _AddFilesAndInformationScreenState
     // initialIdCategory = state.location.idCategory;
     // initialFiles = state.files;
     _initialState = context.read<FilesCubit>().state;
+    currentName = _initialState.location.name;
+    currentDescription = _initialState.location.description;
   }
 
   @override
@@ -122,7 +124,6 @@ class _AddFilesAndInformationScreenState
                     : [],
                 systemOverlayStyle: SystemUiOverlayStyle.dark,
               ),
-              floatingActionButton: _buildFAB(),
               body: state.isLoading == false
                   ? Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -245,77 +246,114 @@ class _AddFilesAndInformationScreenState
         });
   }
 
-  Widget _buildFAB() {
-    return Padding(
-        padding: const EdgeInsets.only(bottom: 68, right: 8),
+  void _showAddMediaOptions() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        backgroundColor: Colors.transparent,
         child: Container(
-            width: 66,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(19),
-              color: const Color.fromRGBO(43, 54, 65, 0.7),
-            ),
-            child: Wrap(children: [
-              Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                const SizedBox(height: 8),
-                IconButton(
-                  key: const ValueKey('camera_button'),
-                  icon: SvgPicture.asset(IMG.icons.iconCamera,
-                      fit: BoxFit.scaleDown),
-                  onPressed: () async {
-                    var status =
-                        await _permissionsCubit.checkPermissionsForCamera();
-                    if (status == MyPermissionStatus.Granted) {
-                      try {
-                        final cameras = await availableCameras();
-                        Navigator.of(context)
-                            .push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                CustomCameraScreen(cameras: cameras),
-                          ),
-                        )
-                            .then((result) {
-                          if (result != null) {
-                            _cubit.setFilesFromCamera(result);
-                          }
-                        });
-                      } catch (e) {
-                        showSnackBar(context: context, message: e.toString());
-                      }
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return PermissionDeniedDialog(target: 'camera');
-                        },
-                      );
-                    }
-                  },
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            color: const Color.fromRGBO(43, 54, 65, 0.95),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  _openCamera();
+                },
+                child: SvgPicture.asset(
+                  IMG.icons.iconCamera,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
                 ),
-                const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 9),
-                    child: Divider(color: Colors.white)),
-                IconButton(
-                  icon: SvgPicture.asset(IMG.icons.iconGallery,
-                      fit: BoxFit.scaleDown),
-                  onPressed: () async {
-                    var status =
-                        await _permissionsCubit.checkPermissionsForGallery();
-                    if (status == MyPermissionStatus.Granted) {
-                      await _cubit.addFilesFromGallery();
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return PermissionDeniedDialog(target: 'gallery');
-                        },
-                      );
-                    }
-                  },
+              ),
+              Container(width: 2, height: 100, color: Colors.white24),
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  _openGallery();
+                },
+                child: SvgPicture.asset(
+                  IMG.icons.iconGallery,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 8)
-              ])
-            ])));
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCamera() async {
+    var status = await _permissionsCubit.checkPermissionsForCamera();
+    if (status == MyPermissionStatus.Granted) {
+      try {
+        final cameras = await availableCameras();
+        Navigator.of(context)
+            .push(
+          MaterialPageRoute(
+            builder: (context) => CustomCameraScreen(cameras: cameras),
+          ),
+        )
+            .then((result) {
+          if (result != null) {
+            _cubit.setFilesFromCamera(result);
+          }
+        });
+      } catch (e) {
+        showSnackBar(context: context, message: e.toString());
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return PermissionDeniedDialog(target: 'camera');
+        },
+      );
+    }
+  }
+
+  Future<void> _openGallery() async {
+    var status = await _permissionsCubit.checkPermissionsForGallery();
+    if (status == MyPermissionStatus.Granted) {
+      await _cubit.addFilesFromGallery();
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return PermissionDeniedDialog(target: 'gallery');
+        },
+      );
+    }
+  }
+
+  Widget _buildAddGridItem() {
+    return InkWell(
+      onTap: () => _showAddMediaOptions(),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: const Color.fromRGBO(245, 245, 245, 1),
+          border: Border.all(color: ColorBorderV2),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.add,
+            color: ColorOrange,
+            size: 32,
+          ),
+        ),
+      ),
+    );
   }
 
   _buildBody(FilesState state) {
@@ -324,20 +362,19 @@ class _AddFilesAndInformationScreenState
     var gridHeight = oneItemWidth - (oneItemWidth - (oneItemWidth / 1.05));
 
     List<FileModel> notDeletedFiles = state.notDeletedFiles;
+    int totalItems = notDeletedFiles.length + 1;
+    int displayCount = ((totalItems + 2) ~/ 3) * 3;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 24),
         Container(
-          height: (notDeletedFiles.isEmpty)
-              ? 0
-              : (notDeletedFiles.length < 4)
-                  ? gridHeight
-                  : gridHeight * 2,
+          height: (displayCount <= 3) ? gridHeight : gridHeight * 2,
           child: RawScrollbar(
             thumbColor: const Color.fromARGB(255, 248, 166, 166),
             radius: const Radius.circular(8),
-            thumbVisibility: notDeletedFiles.length > 5 ? true : false,
+            thumbVisibility: totalItems > 6 ? true : false,
             controller: _scrollController,
             child: GridView.builder(
               controller: _scrollController,
@@ -347,14 +384,20 @@ class _AddFilesAndInformationScreenState
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount: notDeletedFiles.length,
+              itemCount: displayCount,
               itemBuilder: (BuildContext ctx, index) {
-                return _buildItem(index, state, notDeletedFiles);
+                if (index == 0) {
+                  return _buildAddGridItem();
+                }
+                if (index < totalItems) {
+                  return _buildItem(index - 1, state, notDeletedFiles);
+                }
+                return _buildEmptySlot();
               },
             ),
           ),
         ),
-        SizedBox(height: notDeletedFiles.isEmpty ? 0 : 25),
+        const SizedBox(height: 25),
         GestureDetector(
             onTap: () {
               _showCategoriesBottomSheet(state.categories);
@@ -452,134 +495,146 @@ class _AddFilesAndInformationScreenState
     );
   }
 
+  Widget _buildEmptySlot() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: const Color.fromRGBO(245, 245, 245, 1),
+        border: Border.all(color: ColorBorderV2),
+      ),
+    );
+  }
+
   Widget _buildItem(
       int index, FilesState state, List<FileModel> notDeletedFiles) {
     const double borderRadiusOfImage = 8;
     final model = notDeletedFiles[index];
     return InkWell(
-      onTap: () {
-        if (state.selectedIds.isEmpty) {
-          var file = File(model.localPath);
-          if (file.existsSync()) {
-            showFullMediaPreviewSlider(context, _cubit, () {
-              setState(() {});
-            }, index);
+        onTap: () {
+          if (state.selectedIds.isEmpty) {
+            var file = File(model.localPath);
+            if (file.existsSync()) {
+              showFullMediaPreviewSlider(context, _cubit, () {
+                setState(() {});
+              }, index);
+            }
+          } else {
+            _cubit.selectFile(model);
           }
-        } else {
+        },
+        onLongPress: () {
           _cubit.selectFile(model);
-        }
-      },
-      onLongPress: () {
-        _cubit.selectFile(model);
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadiusOfImage),
-        child: Stack(
-          alignment: AlignmentDirectional.center,
-          children: [
-            Container(
-              width: 114,
-              height: 106,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(borderRadiusOfImage + 4),
-                color: const Color.fromRGBO(255, 255, 255, 0.5),
-                border: _cubit.fileSelected(model.localId)
-                    ? Border.all(
-                        color: ColorOrange,
-                        width: 2,
-                      )
-                    : null,
-              ),
-              child: ClipRRect(
-                  borderRadius: BorderRadius.circular(borderRadiusOfImage),
-                  child: model.type == FileModelType.Video
-                      ? ((File(model.localPath).existsSync())
-                          ? ImageItem(imagePath: model.thumb ?? "")
-                          : ImageItem(imagePath: model.localPath))
-                      : ImageItem(imagePath: model.localPath)),
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadiusOfImage),
+            color: const Color.fromRGBO(245, 245, 245, 1),
+            border: Border.all(
+              color: _cubit.fileSelected(model.localId)
+                  ? ColorOrange
+                  : ColorBorderV2,
+              width: _cubit.fileSelected(model.localId) ? 2 : 1,
             ),
-            if (model.type == FileModelType.Video)
-              Positioned.fill(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: SvgPicture.asset(
-                      IMG.icons.playPNG,
-                      fit: BoxFit.scaleDown,
-                      colorFilter: const ColorFilter.mode(
-                          Color.fromARGB(255, 189, 189, 189), BlendMode.srcIn),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(borderRadiusOfImage),
+            child: Stack(
+              alignment: AlignmentDirectional.center,
+              children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(borderRadiusOfImage),
+                      child: model.type == FileModelType.Video
+                          ? ((File(model.localPath).existsSync())
+                              ? ImageItem(imagePath: model.thumb ?? "")
+                              : ImageItem(imagePath: model.localPath))
+                          : ImageItem(imagePath: model.localPath)),
+                ),
+                if (model.type == FileModelType.Video)
+                  Positioned.fill(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: SvgPicture.asset(
+                          IMG.icons.playPNG,
+                          fit: BoxFit.scaleDown,
+                          colorFilter: const ColorFilter.mode(
+                              Color.fromARGB(255, 189, 189, 189),
+                              BlendMode.srcIn),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            Positioned(
-                left: 4,
-                top: 6,
-                child: Row(children: [
-                  state.location.pathOfProfilePhoto == model.localPath
-                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfLocation,
-                          fit: BoxFit.scaleDown)
-                      : const SizedBox(),
-                  SizedBox(
-                      width:
-                          state.location.pathOfProfilePhoto == model.localPath
+                Positioned(
+                    left: 4,
+                    top: 6,
+                    child: Row(children: [
+                      state.location.pathOfProfilePhoto == model.localPath
+                          ? SvgPicture.asset(
+                              IMG.icons.iconProfilePhotoOfLocation,
+                              fit: BoxFit.scaleDown)
+                          : const SizedBox(),
+                      SizedBox(
+                          width: state.location.pathOfProfilePhoto ==
+                                  model.localPath
                               ? 4
                               : 0),
-                  state.myHotel.pathOfProfilePhoto == model.localPath
-                      ? SvgPicture.asset(IMG.icons.iconProfilePhotoOfMyHotel,
-                          fit: BoxFit.scaleDown)
-                      : const SizedBox()
-                ])),
-            if (model.synced == true)
-              Positioned(
-                  right: 4,
-                  top: 4,
-                  child: SvgPicture.asset(IMG.icons.downloadComplite,
-                      width: 30, height: 30, fit: BoxFit.scaleDown))
-            else if (model.syncError == true)
-              Positioned(
-                  right: 7,
-                  top: 6,
-                  child: SvgPicture.asset(IMG.icons.downloadFailed,
-                      width: 24, height: 24, fit: BoxFit.scaleDown))
-            else if (model.synced == false)
-              Positioned(
-                right: 4,
-                top: 4,
-                child: SvgPicture.asset(IMG.icons.uploading,
-                    width: 30, height: 30, fit: BoxFit.scaleDown),
-              ),
-            if (state.selectedIds.isNotEmpty)
-              Positioned(
-                  left: 4,
-                  top: 4,
-                  child: _cubit.fileSelected(model.localId)
-                      ? Container(
-                          width: 25,
-                          height: 25,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: const Color.fromRGBO(255, 255, 255, 1),
-                          ),
-                          child: SvgPicture.asset(IMG.icons.select,
-                              width: 20, height: 20, fit: BoxFit.scaleDown),
-                        )
-                      : Container(
-                          width: 25,
-                          height: 25,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: const Color.fromRGBO(255, 255, 255, 0.5),
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 2,
-                            ),
-                          ),
-                        ))
-          ],
-        ),
-      ),
-    );
+                      state.myHotel.pathOfProfilePhoto == model.localPath
+                          ? SvgPicture.asset(
+                              IMG.icons.iconProfilePhotoOfMyHotel,
+                              fit: BoxFit.scaleDown)
+                          : const SizedBox()
+                    ])),
+                if (model.synced == true)
+                  Positioned(
+                      right: 4,
+                      top: 4,
+                      child: SvgPicture.asset(IMG.icons.downloadComplite,
+                          width: 30, height: 30, fit: BoxFit.scaleDown))
+                else if (model.syncError == true)
+                  Positioned(
+                      right: 7,
+                      top: 6,
+                      child: SvgPicture.asset(IMG.icons.downloadFailed,
+                          width: 24, height: 24, fit: BoxFit.scaleDown))
+                else if (model.synced == false)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: SvgPicture.asset(IMG.icons.uploading,
+                        width: 30, height: 30, fit: BoxFit.scaleDown),
+                  ),
+                if (state.selectedIds.isNotEmpty)
+                  Positioned(
+                      left: 4,
+                      top: 4,
+                      child: _cubit.fileSelected(model.localId)
+                          ? Container(
+                              width: 25,
+                              height: 25,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: const Color.fromRGBO(255, 255, 255, 1),
+                              ),
+                              child: SvgPicture.asset(IMG.icons.select,
+                                  width: 20, height: 20, fit: BoxFit.scaleDown),
+                            )
+                          : Container(
+                              width: 25,
+                              height: 25,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: const Color.fromRGBO(255, 255, 255, 0.5),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ))
+              ],
+            ),
+          ),
+        ));
   }
 
   _showCategoriesBottomSheet(List<CategoryModel> categories) {
