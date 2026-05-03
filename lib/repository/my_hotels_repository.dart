@@ -8,6 +8,7 @@ import 'package:psn.hotels.hub/services/service_container.dart';
 
 class MyHotelRepository {
   final HotelApi hotelApi = ApiContainer().hotelApi;
+
   // Assuming you have a DB instance
   DBManager db = DBManager();
 
@@ -19,10 +20,8 @@ class MyHotelRepository {
       List<Map<String, dynamic>> myHotelsMaps = await (await db.myHotelsDao())
           .getAllMyHotelsNotDeleted(
               limit: limit, offset: offset, search: search);
-      List<MyHotelModel> myHotels = myHotelsMaps
-          .map((map) => MyHotelModel.fromMap(map))
-          .where((element) => element.deleted == false)
-          .toList();
+      List<MyHotelModel> myHotels =
+          myHotelsMaps.map((map) => MyHotelModel.fromMap(map)).toList();
       return myHotels;
     } catch (e) {
       throw e;
@@ -40,6 +39,8 @@ class MyHotelRepository {
         MyHotelModel myHotel = MyHotelModel();
         myHotel.id = hotel.id;
         myHotel.name = hotel.name;
+        myHotel.country = hotel.country;
+        myHotel.resort = hotel.resort;
         myHotel.createdAt = DateTime.now().toIso8601String();
         myHotel.updatedAt = DateTime.now().toIso8601String();
         (await db.myHotelsDao()).insertMyHotel(myHotel);

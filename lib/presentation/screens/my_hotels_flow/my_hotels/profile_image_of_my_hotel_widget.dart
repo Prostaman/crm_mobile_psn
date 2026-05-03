@@ -9,7 +9,8 @@ import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/presentation/items/image_item.dart';
 
 Widget? profileImageOMyfHotel(MyHotelModel myHotel, List<FileModel> files) {
-  //print("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
+  print("myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
+  print("myHotel.pathOfProfilePhoto content.length:${files.length}");
   if (myHotel.pathOfProfilePhoto.isNotEmpty &&
       File(myHotel.pathOfProfilePhoto).existsSync()) {
     return ImageItem(imagePath: myHotel.pathOfProfilePhoto);
@@ -25,6 +26,7 @@ Widget? profileImageOMyfHotel(MyHotelModel myHotel, List<FileModel> files) {
           return ImageItem(imagePath: file.thumb ?? '');
         }
       } else {
+        print("myHotel.pathOfProfilePhoto file.localPath:${file.localPath}");
         if (File(file.localPath).existsSync() && file.deleted != true) {
           return ImageItem(imagePath: file.localPath);
         }

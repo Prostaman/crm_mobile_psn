@@ -5,7 +5,7 @@ import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 
 import '../../../models/entities_database/file_model.dart';
 
-class FilesState extends Equatable {
+class ContentState extends Equatable {
   final List<FileModel> files;
   final Set<int> selectedIds;
   final MyHotelModel myHotel;
@@ -16,7 +16,7 @@ class FilesState extends Equatable {
   final bool isLoading;
   final String? error;
 
-  const FilesState({
+  const ContentState({
     required this.files,
     required this.selectedIds,
     required this.myHotel,
@@ -27,7 +27,7 @@ class FilesState extends Equatable {
     this.error,
   });
 
-  FilesState copyWith(
+  ContentState copyWith(
       {List<FileModel>? files,
       Set<int>? selectedIds,
       MyHotelModel? myHotel,
@@ -36,7 +36,7 @@ class FilesState extends Equatable {
       List<CategoryModel>? categories,
       bool? isLoading,
       String? error}) {
-    return FilesState(
+    return ContentState(
       files: files ?? this.files,
       selectedIds: selectedIds ?? this.selectedIds,
       myHotel: myHotel ?? this.myHotel,

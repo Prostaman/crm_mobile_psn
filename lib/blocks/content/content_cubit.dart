@@ -18,14 +18,16 @@ import 'package:video_compress/video_compress.dart';
 import '../../repository/repository_container.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
-//import 'package:collection/collection.dart';
-import 'states/files_screen_state.dart';
 
-class FilesCubit extends Cubit<FilesState> {
-  FilesCubit({
+//import 'package:collection/collection.dart';
+import 'states/content_state.dart';
+import 'states/content_state_extension.dart';
+
+class ContentCubit extends Cubit<ContentState> {
+  ContentCubit({
     required MyHotelModel myHotel,
     LocationModel? location,
-  }) : super(FilesState(
+  }) : super(ContentState(
             files: [],
             selectedIds: {},
             myHotel: myHotel,
@@ -34,12 +36,16 @@ class FilesCubit extends Cubit<FilesState> {
                 CategoryModel(id: -1, description: 'Выберите категорию *'),
             categories: []));
 
-  late final DBManager db;
+  late final DBManager _db;
+  ContentState? _initialState;
+  void resetInitialState() {
+    _initialState = null;
+  }
 
   Future<void> init() async {
     Future<List<FileModel>> _getFiles() async {
       try {
-        List<FileModel> files = await (await db.filesDao())
+        List<FileModel> files = await (await _db.filesDao())
                 .findNotDeletedFilesByLocationId(state.location.localId) ??
             [];
         files.sort((a, b) {
@@ -55,29 +61,36 @@ class FilesCubit extends Cubit<FilesState> {
     }
 
     Future<List<CategoryModel>> _getAllCategories() async {
-      return await (await db.categoriesDao()).getAllCategories();
+      return await (await _db.categoriesDao()).getAllCategories();
     }
 
     Future<CategoryModel> _findCategoryById(int id) async {
       CategoryModel? categoryModel =
-          await (await db.categoriesDao()).findCategoryById(id);
+          await (await _db.categoriesDao()).findCategoryById(id);
       return categoryModel ??
           CategoryModel(id: -1, description: 'Выберите категорию *');
     }
 
     _showLoading();
+    _db = DBManager();
     try {
       List<CategoryModel> categories = await _getAllCategories();
       if (state.location.localId != -1) {
         List<FileModel> files = await _getFiles();
         CategoryModel currentCategory =
             await _findCategoryById(state.location.idCategory);
-        emit(state.copyWith(
+
+        final loadedState = state.copyWith(
             isLoading: false,
             error: null,
             files: files,
             categories: categories,
-            category: currentCategory));
+            category: currentCategory);
+        if (_initialState == null) {
+          _initialState =
+              loadedState; // Фиксируем момент, когда данные загружены
+        }
+        emit(loadedState);
       } else {
         emit(state.copyWith(
             isLoading: false, error: null, categories: categories));
@@ -103,12 +116,21 @@ class FilesCubit extends Cubit<FilesState> {
     FirebaseCrashlytics.instance.recordError(error, stackTrace);
   }
 
+  bool hasChanges(
+      {required String currentName, required String currentDescription}) {
+    if (_initialState == null) return false; // Данные еще не загружены
+    // Сравниваем файлы/категорию через extension и текст в контроллерах
+    return state.isDifferentFrom(_initialState!) ||
+        currentName != _initialState!.location.name ||
+        currentDescription != _initialState!.location.description;
+  }
+
   Future<void> save({
     required String currentName,
     required String currentDescription,
   }) async {
     Future<void> _saveProfileImageOfMyHotel() async {
-      await (await db.myHotelsDao())
+      await (await _db.myHotelsDao())
           .updateMyHotel(state.myHotel.id, state.myHotel);
     }
 
@@ -173,9 +195,10 @@ class FilesCubit extends Cubit<FilesState> {
           }
 
           // Б. Привязка к локации и сохранение в БД
-          if (file.localLocationId == -1) {
+          if (file.localLocationId <= 0) {
             file.localLocationId = state.location.localId;
             file.cloudLocationId = state.location.cloudId;
+            file.hotelId = state.location.hotelId;
             await repository.addFile(file: file);
           } else if (file.isEdited) {
             await repository.updateFile(file: file);
@@ -198,6 +221,7 @@ class FilesCubit extends Cubit<FilesState> {
     state.location.description = currentDescription;
     await _addLocationWithContent();
     await _saveProfileImageOfMyHotel();
+    _initialState = null;
     startSync();
   }
 
@@ -294,7 +318,7 @@ class FilesCubit extends Cubit<FilesState> {
     // TODO: optimize with limited parallelism if performance issues appear
     try {
       const double maxFileSizeInBytes =
-          100 * 1048576; //100 MB limit size for files
+          100 * 1048576; //100 MB limit size for content
       List<FileModel> filesFromGallery = [];
       final ImagePicker _picker = ImagePicker();
       List<XFile> xfilesFromGallery =
@@ -387,32 +411,32 @@ class FilesCubit extends Cubit<FilesState> {
     emit(state.copyWith(files: updatedFiles));
   }
 
-  // bool wereChanges(
-  //     {required String initialProfilePhotoOfLocation,
-  //     required String initialProfilePhotoOfMyHotel,
-  //     required int initialIdCategory,
-  //     required List<FileModel> initialFiles,
-  //     required String currentName,
-  //     required String currentDescription,
-  //     required String initName,
-  //     required String initDescription}) {
-  //   bool _isExistsEditedFiles(List<FileModel> files) {
-  //     for (var file in files) {
-  //       if (file.isEdited) {
-  //         return true;
-  //       }
-  //     }
-  //     return false;
-  //   }
-  //
-  //   return (!deepComparing(initialFiles, state.files) ||
-  //       _isExistsEditedFiles(state.files) ||
-  //       currentName != initName ||
-  //       currentDescription != initDescription ||
-  //       initialProfilePhotoOfLocation != state.location.pathOfProfilePhoto ||
-  //       initialProfilePhotoOfMyHotel != state.myHotel.pathOfProfilePhoto ||
-  //       initialIdCategory != state.category.id);
-  // }
+// bool wereChanges(
+//     {required String initialProfilePhotoOfLocation,
+//     required String initialProfilePhotoOfMyHotel,
+//     required int initialIdCategory,
+//     required List<FileModel> initialFiles,
+//     required String currentName,
+//     required String currentDescription,
+//     required String initName,
+//     required String initDescription}) {
+//   bool _isExistsEditedFiles(List<FileModel> content) {
+//     for (var file in content) {
+//       if (file.isEdited) {
+//         return true;
+//       }
+//     }
+//     return false;
+//   }
+//
+//   return (!deepComparing(initialFiles, state.content) ||
+//       _isExistsEditedFiles(state.content) ||
+//       currentName != initName ||
+//       currentDescription != initDescription ||
+//       initialProfilePhotoOfLocation != state.location.pathOfProfilePhoto ||
+//       initialProfilePhotoOfMyHotel != state.myHotel.pathOfProfilePhoto ||
+//       initialIdCategory != state.category.id);
+// }
 
-  //Function deepComparing = const DeepCollectionEquality().equals;
+//Function deepComparing = const DeepCollectionEquality().equals;
 }

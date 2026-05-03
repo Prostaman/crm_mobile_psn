@@ -82,7 +82,7 @@ class AuthService {
               //print("token: ${response.item!.token}");
               bool success = await _saveUserToShared(response.item);
               if (success == true) {
-                //adding auto uploading files to the server, when app is closed
+                //adding auto uploading content to the server, when app is closed
                 return response.item;
               } else {
                 throw ("Error saving user to shared");

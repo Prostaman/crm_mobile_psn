@@ -18,6 +18,7 @@ class DefaultTextField extends StatefulWidget {
   final int? maxLenght;
   final bool multiline;
   final List<TextInputFormatter>? inputFormatter;
+  final TextEditingController? controller;
 
   DefaultTextField({
     Key? key,
@@ -36,6 +37,7 @@ class DefaultTextField extends StatefulWidget {
     this.maxLenght,
     this.multiline = false,
     this.inputFormatter,
+    this.controller,
   }) : super(key: key);
 
   @override
@@ -43,37 +45,28 @@ class DefaultTextField extends StatefulWidget {
 }
 
 class _DefaultTextFieldState extends State<DefaultTextField> {
-  TextEditingController? _controller;
+  TextEditingController? _internalController;
   bool _passwordVisible = false;
 
-  bool _oldPasswordVisible = false;
+  TextEditingController get _effectiveController =>
+      widget.controller ??
+      (_internalController ??= TextEditingController(text: widget.initialText));
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _internalController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_controller == null) {
-      _controller = TextEditingController(text: widget.initialText);
-    }
-
-    if (_controller != null &&
-        _controller?.text != widget.initialText &&
-        _oldPasswordVisible == _passwordVisible) {
-      _controller = TextEditingController(text: widget.initialText);
-    }
-
     if (widget.readOnly == true) {
-      _controller?.text = widget.initialText ?? "";
+      _effectiveController.text = widget.initialText ?? "";
     }
-
-    _oldPasswordVisible = _passwordVisible;
 
     Widget textField = TextFormField(
         maxLength: widget.maxLenght,
-        controller: _controller,
+        controller: _effectiveController,
         maxLines: (widget.maxLines ?? 1) > 1 ? null : widget.maxLines,
         minLines: widget.minLines,
         readOnly: widget.readOnly,

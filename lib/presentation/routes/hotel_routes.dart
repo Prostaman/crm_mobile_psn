@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/blocks/locations/locations_cubit.dart';
-import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
+import 'package:psn.hotels.hub/blocks/content/content_cubit.dart';
 import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/presentation/routes/base_routes.dart';
-import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/add_location_with_content/add_files_and_information_screen.dart';
+import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/content/content_screen.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/full_media_preview_screen/full_media_preview_slider.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/locations/locations_screen.dart';
 import '../screens/my_hotels_flow/drawer/settings/settings_screen.dart';
@@ -35,11 +35,11 @@ pushToCreateLocationWithContentScreen(
     required VoidCallback saveCallback}) {
   pushTo(
     screen: BlocProvider(
-      create: (context) => FilesCubit(myHotel: hotel),
-      child: AddFilesAndInformationScreen(saveCallback: saveCallback),
+      create: (context) => ContentCubit(myHotel: hotel)..init(),
+      child: ContentScreen(saveCallback: saveCallback),
     ),
     context: context,
-  )..init();
+  );
 }
 
 pushToEditLocationContent(
@@ -49,11 +49,12 @@ pushToEditLocationContent(
     required VoidCallback saveCallback}) {
   pushTo(
     screen: BlocProvider(
-      create: (context) => FilesCubit(myHotel: hotel, location: location),
-      child: AddFilesAndInformationScreen(saveCallback: saveCallback),
+      create: (context) =>
+          ContentCubit(myHotel: hotel, location: location)..init(),
+      child: ContentScreen(saveCallback: saveCallback),
     ),
     context: context,
-  )..init();
+  );
 }
 
 showFullMediaPreviewSlider(context, _cubit, setStateCallback,

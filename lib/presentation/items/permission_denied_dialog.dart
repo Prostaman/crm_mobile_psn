@@ -121,8 +121,8 @@ class PermissionDeniedDialog extends StatelessWidget {
 //                     TextButton(
 //                       onPressed: () {
 //                         // List<FileModel> filesThatWillDelete = [];
-//                         // //deleteting not saved files from memory of application
-//                         // for (final file in _cubit.files) {
+//                         // //deleteting not saved content from memory of application
+//                         // for (final file in _cubit.content) {
 //                         //   if (!initialFiles.contains(file)) {
 //                         //     filesThatWillDelete.add(file);
 //                         //     FileUtility.deleteFile(file.localPath);
@@ -131,7 +131,7 @@ class PermissionDeniedDialog extends StatelessWidget {
 //                         //     file.localPath = file.oldLocalPath;
 //                         //   }
 //                         // }
-//                         // _cubit.files.removeWhere((file) => filesThatWillDelete.contains(file));
+//                         // _cubit.content.removeWhere((file) => filesThatWillDelete.contains(file));
 
 //                         //test
 //                         // await deleteteNotSavedFilesFromMemoryOfApplication();

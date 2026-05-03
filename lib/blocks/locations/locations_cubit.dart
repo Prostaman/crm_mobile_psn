@@ -89,12 +89,12 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
   @override
   Future<ListResult<LocationState>?> getModels({int page = 0}) async {
     try {
-      const int limit = 10;
+      const int limit = 12;
       int offset = page * limit;
 
       // 1. Получаем локации из БД
       final locationsData = await (await db.locationsDao())
-              .findLocationsByHotelId(myHotel.id,
+              .findNotDeletedLocationsByHotelId(myHotel.id,
                   limit: limit, offset: offset) ??
           [];
 

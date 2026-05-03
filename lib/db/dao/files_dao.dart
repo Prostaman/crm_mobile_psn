@@ -12,6 +12,7 @@ class FilesDao {
   final Database _database;
 
   FilesDao(this._database, this.tableName);
+
   //обновляет UUID в path каждого файла, если он был изменён дабы не потерять файлы
   Future<void> updateUUID_of_Files() async {
     getUUID(String path) {
@@ -179,10 +180,16 @@ class FilesDao {
   //   }
   // }
 
-  Future<FileModel> findFileByLocalPath(String localPath) async {
+  Future<FileModel?> findFileByLocalPath(String localPath) async {
     try {
       List<Map<String, dynamic>> mapList = await _database.query(tableName,
           where: 'localPath = ?', whereArgs: [localPath], limit: 1);
+      if (mapList.isEmpty) {
+        FirebaseCrashlyticsHelper.recordDaoLocalDBError(
+            'file not found by pathOfProfilePhoto in local db',
+            'changingProfilePhotoOfMyHotel');
+        return null;
+      }
       return FileModel.fromMap(mapList.first);
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
@@ -192,7 +199,6 @@ class FilesDao {
   }
 
   Future<void> insertFile(FileModel file) async {
-    //Database db = await database;
     try {
       await _database.insert(tableName, file.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -200,6 +206,8 @@ class FilesDao {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "insertFile");
       throw e;
+    } finally {
+      debugPrint("Successfully inserted file");
     }
   }
 

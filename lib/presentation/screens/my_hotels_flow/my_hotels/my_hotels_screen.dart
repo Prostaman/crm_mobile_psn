@@ -134,16 +134,17 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
           ]);
         },
         itemBuilder: (context, models, index) {
+          final state = models[index];
           controllers.add(SlidableController(this));
           return InkWell(
-            key: ValueKey(models[index].base.id),
+            key: ValueKey(state.base.id),
             onTap: () {
               controllers.forEach((controller) => controller.close());
               pushToLocationsScreen(
                 context: context,
-                model: models[index].base,
+                model: state.base,
                 updateCallback: () async {
-                  await _cubit.updateSingleMyHotel(models[index].base.id);
+                  await _cubit.updateSingleMyHotel(state.base.id);
                 },
               );
             },
@@ -153,7 +154,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Slidable(
-                  key: ValueKey(models[index].base.id),
+                  key: ValueKey(state.base.id),
                   controller: controllers[index],
                   endActionPane: ActionPane(
                     motion: ScrollMotion(),
@@ -188,7 +189,8 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                             color: applyOpacity(ColorLightGrey, 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: profileImageOMyfHotel(models[index].base, [])),
+                          child:
+                              profileImageOMyfHotel(state.base, state.files)),
                       Expanded(
                           child: Padding(
                               padding: EdgeInsets.only(left: 18),
@@ -197,7 +199,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                 children: [
                                   SizedBox(height: 4),
                                   Text(
-                                    "Создано: ${formatDate(stringToDate(models[index].base.createdAt) ?? DateTime(2000, 1, 1), format: DateFormatType.Date)}",
+                                    "Создано: ${formatDate(stringToDate(state.base.createdAt) ?? DateTime(2000, 1, 1), format: DateFormatType.Date)}",
                                     style: textStyle(
                                         size: 12,
                                         color:
@@ -205,7 +207,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    models[index].base.name,
+                                    state.base.name,
                                     style: textStyle(
                                         size: 19, weight: FontWeight.bold),
                                     textAlign: TextAlign.left,
@@ -214,7 +216,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    "${models[index].base.country}, ${models[index].base.resort}",
+                                    "${state.base.country}, ${state.base.resort}",
                                     style: textStyle(
                                         size: 12,
                                         color:

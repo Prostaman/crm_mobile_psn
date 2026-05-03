@@ -36,13 +36,11 @@ class LocationsDao {
   Future<List<Map<String, dynamic>>?> findLocationsByHotelId(int hotelId,
       {int? limit, int? offset}) async {
     try {
-      return await _database.query(
-        tableName,
-        where: 'hotelId = ?',
-        whereArgs: [hotelId],
-        limit: limit,
-        offset: offset,
-      );
+      return await _database.query(tableName,
+          where: 'hotelId = ?',
+          whereArgs: [hotelId],
+          limit: limit,
+          offset: offset);
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "findLocationsByHotelId");
@@ -61,6 +59,7 @@ class LocationsDao {
         whereArgs: [hotelId],
         limit: limit,
         offset: offset,
+        orderBy: 'createdAt DESC',
       );
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(

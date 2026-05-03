@@ -103,7 +103,7 @@ class _LocationsScreenState extends State<LocationsScreen>
             context: context,
             hotel: hotel,
             saveCallback: () {
-              _cubit.reload();
+              _cubit.refresh();
               widget.updateCallback();
             },
           );
@@ -196,7 +196,7 @@ class _LocationsScreenState extends State<LocationsScreen>
           hotel: hotel,
           location: location,
           saveCallback: () async {
-            _cubit.reload();
+            _cubit.refresh();
             widget.updateCallback();
           },
         );

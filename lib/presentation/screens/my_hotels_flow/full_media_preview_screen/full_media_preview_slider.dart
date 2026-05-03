@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
+import 'package:psn.hotels.hub/blocks/content/content_cubit.dart';
 import 'package:psn.hotels.hub/helpers/file_utility.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
@@ -21,7 +21,7 @@ import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'dart:math' as math;
-import '../../../../blocks/files/states/files_screen_state.dart';
+import '../../../../blocks/content/states/content_state.dart';
 import 'semi_circle.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
@@ -40,12 +40,12 @@ class FullMediaPreviewSlider extends StatefulWidget {
 }
 
 class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
-  late final FilesCubit _cubit;
+  late final ContentCubit _cubit;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _cubit = context.read<FilesCubit>();
+    _cubit = context.read<ContentCubit>();
   }
 
   int currentIndexOfFile = 0;
@@ -96,7 +96,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     });
   }
 
-  void overrideImage(String newFilePath, FilesState state) {
+  void overrideImage(String newFilePath, ContentState state) {
     final file = state.notDeletedFiles[currentIndexOfFile];
 
     final updated = file.copyWith(
@@ -111,7 +111,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
 
   final GlobalKey _globalKey = GlobalKey();
 
-  Future<void> saveImageWithFiltersFromWidget(FilesState state) async {
+  Future<void> saveImageWithFiltersFromWidget(ContentState state) async {
     setState(() {
       isLoading = true;
     });
@@ -161,7 +161,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     );
   }
 
-  Future<void> _cropImage(FilesState state) async {
+  Future<void> _cropImage(ContentState state) async {
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: state.notDeletedFiles[currentIndexOfFile].localPath,
       compressFormat: ImageCompressFormat.jpg,
@@ -207,7 +207,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
             return Future.value(true);
           });
         },
-        child: BlocBuilder<FilesCubit, FilesState>(
+        child: BlocBuilder<ContentCubit, ContentState>(
             bloc: _cubit,
             builder: (context, state) {
               final files = state.notDeletedFiles;

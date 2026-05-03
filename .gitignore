@@ -3,20 +3,20 @@
 # Learn more about .gitignore:
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
 
-# Node artifact files
+# Node artifact content
 node_modules/
 dist/
 
-# Compiled Java class files
+# Compiled Java class content
 *.class
 
 # Compiled Python bytecode
 *.py[cod]
 
-# Log files
+# Log content
 *.log
 
-# Package files
+# Package content
 *.jar
 
 # Maven
@@ -40,7 +40,7 @@ Thumbs.db
 *.exe
 *.war
 
-# Large media files
+# Large media content
 *.mp4
 *.tiff
 *.avi

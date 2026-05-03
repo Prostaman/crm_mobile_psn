@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/blocks/files/files_cubit.dart';
-import 'package:psn.hotels.hub/blocks/files/states/file_state.dart';
-import 'package:psn.hotels.hub/blocks/files/states/files_screen_state.dart';
+import 'package:psn.hotels.hub/blocks/content/content_cubit.dart';
+import 'package:psn.hotels.hub/blocks/content/states/content_state.dart';
 import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/helpers/getter_icon_path_category.dart';
 import 'package:psn.hotels.hub/helpers/images.gen.dart';
@@ -15,46 +13,35 @@ import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/models/entities_database/category_of_location_model.dart';
 import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
-import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 import 'package:psn.hotels.hub/presentation/items/default_cupertino_text_field.dart';
 import 'package:psn.hotels.hub/presentation/items/image_item.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
-import 'package:psn.hotels.hub/presentation/screens/base_screen.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/camera/custom_camera_screen.dart';
 import 'package:psn.hotels.hub/presentation/items/permission_denied_dialog.dart';
-import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'choose_category_bottom_sheet.dart';
-import 'extension/files_state_diff.dart';
 
-class AddFilesAndInformationScreen extends StatefulWidget {
+class ContentScreen extends StatefulWidget {
   final VoidCallback saveCallback;
 
-  AddFilesAndInformationScreen({Key? key, required this.saveCallback})
-      : super(key: key);
+  ContentScreen({Key? key, required this.saveCallback}) : super(key: key);
 
   @override
-  _AddFilesAndInformationScreenState createState() =>
-      _AddFilesAndInformationScreenState();
+  _ContentScreenState createState() => _ContentScreenState();
 }
 
-class _AddFilesAndInformationScreenState
-    extends State<AddFilesAndInformationScreen> {
-  late final FilesCubit _cubit;
+class _ContentScreenState extends State<ContentScreen> {
+  late final ContentCubit _cubit;
   late final PermissionsCubit _permissionsCubit;
-
-  late String currentName;
-  late String currentDescription;
-
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
   // late final String? initLocationName;
   // late final String? initLocationDescription;
   // late final String? initialProfilePhotoOfLocation;
   // late final String? initialProfilePhotoOfMyHotel;
   // late final int? initialIdCategory;
   // List<FileModel> initialFiles = [];
-
-  late final FilesState _initialState;
 
   ScrollController _scrollController = ScrollController();
   bool _showRequiredFields = false;
@@ -63,7 +50,7 @@ class _AddFilesAndInformationScreenState
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.initState();
-    _cubit = BlocProvider.of<FilesCubit>(context);
+    _cubit = BlocProvider.of<ContentCubit>(context);
     _permissionsCubit = BlocProvider.of<PermissionsCubit>(context);
     // currentName = state.location.name;
     // currentDescription = state.location.description;
@@ -72,27 +59,37 @@ class _AddFilesAndInformationScreenState
     // initialProfilePhotoOfLocation = state.location.pathOfProfilePhoto;
     // initialProfilePhotoOfMyHotel = state.myHotel.pathOfProfilePhoto;
     // initialIdCategory = state.location.idCategory;
-    // initialFiles = state.files;
-    _initialState = context.read<FilesCubit>().state;
-    currentName = _initialState.location.name;
-    currentDescription = _initialState.location.description;
+    // initialFiles = state.content;
+
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext contextWidget) {
-    return BlocConsumer<FilesCubit, FilesState>(
+    return BlocConsumer<ContentCubit, ContentState>(
       bloc: _cubit,
       listener: (context, state) {
-        if (state is ErrorState) {
+        if (state.error != null) {
           showSnackBar(context: context, message: state.error ?? "Empty error");
         }
+        _nameController.text = state.location.name;
+        _descriptionController.text = state.location.description;
       },
       builder: (context, state) {
         return PopScope(
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (didPop) return;
-              _handlePop();
+              _handlePop(state);
             },
             child: Scaffold(
               backgroundColor: ColorWhite,
@@ -147,11 +144,11 @@ class _AddFilesAndInformationScreenState
     );
   }
 
-  bool get hasChanges =>
-      context.read<FilesCubit>().state.isDifferentFrom(_initialState);
-
-  void _handlePop() async {
-    if (hasChanges) {
+  void _handlePop(ContentState state) async {
+    if (state.location.localId == -1 ||
+        _cubit.hasChanges(
+            currentName: _nameController.text,
+            currentDescription: _descriptionController.text)) {
       bool? resultAlertDialog = await showDialog<bool>(
         context: context,
         builder: (contextAlertDialog) {
@@ -172,7 +169,8 @@ class _AddFilesAndInformationScreenState
               actions: [
                 TextButton(
                   onPressed: () {
-                    widget.saveCallback();
+                    //widget.saveCallback();
+                    _cubit.resetInitialState();
                     Navigator.pop(contextAlertDialog, true);
                   },
                   child: Text("Выйти",
@@ -183,13 +181,17 @@ class _AddFilesAndInformationScreenState
                 ),
                 TextButton(
                   onPressed: () async {
-                    await _cubit.save(
-                      currentName: currentName,
-                      currentDescription: currentDescription,
-                    );
-
-                    widget.saveCallback();
-                    Navigator.pop(contextAlertDialog, true);
+                    if (state.category.id == -1) {
+                      setState(() => _showRequiredFields = true);
+                      Navigator.pop(contextAlertDialog, false);
+                    } else {
+                      await _cubit.save(
+                        currentName: _nameController.text,
+                        currentDescription: _descriptionController.text,
+                      );
+                      widget.saveCallback();
+                      Navigator.pop(contextAlertDialog, true);
+                    }
                   },
                   child: Text("Cохранить",
                       style: textStyle(
@@ -204,6 +206,7 @@ class _AddFilesAndInformationScreenState
         Navigator.of(context).pop();
       }
     } else {
+      _cubit.resetInitialState();
       widget.saveCallback();
       Navigator.of(context).pop();
     }
@@ -356,7 +359,7 @@ class _AddFilesAndInformationScreenState
     );
   }
 
-  _buildBody(FilesState state) {
+  _buildBody(ContentState state) {
     var width = MediaQuery.of(context).size.width - 24 - 32;
     var oneItemWidth = width / 3;
     var gridHeight = oneItemWidth - (oneItemWidth - (oneItemWidth / 1.05));
@@ -443,10 +446,8 @@ class _AddFilesAndInformationScreenState
         SizedBox(
           height: 66,
           child: DefaultTextField(
-            initialText: currentName,
-            onChanged: (newValue) {
-              currentName = newValue;
-            },
+            controller: _nameController,
+            onChanged: (newValue) {},
             maxLenght: 256,
             placeholder: "Название локации",
           ),
@@ -455,10 +456,8 @@ class _AddFilesAndInformationScreenState
         Expanded(
           child: Scrollbar(
             child: DefaultTextField(
-              initialText: currentDescription,
-              onChanged: (newValue) {
-                currentDescription = newValue;
-              },
+              controller: _descriptionController,
+              onChanged: (newValue) {},
               maxLines: 10,
               minLines: 4,
               maxLenght: 1000,
@@ -478,13 +477,14 @@ class _AddFilesAndInformationScreenState
                 textSize: 18,
                 scheme: DefaultButtonScheme.Orange,
                 onPressed: () async {
+                  debugPrint('state.category.id:${state.category.id}');
                   if (state.category.id == -1) {
                     setState(() => _showRequiredFields = true);
                   } else {
                     _showRequiredFields = false;
                     await _cubit.save(
-                        currentName: currentName,
-                        currentDescription: currentDescription);
+                        currentName: _nameController.text,
+                        currentDescription: _descriptionController.text);
                     widget.saveCallback();
                     if (mounted) Navigator.pop(context);
                   }
@@ -506,10 +506,11 @@ class _AddFilesAndInformationScreenState
   }
 
   Widget _buildItem(
-      int index, FilesState state, List<FileModel> notDeletedFiles) {
+      int index, ContentState state, List<FileModel> notDeletedFiles) {
     const double borderRadiusOfImage = 8;
     final model = notDeletedFiles[index];
     return InkWell(
+        key: ValueKey(model.localId),
         onTap: () {
           if (state.selectedIds.isEmpty) {
             var file = File(model.localPath);

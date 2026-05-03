@@ -227,11 +227,11 @@ class SinkService {
               if (r.success == true) {
                 location.synced = true;
                 var oldLocationCloudId = location.cloudId;
-                location.cloudId = r.item?.cloudId ?? 0;
+                location.cloudId = r.item?.cloudId ?? -1;
                 await locationsDao.updateLocation(location);
                 _notifyLocationChanged(location.localId, location.hotelId);
                 debugPrint("oldLocationCloudId: $oldLocationCloudId");
-                if (oldLocationCloudId == 0) {
+                if (oldLocationCloudId <= 0) {
                   var files =
                       await filesDao.findFilesByLocationId(location.localId) ??
                           [];
@@ -348,9 +348,12 @@ class SinkService {
       for (var myHotel in myHotels) {
         debugPrint(
             "synchronization myHotel.pathOfProfilePhoto:${myHotel.pathOfProfilePhoto}");
-        FileModel file =
+        FileModel? file =
             await filesDao.findFileByLocalPath(myHotel.pathOfProfilePhoto);
-        if (file.deleted == false && file.synced == true && file.cloudId != 0) {
+        if (file != null &&
+            file.deleted == false &&
+            file.synced == true &&
+            file.cloudId <= 0) {
           var response = await RepositoryContainer()
               .locationsRepository
               .filesApi
@@ -377,9 +380,13 @@ class SinkService {
       for (var location in locations) {
         debugPrint(
             "location.pathOfProfilePhoto:${location.pathOfProfilePhoto}");
-        FileModel file =
+        FileModel? file =
             await filesDao.findFileByLocalPath(location.pathOfProfilePhoto);
-        if (file.deleted == false && file.synced == true && file.cloudId != 0) {
+        if (file != null &&
+            file.deleted == false &&
+            file.synced == true &&
+            file.cloudId != -1 &&
+            file.cloudId != 0) {
           var response = await RepositoryContainer()
               .locationsRepository
               .filesApi
@@ -403,14 +410,14 @@ class SinkService {
   }
 
 // Future<void> deletingLostFiles(DB db) async {
-//   print("Start deleting lost files");
-//   List<FileModel> files = await db.getAllFiles();
+//   print("Start deleting lost content");
+//   List<FileModel> content = await db.getAllFiles();
 
 //   Future<void> deleteNotDetectedFiles(String path) async {
 //     var contents = Directory(path).listSync();
 //     print("content:${contents.length}");
 //     for (var content in contents) {
-//       bool isFileFound = files.firstWhereOrNull((file) => file.localPath == content.path) != null;
+//       bool isFileFound = content.firstWhereOrNull((file) => file.localPath == content.path) != null;
 //       if (isFileFound == false) {
 //         print("was deleting lost file");
 //         await FirebaseAnalytics.instance.logEvent(
@@ -425,16 +432,16 @@ class SinkService {
 //     }
 //   }
 
-//   if (files.isNotEmpty) {
+//   if (content.isNotEmpty) {
 //     if (Platform.isAndroid) {
-//       var availablePath = files[0].localPath.substring(0, files[0].localPath.lastIndexOf('/'));
+//       var availablePath = content[0].localPath.substring(0, content[0].localPath.lastIndexOf('/'));
 //       deleteNotDetectedFiles(availablePath);
 //     } else if (Platform.isIOS) {
-//       int lastIndex = files[0].localPath.lastIndexOf('/');
+//       int lastIndex = content[0].localPath.lastIndexOf('/');
 //       if (lastIndex != -1) {
-//         int secondLastIndex = files[0].localPath.lastIndexOf('/', lastIndex - 1);
+//         int secondLastIndex = content[0].localPath.lastIndexOf('/', lastIndex - 1);
 //         if (secondLastIndex != -1) {
-//           var cameraPath = files[0].localPath.substring(0, secondLastIndex);
+//           var cameraPath = content[0].localPath.substring(0, secondLastIndex);
 //           deleteNotDetectedFiles(cameraPath);
 //         } else {
 //           print("В строке нет предпоследнего символа '/'");
@@ -521,8 +528,8 @@ class SinkService {
 //     location.deleted = false;
 //     await db.updateLocation(location.localId, location);
 //     print("updatedLocation, cloudId: ${location.cloudId}");
-//     var files = await db.findFilesByLocationId(location.localId) ?? [];
-//     for (var file in files) {
+//     var content = await db.findFilesByLocationId(location.localId) ?? [];
+//     for (var file in content) {
 //       file.cloudLocationId = location.cloudId;
 //       await db.updateFile(file.localId, file);
 //     }

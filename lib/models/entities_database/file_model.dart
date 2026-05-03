@@ -6,7 +6,7 @@ import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
 
 class FileModel extends BaseModel {
   int localId = -1;
-  int cloudId = 0;
+  int cloudId = -1;
   late String name;
   //late String format;
   late String localPath;
@@ -19,8 +19,8 @@ class FileModel extends BaseModel {
   num long = 0.0;
   String uploadedAt = "";
   String? createdAt;
-  int localLocationId = 0;
-  int cloudLocationId = 0;
+  int localLocationId = -1;
+  int cloudLocationId = -1;
   int? hotelId;
 
   //for checking editing photo

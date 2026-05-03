@@ -94,12 +94,12 @@ class BaseCubit extends Cubit<BaseCubitState> {
     return null;
   }
 
-// Future<List<FileModel>> sendFiles(List<FileModel> files, String path) async {
+// Future<List<FileModel>> sendFiles(List<FileModel> content, String path) async {
 //   try {
-//     files.removeWhere((element) => element == null);
-//     if (files != null && files.length > 0) {
-//       List<FileModel> alreadyUploaded = files.where((element) => (element.localPath == null)).toList();
-//       List<FileModel> uploading = files.where((element) => (element.localPath != null)).toList();
+//     content.removeWhere((element) => element == null);
+//     if (content != null && content.length > 0) {
+//       List<FileModel> alreadyUploaded = content.where((element) => (element.localPath == null)).toList();
+//       List<FileModel> uploading = content.where((element) => (element.localPath != null)).toList();
 
 //       List<FileResponse> sendedFiles = await Future.wait(uploading.map(
 //         (e) => ApiContainer().filesApi.send(e, path),
@@ -123,7 +123,7 @@ class BaseCubit extends Cubit<BaseCubitState> {
 //     }
 //     return [];
 
-//     // List<FileResponse> sendedFiles = await Future.wait(files.map(
+//     // List<FileResponse> sendedFiles = await Future.wait(content.map(
 //     //   (e) => ApiContainer().filesApi.send(e, path),
 //     // ));
 //     // return sendedFiles.map((response) {
