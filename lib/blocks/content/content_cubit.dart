@@ -29,6 +29,7 @@ class ContentCubit extends Cubit<ContentState> {
     LocationModel? location,
   }) : super(ContentState(
             files: [],
+            visibleFiles: [],
             selectedIds: {},
             myHotel: myHotel,
             location: location ?? LocationModel(),
@@ -38,6 +39,7 @@ class ContentCubit extends Cubit<ContentState> {
 
   late final DBManager _db;
   ContentState? _initialState;
+
   void resetInitialState() {
     _initialState = null;
   }
@@ -171,7 +173,13 @@ class ContentCubit extends Cubit<ContentState> {
 
         // 2. Обрабатываем файлы (один цикл на все случаи)
         for (var file in state.files) {
-          if (file.deleted) continue;
+          if (file.deleted) {
+            if (file.localId > 0) {
+              // Если файл уже был в БД, обновляем его статус на "удален"
+              await repository.updateFile(file: file);
+            }
+            continue;
+          }
 
           // А. Перемещение во внутреннее хранилище, если файл еще снаружи
           if (!file.localPath.contains(documentsDir.path)) {
@@ -230,13 +238,19 @@ class ContentCubit extends Cubit<ContentState> {
     repository.startSinc();
   }
 
-  Future<void> deleteSelectedFiles() async {
-    _showLoading();
+  String fileKey(FileModel file) {
+    if (file.localId > 0) {
+      return "${file.localId}";
+    } else {
+      return file.localPath;
+    }
+  }
 
+  Future<void> deleteSelectedFiles() async {
     final selected = state.selectedIds;
 
     final updatedFiles = state.files.map((file) {
-      if (!selected.contains(file.localId)) return file;
+      if (!selected.contains(fileKey(file))) return file;
 
       return file.copyWith(
         synced: false,
@@ -252,23 +266,25 @@ class ContentCubit extends Cubit<ContentState> {
   }
 
   Future<void> deleteFile(FileModel target) async {
-    final updatedFiles = state.files.map((file) {
-      if (file.localId != target.localId) return file;
+    debugPrint('deleteFile');
 
+    final updatedFiles = state.files.map((file) {
+      bool isMatch = fileKey(file) == fileKey(target);
+      debugPrint('isMatch:${isMatch}');
+      if (!isMatch) return file;
       return file.copyWith(
         synced: false,
         deleted: true,
-        //isEdited:true
       );
     }).toList();
-
+    debugPrint('deleteFile updatedFiles.length:${updatedFiles.length}');
     emit(state.copyWith(files: updatedFiles));
   }
 
   Future<void> shareSelectedFiles() async {
     final selected = state.selectedIds;
     final filesToShare = state.files
-        .where((file) => selected.contains(file.localId))
+        .where((file) => selected.contains(fileKey(file)))
         .map((file) => XFile(file.localPath))
         .toList();
     await SharePlus.instance.share(
@@ -278,19 +294,23 @@ class ContentCubit extends Cubit<ContentState> {
   }
 
   void selectFile(FileModel file) {
-    final updated = Set<int>.from(state.selectedIds);
+    debugPrint("select file");
+    final updated = Set<String>.from(state.selectedIds);
+    final key = fileKey(file);
 
-    if (updated.contains(file.localId)) {
-      updated.remove(file.localId);
+    if (updated.contains(key)) {
+      debugPrint("select file remove");
+      updated.remove(key);
     } else {
-      updated.add(file.localId);
+      debugPrint("select file add");
+      updated.add(key);
     }
 
     emit(state.copyWith(selectedIds: updated));
   }
 
-  bool fileSelected(int localId) {
-    return state.selectedIds.contains(localId);
+  bool fileSelected(FileModel model) {
+    return state.selectedIds.contains(fileKey(model));
   }
 
   Future<void> addFilesFromGallery() async {
@@ -402,7 +422,13 @@ class ContentCubit extends Cubit<ContentState> {
 
   void updateFile(FileModel updatedFile) {
     final updatedFiles = state.files.map((file) {
-      if (file.localId == updatedFile.localId) {
+      bool isMatch =
+          (file.localId > 0 && file.localId == updatedFile.localId) ||
+              (file.localPath == updatedFile.localPath) ||
+              (updatedFile.oldLocalPath.isNotEmpty &&
+                  file.localPath == updatedFile.oldLocalPath);
+
+      if (isMatch) {
         return updatedFile;
       }
       return file;
@@ -410,33 +436,4 @@ class ContentCubit extends Cubit<ContentState> {
 
     emit(state.copyWith(files: updatedFiles));
   }
-
-// bool wereChanges(
-//     {required String initialProfilePhotoOfLocation,
-//     required String initialProfilePhotoOfMyHotel,
-//     required int initialIdCategory,
-//     required List<FileModel> initialFiles,
-//     required String currentName,
-//     required String currentDescription,
-//     required String initName,
-//     required String initDescription}) {
-//   bool _isExistsEditedFiles(List<FileModel> content) {
-//     for (var file in content) {
-//       if (file.isEdited) {
-//         return true;
-//       }
-//     }
-//     return false;
-//   }
-//
-//   return (!deepComparing(initialFiles, state.content) ||
-//       _isExistsEditedFiles(state.content) ||
-//       currentName != initName ||
-//       currentDescription != initDescription ||
-//       initialProfilePhotoOfLocation != state.location.pathOfProfilePhoto ||
-//       initialProfilePhotoOfMyHotel != state.myHotel.pathOfProfilePhoto ||
-//       initialIdCategory != state.category.id);
-// }
-
-//Function deepComparing = const DeepCollectionEquality().equals;
 }

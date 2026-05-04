@@ -36,12 +36,6 @@ class _ContentScreenState extends State<ContentScreen> {
   late final PermissionsCubit _permissionsCubit;
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
-  // late final String? initLocationName;
-  // late final String? initLocationDescription;
-  // late final String? initialProfilePhotoOfLocation;
-  // late final String? initialProfilePhotoOfMyHotel;
-  // late final int? initialIdCategory;
-  // List<FileModel> initialFiles = [];
 
   ScrollController _scrollController = ScrollController();
   bool _showRequiredFields = false;
@@ -52,15 +46,6 @@ class _ContentScreenState extends State<ContentScreen> {
     super.initState();
     _cubit = BlocProvider.of<ContentCubit>(context);
     _permissionsCubit = BlocProvider.of<PermissionsCubit>(context);
-    // currentName = state.location.name;
-    // currentDescription = state.location.description;
-    // initLocationName = state.location.name;
-    // initLocationDescription = state.location.description;
-    // initialProfilePhotoOfLocation = state.location.pathOfProfilePhoto;
-    // initialProfilePhotoOfMyHotel = state.myHotel.pathOfProfilePhoto;
-    // initialIdCategory = state.location.idCategory;
-    // initialFiles = state.content;
-
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
   }
@@ -259,7 +244,7 @@ class _ContentScreenState extends State<ContentScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
-            color: const Color.fromRGBO(43, 54, 65, 0.95),
+            color: ColorWhite,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -274,9 +259,11 @@ class _ContentScreenState extends State<ContentScreen> {
                   width: 80,
                   height: 80,
                   fit: BoxFit.contain,
+                  colorFilter:
+                      const ColorFilter.mode(ColorOrange, BlendMode.srcIn),
                 ),
               ),
-              Container(width: 2, height: 100, color: Colors.white24),
+              Container(width: 2, height: 100, color: ColorBorderV2),
               InkWell(
                 onTap: () {
                   Navigator.pop(context);
@@ -287,6 +274,8 @@ class _ContentScreenState extends State<ContentScreen> {
                   width: 80,
                   height: 80,
                   fit: BoxFit.contain,
+                  colorFilter:
+                      const ColorFilter.mode(ColorOrange, BlendMode.srcIn),
                 ),
               ),
             ],
@@ -364,7 +353,7 @@ class _ContentScreenState extends State<ContentScreen> {
     var oneItemWidth = width / 3;
     var gridHeight = oneItemWidth - (oneItemWidth - (oneItemWidth / 1.05));
 
-    List<FileModel> notDeletedFiles = state.notDeletedFiles;
+    List<FileModel> notDeletedFiles = state.visibleFiles;
     int totalItems = notDeletedFiles.length + 1;
     int displayCount = ((totalItems + 2) ~/ 3) * 3;
 
@@ -530,11 +519,12 @@ class _ContentScreenState extends State<ContentScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadiusOfImage),
             color: const Color.fromRGBO(245, 245, 245, 1),
+          ),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadiusOfImage),
             border: Border.all(
-              color: _cubit.fileSelected(model.localId)
-                  ? ColorOrange
-                  : ColorBorderV2,
-              width: _cubit.fileSelected(model.localId) ? 2 : 1,
+              color: _cubit.fileSelected(model) ? ColorOrange : ColorBorderV2,
+              width: _cubit.fileSelected(model) ? 3 : 1,
             ),
           ),
           child: ClipRRect(
@@ -543,13 +533,11 @@ class _ContentScreenState extends State<ContentScreen> {
               alignment: AlignmentDirectional.center,
               children: [
                 Positioned.fill(
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.circular(borderRadiusOfImage),
-                      child: model.type == FileModelType.Video
-                          ? ((File(model.localPath).existsSync())
-                              ? ImageItem(imagePath: model.thumb ?? "")
-                              : ImageItem(imagePath: model.localPath))
-                          : ImageItem(imagePath: model.localPath)),
+                  child: model.type == FileModelType.Video
+                      ? ((File(model.localPath).existsSync())
+                          ? ImageItem(imagePath: model.thumb ?? "")
+                          : ImageItem(imagePath: model.localPath))
+                      : ImageItem(imagePath: model.localPath),
                 ),
                 if (model.type == FileModelType.Video)
                   Positioned.fill(
@@ -609,7 +597,7 @@ class _ContentScreenState extends State<ContentScreen> {
                   Positioned(
                       left: 4,
                       top: 4,
-                      child: _cubit.fileSelected(model.localId)
+                      child: _cubit.fileSelected(model)
                           ? Container(
                               width: 25,
                               height: 25,

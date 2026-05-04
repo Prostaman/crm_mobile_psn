@@ -13,7 +13,8 @@ extension ContentStateDiff on ContentState {
         "\ncategory.id != other.category.id : ${category.id != other.category.id}"
         "\nfiles.any((f) => f.isEdited) : ${files.any((f) => f.isEdited)}");
 
-    return !const DeepCollectionEquality().equals(files, other.files) ||
+    return !const DeepCollectionEquality()
+            .equals(visibleFiles, other.visibleFiles) ||
         location.name != other.location.name ||
         location.description != other.location.description ||
         location.pathOfProfilePhoto != other.location.pathOfProfilePhoto ||

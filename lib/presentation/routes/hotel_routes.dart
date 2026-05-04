@@ -64,6 +64,7 @@ showFullMediaPreviewSlider(context, _cubit, setStateCallback,
     MaterialPageRoute(
       builder: (context) {
         return FullMediaPreviewSlider(
+          _cubit,
           setStateCallback,
           initialIndex,
           PageController(initialPage: initialIndex),

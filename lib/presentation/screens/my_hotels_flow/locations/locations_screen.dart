@@ -115,7 +115,7 @@ class _LocationsScreenState extends State<LocationsScreen>
   Widget _buildHeader(BuildContext context, MyHotelModel hotel, int filesCount,
       double percent) {
     return Padding(
-      padding: const EdgeInsets.only(top: 34, left: 22, right: 22),
+      padding: const EdgeInsets.only(top: 34),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

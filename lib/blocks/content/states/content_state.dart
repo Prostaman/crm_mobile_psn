@@ -7,7 +7,8 @@ import '../../../models/entities_database/file_model.dart';
 
 class ContentState extends Equatable {
   final List<FileModel> files;
-  final Set<int> selectedIds;
+  final List<FileModel> visibleFiles;
+  final Set<String> selectedIds;
   final MyHotelModel myHotel;
   final LocationModel location;
   final CategoryModel category;
@@ -18,6 +19,7 @@ class ContentState extends Equatable {
 
   const ContentState({
     required this.files,
+    this.visibleFiles = const [],
     required this.selectedIds,
     required this.myHotel,
     required this.location,
@@ -29,15 +31,19 @@ class ContentState extends Equatable {
 
   ContentState copyWith(
       {List<FileModel>? files,
-      Set<int>? selectedIds,
+      Set<String>? selectedIds,
       MyHotelModel? myHotel,
       LocationModel? location,
       CategoryModel? category,
       List<CategoryModel>? categories,
       bool? isLoading,
       String? error}) {
+    final newFiles = files ?? this.files;
     return ContentState(
       files: files ?? this.files,
+      visibleFiles: files != null
+          ? newFiles.where((f) => !f.deleted).toList()
+          : this.visibleFiles,
       selectedIds: selectedIds ?? this.selectedIds,
       myHotel: myHotel ?? this.myHotel,
       location: location ?? this.location,
@@ -48,13 +54,20 @@ class ContentState extends Equatable {
     );
   }
 
-  List<FileModel> get notDeletedFiles =>
-      files.where((f) => !f.deleted).toList();
+  // List<FileModel> get notDeletedFiles =>
+  //     files.where((f) => !f.deleted).toList();
 
   @override
   List<Object?> get props => [
-        ...files.map(
-            (e) => [e.localId, e.localPath, e.synced, e.syncError, e.isEdited]),
+        ...files.map((e) => [
+              e.localId,
+              e.localPath,
+              e.synced,
+              e.syncError,
+              e.isEdited,
+              e.deleted
+            ]),
+        selectedIds,
         myHotel.id,
         myHotel.name,
         myHotel.pathOfProfilePhoto,
