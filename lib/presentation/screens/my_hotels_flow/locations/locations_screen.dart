@@ -196,7 +196,10 @@ class _LocationsScreenState extends State<LocationsScreen>
           hotel: hotel,
           location: location,
           saveCallback: () async {
-            _cubit.refresh();
+            // ВАЖНО: т.к. в LocationContent могли измениться файлы,
+            // нужно обновить и общую статистику отеля в Cubit
+            _cubit.updateHotelSummary();
+            _cubit.updateSingleLocation(location.localId);
             widget.updateCallback();
           },
         );

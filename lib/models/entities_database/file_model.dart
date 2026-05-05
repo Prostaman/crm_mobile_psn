@@ -25,7 +25,7 @@ class FileModel extends BaseModel {
 
   //for checking editing photo
   bool isEdited = false;
-  String oldLocalPath = '';
+  Set<String> oldLocalPaths = {};
 
   dynamic get baseId {
     return localId;
@@ -121,7 +121,7 @@ class FileModel extends BaseModel {
     int? cloudLocationId,
     int? hotelId,
     bool? isEdited,
-    String? oldLocalPath,
+    Set<String>? oldLocalPaths,
   }) {
     final model = FileModel();
 
@@ -142,7 +142,7 @@ class FileModel extends BaseModel {
     model.cloudLocationId = cloudLocationId ?? this.cloudLocationId;
     model.hotelId = hotelId ?? this.hotelId;
     model.isEdited = isEdited ?? this.isEdited;
-    model.oldLocalPath = oldLocalPath ?? this.oldLocalPath;
+    model.oldLocalPaths = oldLocalPaths ?? this.oldLocalPaths;
 
     return model;
   }

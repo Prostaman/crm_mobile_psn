@@ -36,6 +36,7 @@ void showAddHotelsBottomSheet({
                       model: myNewHotelModel,
                       updateCallback: () async {
                         // await cubit.updateSingleHotel(myNewHotelModel.id);
+                        await cubit.refresh();
                       },
                     );
                   }

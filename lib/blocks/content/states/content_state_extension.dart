@@ -11,7 +11,7 @@ extension ContentStateDiff on ContentState {
         "\nlocation.pathOfProfilePhoto != other.location.pathOfProfilePhoto: ${location.pathOfProfilePhoto != other.location.pathOfProfilePhoto}"
         "\nmyHotel.pathOfProfilePhoto != other.myHotel.pathOfProfilePhoto: ${myHotel.pathOfProfilePhoto != other.myHotel.pathOfProfilePhoto}"
         "\ncategory.id != other.category.id : ${category.id != other.category.id}"
-        "\nfiles.any((f) => f.isEdited) : ${files.any((f) => f.isEdited)}");
+        "\visibleFiles.any((f) => f.isEdited) : ${visibleFiles.any((f) => f.isEdited)}");
 
     return !const DeepCollectionEquality()
             .equals(visibleFiles, other.visibleFiles) ||
@@ -20,6 +20,6 @@ extension ContentStateDiff on ContentState {
         location.pathOfProfilePhoto != other.location.pathOfProfilePhoto ||
         myHotel.pathOfProfilePhoto != other.myHotel.pathOfProfilePhoto ||
         category.id != other.category.id ||
-        files.any((f) => f.isEdited);
+        visibleFiles.any((f) => f.isEdited);
   }
 }

@@ -25,12 +25,13 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
     db = DBManager();
     query = BaseQuery();
     _subscriptionLocationsSynchronization =
-        services.sinkService.syncLocationsObserver.stream.listen((id) {
+        services.sinkService.syncLocationsObserver.stream.listen((id) async {
       if (id == -1) {
         allFilesLength = 0;
         percentLoadedFiles = 0;
         reload();
       } else {
+        await updateHotelSummary();
         updateSingleLocation(id);
       }
     });
@@ -38,11 +39,11 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
 
   @override
   Future<void> initial({required BaseQuery query}) async {
-    await _updateHotelSummary();
+    await updateHotelSummary();
     super.initial(query: query);
   }
 
-  Future<void> _updateHotelSummary() async {
+  Future<void> updateHotelSummary() async {
     final dao = await db.filesDao();
     final stats = await dao.getNotDeletedFilesCountByHotelId(myHotel.id);
     allFilesLength = stats.total;

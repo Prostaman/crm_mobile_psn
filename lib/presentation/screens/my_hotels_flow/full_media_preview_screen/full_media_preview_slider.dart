@@ -30,10 +30,7 @@ class FullMediaPreviewSlider extends StatefulWidget {
   final int initialPage;
   final PageController pageController;
 
-  final VoidCallback setStateCallback;
-
-  FullMediaPreviewSlider(
-      this.cubit, this.setStateCallback, this.initialPage, this.pageController,
+  FullMediaPreviewSlider(this.cubit, this.initialPage, this.pageController,
       {Key? key});
 
   @override
@@ -93,7 +90,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     final file = state.visibleFiles[currentIndexOfFile];
 
     final updated = file.copyWith(
-      oldLocalPath: file.localPath,
+      oldLocalPaths: {...file.oldLocalPaths, file.localPath},
       localPath: newFilePath,
       synced: false,
       isEdited: true,
@@ -200,7 +197,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
       currentIndexOfFile = 0;
     }
     if (state.visibleFiles.length == 0) {
-      widget.setStateCallback();
+      //widget.setStateCallback();
       Navigator.pop(context);
       return;
     }
@@ -222,7 +219,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
           Future.microtask(() async {
             // проверка, что экран еще "жив"
             if (!mounted) return false;
-            widget.setStateCallback();
+            //widget.setStateCallback();
             return Future.value(true);
           });
         },
@@ -230,7 +227,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
             bloc: widget.cubit,
             listener: (context, state) {
               if (state.visibleFiles.isEmpty) {
-                widget.setStateCallback();
+                //widget.setStateCallback();
                 Navigator.of(context).pop();
               }
             },
@@ -279,7 +276,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                             titleSpacing: 0,
                             leading: InkWell(
                               onTap: () {
-                                widget.setStateCallback();
+                                //widget.setStateCallback();
                                 Navigator.pop(context);
                               },
                               child: Row(
@@ -574,19 +571,19 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                   setState(
                                                       () => isLoading = true);
 
-                                                  final imageBytes = await File(
-                                                          state
-                                                              .visibleFiles[
-                                                                  currentIndexOfFile]
-                                                              .localPath)
-                                                      .readAsBytes();
-                                                  final rotatedBytes =
-                                                      await FlutterImageCompress
-                                                          .compressWithList(
-                                                              imageBytes,
-                                                              rotate:
-                                                                  angleOfRotating
-                                                                      .toInt());
+                                                  // final imageBytes = await File(
+                                                  //         state
+                                                  //             .visibleFiles[
+                                                  //                 currentIndexOfFile]
+                                                  //             .localPath)
+                                                  //     .readAsBytes();
+                                                  // final rotatedBytes =
+                                                  //     await FlutterImageCompress
+                                                  //         .compressWithList(
+                                                  //             imageBytes,
+                                                  //             rotate:
+                                                  //                 angleOfRotating
+                                                  //                     .toInt());
                                                   String oldImagePath = state
                                                       .visibleFiles[
                                                           currentIndexOfFile]
@@ -599,15 +596,29 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                                   '/'));
                                                   String newFilePath =
                                                       "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
+                                                  // final rotatedFile =
+                                                  //     await File(newFilePath)
+                                                  //         .writeAsBytes(
+                                                  //             rotatedBytes);
                                                   final rotatedFile =
-                                                      await File(newFilePath)
-                                                          .writeAsBytes(
-                                                              rotatedBytes);
+                                                      await FlutterImageCompress
+                                                          .compressAndGetFile(
+                                                    state
+                                                        .visibleFiles[
+                                                            currentIndexOfFile]
+                                                        .localPath,
+                                                    newFilePath,
+                                                    rotate:
+                                                        angleOfRotating.toInt(),
+                                                    quality: 100,
+                                                  );
 
                                                   debugPrint(
                                                       "Rotating index of current image:$currentIndexOfFile");
                                                   _saveAndStayOnPage(
-                                                      rotatedFile.path, state);
+                                                      rotatedFile?.path ??
+                                                          newFilePath,
+                                                      state);
 
                                                   setState(() {
                                                     // overrideImage(newFilePath)

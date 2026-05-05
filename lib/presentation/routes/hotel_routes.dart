@@ -57,15 +57,13 @@ pushToEditLocationContent(
   );
 }
 
-showFullMediaPreviewSlider(context, _cubit, setStateCallback,
-    [initialIndex = 0]) {
+showFullMediaPreviewSlider(context, _cubit, [initialIndex = 0]) {
   Navigator.push(
     context,
     MaterialPageRoute(
       builder: (context) {
         return FullMediaPreviewSlider(
           _cubit,
-          setStateCallback,
           initialIndex,
           PageController(initialPage: initialIndex),
         );

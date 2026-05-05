@@ -102,7 +102,7 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
           ],
         ),
         drawer: AppDrawer(setStateCallback: (() async {
-          await _cubit.reload();
+          await _cubit.refresh();
         })),
         body: _buildBody(context));
   }

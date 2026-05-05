@@ -504,9 +504,7 @@ class _ContentScreenState extends State<ContentScreen> {
           if (state.selectedIds.isEmpty) {
             var file = File(model.localPath);
             if (file.existsSync()) {
-              showFullMediaPreviewSlider(context, _cubit, () {
-                setState(() {});
-              }, index);
+              showFullMediaPreviewSlider(context, _cubit, index);
             }
           } else {
             _cubit.selectFile(model);

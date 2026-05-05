@@ -215,8 +215,13 @@ class ContentCubit extends Cubit<ContentState> {
 
         // 3. Удаление физических файлов, которые больше не нужны
         for (var file in state.files) {
-          if (file.isEdited && file.oldLocalPath.isNotEmpty) {
-            FileUtility.deleteFile(file.oldLocalPath);
+          if (file.isEdited) {
+            if (file.oldLocalPaths.isNotEmpty) {
+              for (var path in file.oldLocalPaths) {
+                FileUtility.deleteFile(path);
+              }
+              file.oldLocalPaths.clear();
+            }
             file.isEdited = false;
           }
         }
@@ -422,11 +427,11 @@ class ContentCubit extends Cubit<ContentState> {
 
   void updateFile(FileModel updatedFile) {
     final updatedFiles = state.files.map((file) {
-      bool isMatch =
-          (file.localId > 0 && file.localId == updatedFile.localId) ||
-              (file.localPath == updatedFile.localPath) ||
-              (updatedFile.oldLocalPath.isNotEmpty &&
-                  file.localPath == updatedFile.oldLocalPath);
+      bool isMatch = (file.localId > 0 &&
+              file.localId == updatedFile.localId) ||
+          (file.localPath == updatedFile.localPath) ||
+          (updatedFile.oldLocalPaths.contains(file
+              .localPath)); // для только что добавленных и отредаактированных файлов
 
       if (isMatch) {
         // Обновляем имя, если путь изменился
