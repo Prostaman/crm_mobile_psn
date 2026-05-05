@@ -429,6 +429,13 @@ class ContentCubit extends Cubit<ContentState> {
                   file.localPath == updatedFile.oldLocalPath);
 
       if (isMatch) {
+        // Обновляем имя, если путь изменился
+        if (updatedFile.localPath != file.localPath) {
+          int lastIndex = updatedFile.localPath.lastIndexOf('/');
+          if (lastIndex != -1) {
+            updatedFile.name = updatedFile.localPath.substring(lastIndex + 1);
+          }
+        }
         return updatedFile;
       }
       return file;

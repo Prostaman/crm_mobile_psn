@@ -89,8 +89,8 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     });
   }
 
-  void overrideImage(String newFilePath, ContentState state) {
-    final file = widget.cubit.state.visibleFiles[currentIndexOfFile];
+  void _saveAndStayOnPage(String newFilePath, ContentState state) {
+    final file = state.visibleFiles[currentIndexOfFile];
 
     final updated = file.copyWith(
       oldLocalPath: file.localPath,
@@ -100,11 +100,16 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     );
 
     widget.cubit.updateFile(updated);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.pageController.jumpToPage(currentIndexOfFile);
+    });
   }
 
   final GlobalKey _globalKey = GlobalKey();
 
-  Future<void> saveImageWithFiltersFromWidget(ContentState state) async {
+  Future<void> _saveImageWithFiltersFromWidget(ContentState state) async {
     setState(() {
       isLoading = true;
     });
@@ -120,7 +125,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     String newFilePath =
         "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
     await File(newFilePath).writeAsBytes(uint8list);
-    overrideImage(newFilePath, state);
+    _saveAndStayOnPage(newFilePath, state);
     setState(() {
       isFilterModeOn = false;
       currentIndexOfFilter = 0;
@@ -128,7 +133,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     });
   }
 
-  Widget widgetCorouselOfFilters(List<Widget> widgets) {
+  Widget widgetCorouselOfFilters(ContentState state) {
     return Container(
       height: 80, // Высота карусели
       child: ListView.builder(
@@ -145,7 +150,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
               padding: EdgeInsets.all(8.0),
               child: ColorFiltered(
                 colorFilter: ColorFilter.matrix(filters[index]),
-                child: widgets[currentIndexOfFile],
+                child: buildMediaItem(state.visibleFiles[currentIndexOfFile]),
               ),
             ),
           );
@@ -175,11 +180,11 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     );
     if (croppedFile != null) {
       if (Platform.isAndroid) {
-        overrideImage(croppedFile.path, state);
+        _saveAndStayOnPage(croppedFile.path, state);
       } else if (Platform.isIOS) {
         //print("New file path:${croppedFile.path}");
         String newPath = state.visibleFiles[currentIndexOfFile].localPath;
-        overrideImage(
+        _saveAndStayOnPage(
             await FileUtility.moveFile(File(croppedFile.path),
                 newPath.substring(0, newPath.lastIndexOf('/'))),
             state);
@@ -239,26 +244,29 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
               if (currentIndexOfFile >= files.length) {
                 currentIndexOfFile = files.isEmpty ? 0 : files.length - 1;
               }
-              final widgets = files.map((fileModel) {
-                final file = File(fileModel.localPath);
 
-                if (!file.existsSync()) {
-                  //доверять файлам из BLoC ??
-                  return const SizedBox();
-                }
-
-                if (fileModel.type == FileModelType.Image) {
-                  return Image.file(file,
-                      key: ValueKey(
-                          "${fileModel.localId}_${fileModel.localPath}"));
-                } else {
-                  return ChewieDemo(
-                    file: fileModel,
-                    key:
-                        ValueKey("${fileModel.localId}_${fileModel.localPath}"),
-                  );
-                }
-              }).toList();
+              // final widgets = files.map((fileModel) {
+              //   final file = File(fileModel.localPath);
+              //
+              //   // if (!file.existsSync()) {
+              //   //   //доверять файлам из BLoC ??
+              //   //   return const SizedBox();
+              //   // }
+              //
+              //   if (fileModel.type == FileModelType.Image) {
+              //     return Image.file(file,
+              //         key: ValueKey(fileModel.localId > 0
+              //             ? "${fileModel.localId}"
+              //             : "${fileModel.localPath}"));
+              //   } else {
+              //     return ChewieDemo(
+              //       file: fileModel,
+              //       key: ValueKey(fileModel.localId > 0
+              //           ? "${fileModel.localId}"
+              //           : "${fileModel.localPath}"),
+              //     );
+              //   }
+              // }).toList();
 
               return Stack(
                 children: [
@@ -559,7 +567,7 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                               ),
                                               onPressed: () async {
                                                 if (isFilterModeOn) {
-                                                  await saveImageWithFiltersFromWidget(
+                                                  await _saveImageWithFiltersFromWidget(
                                                       state);
                                                 } else if (isRotatingMode) {
                                                   //сохранить вращение
@@ -598,8 +606,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
 
                                                   debugPrint(
                                                       "Rotating index of current image:$currentIndexOfFile");
-                                                  overrideImage(
+                                                  _saveAndStayOnPage(
                                                       rotatedFile.path, state);
+
                                                   setState(() {
                                                     // overrideImage(newFilePath)
                                                     isRotatingMode = false;
@@ -638,10 +647,11 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                 child: ColorFiltered(
                                   colorFilter: ColorFilter.matrix(
                                       filters[currentIndexOfFilter]),
-                                  child: widgets[currentIndexOfFile],
+                                  child: buildMediaItem(
+                                      state.visibleFiles[currentIndexOfFile]),
                                 ),
                               )),
-                              widgetCorouselOfFilters(widgets),
+                              widgetCorouselOfFilters(state),
                             ])
                           : isRotatingMode
                               ? Stack(
@@ -651,7 +661,9 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                         child: RotatedBox(
                                           quarterTurns: angleOfRotating ~/
                                               90, // 90° = 1, 180° = 2, 270° = 3
-                                          child: widgets[currentIndexOfFile],
+                                          child: buildMediaItem(
+                                              state.visibleFiles[
+                                                  currentIndexOfFile]),
                                         )),
                                     Align(
                                         alignment: Alignment.bottomCenter,
@@ -710,14 +722,38 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                           const BouncingScrollPhysics(),
                                       builder:
                                           (BuildContext context, int index) {
-                                        //debugPrint("Прорисовка, Index of current image:$index");
-                                        return PhotoViewGalleryPageOptions
-                                            .customChild(
-                                          child: widgets[
-                                              index], //widgets[currentIndexOfFile],
+                                        final fileModel = files[index];
+
+                                        final file = File(fileModel.localPath);
+
+                                        final key = ValueKey(
+                                          fileModel.localId > 0
+                                              ? "id_${fileModel.localId}_${fileModel.localPath}"
+                                              : "path_${fileModel.localPath}",
                                         );
+
+                                        if (!file.existsSync()) {
+                                          return PhotoViewGalleryPageOptions
+                                              .customChild(
+                                            child: SizedBox(),
+                                          );
+                                        }
+
+                                        if (fileModel.type ==
+                                            FileModelType.Image) {
+                                          return PhotoViewGalleryPageOptions
+                                              .customChild(
+                                            child: Image.file(file, key: key),
+                                          );
+                                        } else {
+                                          return PhotoViewGalleryPageOptions
+                                              .customChild(
+                                            child: ChewieDemo(
+                                                file: fileModel, key: key),
+                                          );
+                                        }
                                       },
-                                      itemCount: widgets.length,
+                                      itemCount: files.length,
                                       loadingBuilder: (context, event) =>
                                           Center(
                                         child: Container(
@@ -852,6 +888,24 @@ class ChewieDemo extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return _ChewieDemoState();
+  }
+}
+
+Widget buildMediaItem(FileModel fileModel) {
+  final file = File(fileModel.localPath);
+
+  final key = ValueKey(
+    fileModel.localId > 0 ? "${fileModel.localId}" : "${fileModel.localPath}",
+  );
+
+  if (!file.existsSync()) {
+    return const SizedBox();
+  }
+
+  if (fileModel.type == FileModelType.Image) {
+    return Image.file(file, key: key);
+  } else {
+    return ChewieDemo(file: fileModel, key: key);
   }
 }
 
