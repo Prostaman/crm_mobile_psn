@@ -66,7 +66,7 @@ class ImageItem extends StatelessWidget {
             filterQuality: filterQuality,
           );
         } else if (snapshot.data == false) {
-          String error = "Showing image, File not exists";
+          String error = "Showing image, File not exists: $imagePath";
           debugPrint(error);
           FirebaseCrashlytics.instance
               .recordFlutterError(FlutterErrorDetails(exception: error));

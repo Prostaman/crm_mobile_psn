@@ -13,8 +13,11 @@ import 'package:path_provider/path_provider.dart';
 import 'dao/categories_dao.dart';
 
 class DBManager {
-  static final DBManager _instance = DBManager._internal(); // signleton
+  static DBManager _instance = DBManager._internal(); // signleton
   factory DBManager() => _instance; // signleton
+
+  static set instance(DBManager instance) => _instance = instance;
+
   DBManager._internal(); // signleton
 
   Database? _database;

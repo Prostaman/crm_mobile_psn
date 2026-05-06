@@ -51,9 +51,13 @@ class ErrorState extends BaseCubitState {
   String toString() {
     String textError = error.toString();
     debugPrint(error);
-    FirebaseCrashlytics.instance.log("Error state:$textError");
-    FirebaseCrashlytics.instance
-        .recordFlutterError(FlutterErrorDetails(exception: textError));
+    try {
+      FirebaseCrashlytics.instance.log("Error state:$textError");
+      FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: textError));
+    } catch (e) {
+      debugPrint("Firebase not initialized: $e");
+    }
     return textError;
   }
 }

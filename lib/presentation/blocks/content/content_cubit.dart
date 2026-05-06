@@ -368,8 +368,8 @@ class ContentCubit extends Cubit<ContentState> {
                   (await FileUtility().getFileCreationDate(xfile.path))
                       ?.toIso8601String()
               ..size = xfileLength / 1024
-              ..name = "${fileType}_${xfile.name}";
-            if (fileType == 'video') {
+              ..name = "${fileType[0]}_${xfile.name}";
+            if (fileType.contains('video')) {
               final thumb =
                   await VideoCompress.getFileThumbnail(file.localPath);
               file.thumb = thumb.path;

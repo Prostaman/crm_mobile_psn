@@ -63,11 +63,13 @@ class ApiEnvironment {
 }
 
 class ApiContainer {
-  static final ApiContainer _singleton = ApiContainer._initialize();
+  static ApiContainer _singleton = ApiContainer._initialize();
 
   factory ApiContainer() {
     return _singleton;
   }
+
+  static set instance(ApiContainer instance) => _singleton = instance;
 
   final Dio client = Dio(BaseOptions(
     baseUrl: ApiEnvironment.getApiURL(),

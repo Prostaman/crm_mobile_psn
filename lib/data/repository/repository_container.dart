@@ -5,10 +5,12 @@ import 'hotel_list_repository.dart';
 
 // класс в котором создаются репозитории всех объектов
 class RepositoryContainer {
-  static final RepositoryContainer _singleton = RepositoryContainer._internal();
+  static RepositoryContainer _singleton = RepositoryContainer._internal();
   factory RepositoryContainer() {
     return _singleton;
   }
+
+  static set instance(RepositoryContainer instance) => _singleton = instance;
 
   late MyHotelRepository _myHotelRepository;
   MyHotelRepository get myHotelRepository {

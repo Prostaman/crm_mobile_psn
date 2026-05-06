@@ -32,7 +32,11 @@ class BaseCubit extends Cubit<BaseCubitState> {
     emit(ErrorState(error: message));
 
     debugPrint(e.toString());
-    FirebaseCrashlytics.instance.recordError(e, stackTrace);
+    try {
+      FirebaseCrashlytics.instance.recordError(e, stackTrace);
+    } catch (error) {
+      debugPrint("Firebase not initialized: $error");
+    }
   }
 
   String? mapError(Object e) {

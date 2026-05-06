@@ -125,6 +125,14 @@ class HotelListRepository {
     if (_isDownloading) return false; // Проверка
     _isDownloading = true;
     try {
+      return await _downloadAllHotelsRecursive();
+    } finally {
+      _isDownloading = false; // Сброс флага
+    }
+  }
+
+  Future<bool> _downloadAllHotelsRecursive() async {
+    try {
       // получим дату последнего обновления
       String? lastUpdated = await _loadLastUpdatedDate();
       // закачаем отели
@@ -148,16 +156,16 @@ class HotelListRepository {
         attempt++;
         if (attempt < 4) {
           await Future.delayed(Duration(seconds: 3));
-          await downloadAllHotels();
+          return await _downloadAllHotelsRecursive();
         } else {
           attempt = 0;
           observerOfLoadingHotels.add(true);
           return false;
         }
       }
+    } catch (e) {
+      debugPrint("Error in _downloadAllHotelsRecursive: $e");
       return false;
-    } finally {
-      _isDownloading = false; // Сброс флага
     }
   }
 

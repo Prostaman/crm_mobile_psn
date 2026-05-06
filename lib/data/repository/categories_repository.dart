@@ -34,13 +34,12 @@ class CategoriesRepository {
       attempt++;
       if (attempt < 4) {
         await Future.delayed(Duration(seconds: 3));
-        await downloadCategories();
+        return await downloadCategories();
       } else {
         attempt = 0;
         observerOfLoadingCategories.add(true);
         return false;
       }
     }
-    return false;
   }
 }

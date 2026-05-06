@@ -4,11 +4,13 @@ import 'package:psn.hotels.hub/data/services/synchronization_service.dart';
 import '../data/services/auth_service.dart';
 
 class ServiceContainer {
-  static final ServiceContainer _singleton = ServiceContainer._internal();
+  static ServiceContainer _singleton = ServiceContainer._internal();
 
   factory ServiceContainer() {
     return _singleton;
   }
+
+  static set instance(ServiceContainer instance) => _singleton = instance;
 
   AuthService get authService {
     return _authService;

@@ -1,6 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class SharedPrefUtils {
   late SharedPreferences preferences;
   static bool _init = false;
@@ -8,10 +7,13 @@ class SharedPrefUtils {
 
   factory SharedPrefUtils() {
     if (_instance == null) {
-      _instance = SharedPrefUtils._(); // Create an instance only if it doesn't exist
+      _instance =
+          SharedPrefUtils._(); // Create an instance only if it doesn't exist
     }
     return _instance!;
   }
+
+  static set instance(SharedPrefUtils instance) => _instance = instance;
 
   SharedPrefUtils._(); // Private constructor for the Singleton pattern
 
