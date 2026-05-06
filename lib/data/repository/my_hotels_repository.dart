@@ -4,7 +4,7 @@ import 'package:psn.hotels.hub/data/datasources/remote/api/hotel_api.dart';
 import 'package:psn.hotels.hub/data/datasources/local/db/db_manager.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/hotel_model.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
 class MyHotelRepository {
   final HotelApi hotelApi = ApiContainer().hotelApi;

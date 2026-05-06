@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:psn.hotels.hub/presentation/blocks/splash/splash_state.dart';
 import 'package:psn.hotels.hub/data/datasources/local/db/db_manager.dart';
 import 'package:psn.hotels.hub/data/repository/repository_container.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
 class SplashCubit extends Cubit<SplashState> {
   SplashCubit() : super(SplashState(message: 'Идет загрузка отелей...'));

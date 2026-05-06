@@ -4,9 +4,9 @@ import 'package:psn.hotels.hub/data/datasources/local/db/db_manager.dart';
 import 'package:psn.hotels.hub/infrastructure/file_utility.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/data/models/response_models/file_model_response.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
-import '../../../domain/services/synchronization_service.dart';
+import '../../../data/services/synchronization_service.dart';
 
 class SettingsCubit extends BaseCubit {
   SettingsCubit()

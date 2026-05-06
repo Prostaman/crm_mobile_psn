@@ -12,7 +12,7 @@ import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/data/models/response_models/file_model_response.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:open_file/open_file.dart';

@@ -12,7 +12,7 @@ import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 import 'package:psn.hotels.hub/presentation/items/indicator_of_uploading.dart';
 import 'package:psn.hotels.hub/presentation/items/pagination_list_view.dart';

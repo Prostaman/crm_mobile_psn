@@ -5,8 +5,8 @@ import 'package:psn.hotels.hub/infrastructure/firebase/firebase_initialization.d
 import 'package:psn.hotels.hub/infrastructure/shared_preferences_utils.dart';
 import 'package:psn.hotels.hub/main.reflectable.dart';
 import 'package:psn.hotels.hub/data/models/response_models/user_model.dart';
-import 'package:psn.hotels.hub/domain/services/auth_service.dart';
-import 'package:psn.hotels.hub/domain/services/synchronization_service.dart';
+import 'package:psn.hotels.hub/data/services/auth_service.dart';
+import 'package:psn.hotels.hub/data/services/synchronization_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 void initWorkManagerSyncing() {

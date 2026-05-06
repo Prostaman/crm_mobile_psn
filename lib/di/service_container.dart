@@ -1,7 +1,7 @@
-import 'package:psn.hotels.hub/domain/services/settings_service.dart';
-import 'package:psn.hotels.hub/domain/services/synchronization_service.dart';
+import 'package:psn.hotels.hub/infrastructure/settings_service.dart';
+import 'package:psn.hotels.hub/data/services/synchronization_service.dart';
 
-import 'auth_service.dart';
+import '../data/services/auth_service.dart';
 
 class ServiceContainer {
   static final ServiceContainer _singleton = ServiceContainer._internal();

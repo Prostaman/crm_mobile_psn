@@ -8,8 +8,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:psn.hotels.hub/data/datasources/remote/api/api_container.dart';
 import 'package:psn.hotels.hub/data/models/response_models/base_model_response.dart';
-import 'package:psn.hotels.hub/domain/services/auth_service.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/data/services/auth_service.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
 part 'base_state.dart';
 

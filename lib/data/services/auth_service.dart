@@ -12,15 +12,17 @@ import 'package:psn.hotels.hub/data/models/request_models/sign_in_request.dart';
 import 'package:psn.hotels.hub/data/models/response_models/sign_in_response.dart';
 import 'package:psn.hotels.hub/data/models/response_models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../data/repository/repository_container.dart';
-import 'service_container.dart';
+import '../../di/service_container.dart';
 
 class AuthService {
   final String _onboardingKey = "onboarding_key";
   final String _authUserKey = "auth_user_key";
   final AuthApi _authApi = ApiContainer().authApi;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   final FlowCubit flowCubit = FlowCubit();
 
@@ -193,24 +195,39 @@ class AuthService {
   }
 
   loadUserFromShared() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? json = prefs.getString(_authUserKey);
+    // 1. Пытаемся прочитать из защищенного хранилища
+    String? json = await _secureStorage.read(key: _authUserKey);
+
+    if (json == null) {
+      // 2. Если там нет, проверяем SharedPreferences (Миграция)
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      json = prefs.getString(_authUserKey);
+
+      if (json != null) {
+        // 3. Если нашли в обычных префах, переносим в защищенные
+        await _secureStorage.write(key: _authUserKey, value: json);
+        await prefs.remove(_authUserKey);
+        debugPrint("User data migrated to Secure Storage");
+      }
+    }
+
     if (json == null) {
       return null;
     }
+
     UserModel? userModel = JsonMapper.deserialize<UserModel>(json);
     authUserCubit.changeUser(userModel);
     return userModel;
   }
 
   _removeUserFromShared() async {
+    // Удаляем из обоих мест для надежности
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool success = await prefs.remove(_authUserKey);
+    await prefs.remove(_authUserKey);
+    await _secureStorage.delete(key: _authUserKey);
 
-    if (success == true) {
-      authUserCubit.changeUser(null);
-    }
-    return success;
+    authUserCubit.changeUser(null);
+    return true;
   }
 
   _saveUserToShared(UserModel? user) async {
@@ -218,14 +235,17 @@ class AuthService {
       if (user.token == null) {
         user.token = this.user?.token;
       }
-      SharedPreferences prefs = await SharedPreferences.getInstance();
       String json = JsonMapper.serialize(user);
 
-      bool success = await prefs.setString(_authUserKey, json);
-      if (success == true) {
+      try {
+        await _secureStorage.write(key: _authUserKey, value: json);
         authUserCubit.changeUser(user);
+        return true;
+      } catch (e) {
+        debugPrint("Error saving to secure storage: $e");
+        return false;
       }
-      return success;
     }
+    return false;
   }
 }

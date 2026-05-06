@@ -1,29 +1,22 @@
 import 'dart:io';
-import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:psn.hotels.hub/presentation/blocks/content/content_cubit.dart';
 import 'package:psn.hotels.hub/infrastructure/file_utility.dart';
 import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
-import 'package:psn.hotels.hub/presentation/items/loading_indicator.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import 'package:psn.hotels.hub/presentation/items/filters.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
-import 'package:psn.hotels.hub/data/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/data/models/response_models/file_model_response.dart';
-import 'package:video_player/video_player.dart';
+import 'package:psn.hotels.hub/infrastructure/media_editor_helper.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:ui' as ui;
-import 'package:intl/intl.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'dart:math' as math;
 import '../../../../presentation/blocks/content/states/content_state.dart';
-import 'semi_circle.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'widgets/semi_circle.dart';
+import 'widgets/filter_carousel.dart';
+import 'widgets/media_item_builder.dart';
 
 class FullMediaPreviewSlider extends StatefulWidget {
   final ContentCubit cubit;
@@ -107,22 +100,20 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
   final GlobalKey _globalKey = GlobalKey();
 
   Future<void> _saveImageWithFiltersFromWidget(ContentState state) async {
-    setState(() {
-      isLoading = true;
-    });
-    RenderRepaintBoundary repaintBoundary =
-        _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
-    ui.Image boxImage = await repaintBoundary.toImage(
-        pixelRatio: pixelRatio); // for saving quality
-    ByteData? byteData =
-        await boxImage.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List uint8list = byteData!.buffer.asUint8List();
-    String oldFilePath = state.visibleFiles[currentIndexOfFile].localPath;
-    var availablePath = oldFilePath.substring(0, oldFilePath.lastIndexOf('/'));
-    String newFilePath =
-        "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
-    await File(newFilePath).writeAsBytes(uint8list);
-    _saveAndStayOnPage(newFilePath, state);
+    setState(() => isLoading = true);
+
+    try {
+      final uint8list =
+          await MediaEditorHelper.captureWidgetToBytes(_globalKey, pixelRatio);
+      final newFilePath = MediaEditorHelper.generateNewPath(
+          state.visibleFiles[currentIndexOfFile].localPath);
+
+      await File(newFilePath).writeAsBytes(uint8list);
+      _saveAndStayOnPage(newFilePath, state);
+    } catch (e) {
+      debugPrint("Error saving filtered image: $e");
+    }
+
     setState(() {
       isFilterModeOn = false;
       currentIndexOfFilter = 0;
@@ -130,62 +121,25 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
     });
   }
 
-  Widget widgetCorouselOfFilters(ContentState state) {
-    return Container(
-      height: 80, // Высота карусели
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal, // Горизонтальная прокрутка
-        itemCount: filters.length,
-        itemBuilder: (BuildContext context, int index) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                currentIndexOfFilter = index;
-              });
-            },
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: ColorFiltered(
-                colorFilter: ColorFilter.matrix(filters[index]),
-                child: buildMediaItem(state.visibleFiles[currentIndexOfFile]),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Future<void> _cropImage(ContentState state) async {
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: state.visibleFiles[currentIndexOfFile].localPath,
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 100,
-      uiSettings: [
-        AndroidUiSettings(
-            toolbarTitle: '',
-            toolbarColor: Colors.deepOrange,
-            toolbarWidgetColor: Colors.black,
-            backgroundColor: Colors.black,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false,
-            hideBottomControls: true),
-        IOSUiSettings(
-          title: '',
-        ),
-      ],
-    );
-    if (croppedFile != null) {
+    final sourcePath = state.visibleFiles[currentIndexOfFile].localPath;
+    final croppedPath = await MediaEditorHelper.cropImage(sourcePath);
+
+    if (croppedPath != null) {
       if (Platform.isAndroid) {
-        _saveAndStayOnPage(croppedFile.path, state);
+        _saveAndStayOnPage(croppedPath, state);
       } else if (Platform.isIOS) {
-        //print("New file path:${croppedFile.path}");
-        String newPath = state.visibleFiles[currentIndexOfFile].localPath;
-        _saveAndStayOnPage(
-            await FileUtility.moveFile(File(croppedFile.path),
-                newPath.substring(0, newPath.lastIndexOf('/'))),
-            state);
+        final newPath = await FileUtility.moveFile(
+          File(croppedPath),
+          sourcePath.substring(0, sourcePath.lastIndexOf('/')),
+        );
+        _saveAndStayOnPage(newPath, state);
       }
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        widget.pageController.jumpToPage(currentIndexOfFile);
+      });
     }
   }
 
@@ -227,7 +181,6 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
             bloc: widget.cubit,
             listener: (context, state) {
               if (state.visibleFiles.isEmpty) {
-                //widget.setStateCallback();
                 Navigator.of(context).pop();
               }
             },
@@ -242,29 +195,6 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                 currentIndexOfFile = files.isEmpty ? 0 : files.length - 1;
               }
 
-              // final widgets = files.map((fileModel) {
-              //   final file = File(fileModel.localPath);
-              //
-              //   // if (!file.existsSync()) {
-              //   //   //доверять файлам из BLoC ??
-              //   //   return const SizedBox();
-              //   // }
-              //
-              //   if (fileModel.type == FileModelType.Image) {
-              //     return Image.file(file,
-              //         key: ValueKey(fileModel.localId > 0
-              //             ? "${fileModel.localId}"
-              //             : "${fileModel.localPath}"));
-              //   } else {
-              //     return ChewieDemo(
-              //       file: fileModel,
-              //       key: ValueKey(fileModel.localId > 0
-              //           ? "${fileModel.localId}"
-              //           : "${fileModel.localPath}"),
-              //     );
-              //   }
-              // }).toList();
-
               return Stack(
                 children: [
                   Scaffold(
@@ -276,7 +206,6 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                             titleSpacing: 0,
                             leading: InkWell(
                               onTap: () {
-                                //widget.setStateCallback();
                                 Navigator.pop(context);
                               },
                               child: Row(
@@ -567,61 +496,33 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                   await _saveImageWithFiltersFromWidget(
                                                       state);
                                                 } else if (isRotatingMode) {
-                                                  //сохранить вращение
                                                   setState(
                                                       () => isLoading = true);
 
-                                                  // final imageBytes = await File(
-                                                  //         state
-                                                  //             .visibleFiles[
-                                                  //                 currentIndexOfFile]
-                                                  //             .localPath)
-                                                  //     .readAsBytes();
-                                                  // final rotatedBytes =
-                                                  //     await FlutterImageCompress
-                                                  //         .compressWithList(
-                                                  //             imageBytes,
-                                                  //             rotate:
-                                                  //                 angleOfRotating
-                                                  //                     .toInt());
-                                                  String oldImagePath = state
+                                                  final sourcePath = state
                                                       .visibleFiles[
                                                           currentIndexOfFile]
                                                       .localPath;
-                                                  var availablePath =
-                                                      oldImagePath.substring(
-                                                          0,
-                                                          oldImagePath
-                                                              .lastIndexOf(
-                                                                  '/'));
-                                                  String newFilePath =
-                                                      "$availablePath/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg";
-                                                  // final rotatedFile =
-                                                  //     await File(newFilePath)
-                                                  //         .writeAsBytes(
-                                                  //             rotatedBytes);
-                                                  final rotatedFile =
-                                                      await FlutterImageCompress
-                                                          .compressAndGetFile(
-                                                    state
-                                                        .visibleFiles[
-                                                            currentIndexOfFile]
-                                                        .localPath,
-                                                    newFilePath,
-                                                    rotate:
+                                                  final newFilePath =
+                                                      MediaEditorHelper
+                                                          .generateNewPath(
+                                                              sourcePath);
+
+                                                  final rotatedXFile =
+                                                      await MediaEditorHelper
+                                                          .rotateImage(
+                                                    sourcePath: sourcePath,
+                                                    targetPath: newFilePath,
+                                                    angle:
                                                         angleOfRotating.toInt(),
-                                                    quality: 100,
                                                   );
 
-                                                  debugPrint(
-                                                      "Rotating index of current image:$currentIndexOfFile");
                                                   _saveAndStayOnPage(
-                                                      rotatedFile?.path ??
+                                                      rotatedXFile?.path ??
                                                           newFilePath,
                                                       state);
 
                                                   setState(() {
-                                                    // overrideImage(newFilePath)
                                                     isRotatingMode = false;
                                                     angleOfRotating = 0;
                                                     isLoading = false;
@@ -635,6 +536,13 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                                 color: Colors.red,
                                               ),
                                               onPressed: () {
+                                                WidgetsBinding.instance
+                                                    .addPostFrameCallback((_) {
+                                                  if (!mounted) return;
+                                                  widget.pageController
+                                                      .jumpToPage(
+                                                          currentIndexOfFile);
+                                                });
                                                 setState(() {
                                                   isFilterModeOn = false;
                                                   isRotatingMode = false;
@@ -662,7 +570,17 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                                       state.visibleFiles[currentIndexOfFile]),
                                 ),
                               )),
-                              widgetCorouselOfFilters(state),
+                              FilterCarousel(
+                                filters: filters,
+                                currentFile:
+                                    state.visibleFiles[currentIndexOfFile],
+                                currentIndexOfFilter: currentIndexOfFilter,
+                                onFilterSelected: (index) {
+                                  setState(() {
+                                    currentIndexOfFilter = index;
+                                  });
+                                },
+                              ),
                             ])
                           : isRotatingMode
                               ? Stack(
@@ -888,97 +806,5 @@ class _FullMediaPreviewSliderState extends State<FullMediaPreviewSlider> {
                 ],
               );
             }));
-  }
-}
-
-class ChewieDemo extends StatefulWidget {
-  final FileModel file;
-
-  ChewieDemo({required this.file, Key? key}) : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() {
-    return _ChewieDemoState();
-  }
-}
-
-Widget buildMediaItem(FileModel fileModel) {
-  final file = File(fileModel.localPath);
-
-  final key = ValueKey(
-    fileModel.localId > 0 ? "${fileModel.localId}" : "${fileModel.localPath}",
-  );
-
-  if (!file.existsSync()) {
-    return const SizedBox();
-  }
-
-  if (fileModel.type == FileModelType.Image) {
-    return Image.file(file, key: key);
-  } else {
-    return ChewieDemo(file: fileModel, key: key);
-  }
-}
-
-class _ChewieDemoState extends State<ChewieDemo> {
-  VideoPlayerController? _controller;
-  ChewieController? _chewieController;
-
-  @override
-  void initState() {
-    super.initState();
-    initializePlayer();
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    _chewieController?.dispose();
-    super.dispose();
-  }
-
-  Future<void> initializePlayer() async {
-    _controller = VideoPlayerController.file(File(widget.file.localPath));
-
-    await _controller?.initialize();
-
-    _chewieController = ChewieController(
-      videoPlayerController: _controller!,
-      aspectRatio: _controller?.value.aspectRatio,
-      autoPlay: true,
-      looping: false,
-      placeholder: Center(
-        child: Container(
-          height: 40,
-          width: 40,
-          child: LoadingIndicatorWidget(),
-        ),
-      ),
-    );
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: _chewieController != null &&
-                _chewieController!.videoPlayerController.value.isInitialized
-            ? Chewie(
-                controller: _chewieController!,
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('Loading'),
-                ],
-              ),
-      ),
-    );
   }
 }

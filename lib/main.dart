@@ -10,7 +10,7 @@ import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotels_cubit.dar
 import 'package:psn.hotels.hub/presentation/blocks/permissions_cubit/permissions_cubit.dart';
 import 'package:psn.hotels.hub/presentation/blocks/splash/splash_cubit.dart';
 import 'package:psn.hotels.hub/infrastructure/workmanager/workmanger_sync.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import 'package:psn.hotels.hub/presentation/screens/auth_flow/sign_in_screen.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
 import 'package:psn.hotels.hub/presentation/screens/permission_flow/permission_screen.dart';

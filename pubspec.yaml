@@ -19,6 +19,7 @@ dependencies:
   reflectable: ^4.0.15
   pretty_dio_logger: ^1.4.0
   shared_preferences: ^2.3.5
+  flutter_secure_storage: ^9.2.2
   flutter_bloc: ^9.1.1
   dart_json_mapper_flutter: ^2.0.1
   location: ^8.0.1
@@ -76,8 +77,8 @@ flutter_icons:
   image_path: "assets/app/icon_launcher.jpg"
   android: true
   ios: true
-  #adaptive_icon_background: "#FFFFFF"  # Цвет фона для Android
-  #adaptive_icon_foreground: "assets/app/icon_launcher.jpg" # Лого без фона
+  adaptive_icon_background: "assets/app/icon_background.png" # Картинка фона (без логотипа)
+  adaptive_icon_foreground: "assets/app/icon_foreground.png" # Картинка логотипа (на прозрачном фоне)
 
 flutter:
 

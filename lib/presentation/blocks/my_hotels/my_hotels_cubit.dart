@@ -9,7 +9,7 @@ import 'package:psn.hotels.hub/data/models/entities_database/file_model.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/hotel_model.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/location_model.dart';
 import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import '../../../data/repository/repository_container.dart';
 import 'my_hotel_state.dart';
 

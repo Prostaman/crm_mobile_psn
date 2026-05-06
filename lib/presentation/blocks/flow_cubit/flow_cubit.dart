@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
 enum FlowState {
   Initial,

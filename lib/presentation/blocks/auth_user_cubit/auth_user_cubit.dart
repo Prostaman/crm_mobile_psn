@@ -1,6 +1,6 @@
 import 'package:psn.hotels.hub/presentation/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/data/models/response_models/user_model.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 
 class AuthUserCubit extends BaseCubit {
   UserModel? user;

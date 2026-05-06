@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/infrastructure/webview_helper.dart';
-import 'package:psn.hotels.hub/domain/services/service_container.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
 
 import 'web_view/web_view_page.dart';

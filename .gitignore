@@ -55,6 +55,7 @@ Thumbs.db
 lib/firebase_options.dart
 firebase.json
 **/google-services.json
+**/GoogleService-Info.plist
 
 
 # Flutter/Dart
