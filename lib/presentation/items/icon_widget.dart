@@ -1,6 +1,6 @@
 // import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:flutter/material.dart';
-// import 'package:psn.hotels.hub/helpers/ui_helper.dart';
+// import 'package:psn.hotels.hub/infrastructure/ui_helper.dart';
 
 // class IconWidget extends StatelessWidget {
 //   final String? asset;

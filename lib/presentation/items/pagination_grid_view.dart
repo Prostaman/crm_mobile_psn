@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/blocks/list_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/base_cubit/base_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/presentation/items/loading_more_indicator.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:psn.hotels.hub/blocks/locations/locations_cubit.dart';
-import 'package:psn.hotels.hub/blocks/content/content_cubit.dart';
-import 'package:psn.hotels.hub/models/entities_database/location_model.dart';
-import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
+import 'package:psn.hotels.hub/presentation/blocks/locations/locations_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/content/content_cubit.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/location_model.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/presentation/routes/base_routes.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/content/content_screen.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/full_media_preview_screen/full_media_preview_slider.dart';

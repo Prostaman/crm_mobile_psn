@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/base_cubit/base_cubit.dart';
 
 import '../items/loading_indicator.dart';
 

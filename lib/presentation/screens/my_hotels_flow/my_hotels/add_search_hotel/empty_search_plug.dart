@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../../helpers/images.gen.dart';
+import '../../../../../infrastructure/images.gen.dart';
 import '../../../../ui_helper.dart';
 
 class EmptySearchPlug extends StatelessWidget {

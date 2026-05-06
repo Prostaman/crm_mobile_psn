@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
-import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotels_cubit.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
 
 import 'add_search_hotel_bottom_sheet.dart';

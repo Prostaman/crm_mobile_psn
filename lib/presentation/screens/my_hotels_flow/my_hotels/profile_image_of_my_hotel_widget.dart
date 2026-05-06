@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:psn.hotels.hub/helpers/images.gen.dart';
-import 'package:psn.hotels.hub/models/entities_database/file_model.dart';
-import 'package:psn.hotels.hub/models/entities_database/my_hotel_model.dart';
-import 'package:psn.hotels.hub/models/response_models/file_model_response.dart';
+import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/file_model.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/my_hotel_model.dart';
+import 'package:psn.hotels.hub/data/models/response_models/file_model_response.dart';
 import 'package:psn.hotels.hub/presentation/items/image_item.dart';
 
 Widget? profileImageOMyfHotel(MyHotelModel myHotel, List<FileModel> files) {

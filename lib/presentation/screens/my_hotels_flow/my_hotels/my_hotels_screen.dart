@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/my_hotel_state.dart';
-import 'package:psn.hotels.hub/helpers/format_date.dart';
-import 'package:psn.hotels.hub/helpers/images.gen.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotels_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotel_state.dart';
+import 'package:psn.hotels.hub/infrastructure/format_date.dart';
+import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/items/pagination_list_view.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
@@ -13,7 +13,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/profile_image_of_my_hotel_widget.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/delete_hotel_dialog.dart';
 
-import '../../../../blocks/base_cubit/base_cubit.dart';
+import '../../../../presentation/blocks/base_cubit/base_cubit.dart';
 import '../../../items/indicator_of_uploading.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

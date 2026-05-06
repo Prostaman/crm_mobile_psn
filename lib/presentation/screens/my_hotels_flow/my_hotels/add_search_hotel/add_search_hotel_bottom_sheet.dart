@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/hotels_search/hotels_dialog_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/base_cubit/base_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/hotels_search/hotels_dialog_cubit.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 import 'package:psn.hotels.hub/presentation/items/search_field_box.dart';
 
-import '../../../../../blocks/my_hotels/hotels_search/hotel_search_state.dart';
+import '../../../../../presentation/blocks/my_hotels/hotels_search/hotel_search_state.dart';
 import '../../../../items/pagination_list_view.dart';
 
 class AddSearchHotelBottomSheet extends StatefulWidget {

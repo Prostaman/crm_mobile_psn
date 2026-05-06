@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:psn.hotels.hub/helpers/getter_icon_path_category.dart';
+import 'package:psn.hotels.hub/infrastructure/getter_icon_path_category.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
-import 'package:psn.hotels.hub/models/entities_database/category_of_location_model.dart';
+import 'package:psn.hotels.hub/data/models/entities_database/category_of_location_model.dart';
 
 class CategoriesBottomSheet extends StatefulWidget {
   final Function(CategoryModel?) onTapCallback;

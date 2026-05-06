@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';
-import 'package:psn.hotels.hub/blocks/splash/splash_state.dart';
-import 'package:psn.hotels.hub/helpers/images.gen.dart';
+import 'package:psn.hotels.hub/presentation/blocks/splash/splash_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/splash/splash_state.dart';
+import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 

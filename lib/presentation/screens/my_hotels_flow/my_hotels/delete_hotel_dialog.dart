@@ -2,8 +2,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
-import 'package:psn.hotels.hub/helpers/images.gen.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotels_cubit.dart';
+import 'package:psn.hotels.hub/infrastructure/images.gen.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 import 'package:psn.hotels.hub/presentation/buttons/default_button.dart';
 
