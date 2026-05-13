@@ -41,7 +41,7 @@ jobs:
       - name: Upload to Play Store (Production)
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonRaw: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
+          serviceAccountJson: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
           packageName: psn.hotels.app
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: production

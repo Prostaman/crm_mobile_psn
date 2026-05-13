@@ -44,7 +44,7 @@ jobs:
       - name: Upload to Play Store (Internal)
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonRaw: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
+          serviceAccountJson: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
           packageName: psn.hotels.app
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
@@ -69,10 +69,14 @@ jobs:
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
 
       - name: Install Apple Certificate
-        uses: Apple-Actions/import-codesigning-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE }}
-          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+        run: |
+          echo "${{ secrets.IOS_P12_CERTIFICATE }}" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_P12_PASSWORD }}" -A
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
       - name: Install Provisioning Profile
         run: |
