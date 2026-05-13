@@ -36,7 +36,9 @@ jobs:
           echo "storeFile=upload-keystore.jks" >> android/key.properties
 
       - name: Build Android AppBundle
-        run: flutter build appbundle --release --build-number ${{ github.run_number }}
+        run: |
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          flutter build appbundle --release --build-number $NEW_BUILD_NUMBER
 
       - name: Upload to Play Store (Production)
         uses: r0adkll/upload-google-play@v1
@@ -78,10 +80,10 @@ jobs:
 
       - name: Build iOS IPA
         run: |
-          flutter build ipa --release --build-number ${{ github.run_number }} \
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          flutter build ipa --release --build-number $NEW_BUILD_NUMBER \
           --export-options-plist=ios/ExportOptions.plist \
-          --build-name=1.26.2 \
-          --provisioning-profile="HotelsHub_AppStore_CI"
+          --build-name=1.26.2
 
       - name: Upload to App Store
         uses: Apple-Actions/upload-testflight-build@v1
