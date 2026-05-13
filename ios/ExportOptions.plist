@@ -11,7 +11,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>psn.hotels.hub</key>
-		<string>psn.hotels.hub AppStore</string>
+		<string>HotelsHub_AppStore_CI</string>
 	</dict>
 	<key>signingCertificate</key>
 	<string>Apple Distribution</string>
