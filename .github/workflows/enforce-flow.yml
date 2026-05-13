@@ -1,0 +1,26 @@
+name: Enforce Branch Flow
+
+on:
+  pull_request:
+    branches:
+      - main
+      - testing
+
+jobs:
+  check-branch-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source branch for main
+        if: github.base_ref == 'main' && github.head_ref != 'testing'
+        run: |
+          echo "Error: You can only merge into 'main' from the 'testing' branch."
+          exit 1
+
+      - name: Verify source branch for testing
+        if: github.base_ref == 'testing' && github.head_ref != 'development'
+        run: |
+          echo "Error: You can only merge into 'testing' from the 'development' branch."
+          exit 1
+
+      - name: Flow is correct
+        run: echo "Branch flow is valid."
