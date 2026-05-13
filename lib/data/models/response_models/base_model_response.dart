@@ -5,8 +5,9 @@ class BaseModelResponse {
   bool? success;
   List<ErrorResponse> errors = [];
 
- BaseModelResponse({this.success, List<ErrorResponse>? errors})
-      : errors = errors ?? <ErrorResponse>[]; // Initialize errors in the constructor
+  BaseModelResponse({this.success, List<ErrorResponse>? errors})
+      : errors =
+            errors ?? <ErrorResponse>[]; // Initialize errors in the constructor
 
   BaseModelResponse.fromJson(Map<String, dynamic> json) {
     success = json['success'];
@@ -17,7 +18,6 @@ class BaseModelResponse {
       });
     }
   }
-
 }
 
 @jsonSerializable
@@ -25,12 +25,10 @@ class ErrorResponse {
   late String message;
   late int code;
 
-  ErrorResponse({this.message = "Empty", this.code =-1});
+  ErrorResponse({this.message = "Empty", this.code = -1});
 
-  ErrorResponse.fromJson(Map<String, dynamic> json){
+  ErrorResponse.fromJson(Map<String, dynamic> json) {
     message = json['message'];
     code = int.parse(json['code'].toString());
   }
-  
-
 }

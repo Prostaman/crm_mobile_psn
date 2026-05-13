@@ -5,14 +5,16 @@ import 'dart:core';
 import 'package:dart_json_mapper/src/model/annotations.dart' as prefix0;
 import 'package:psn.hotels.hub/data/models/request_models/sign_in_request.dart'
     as prefix1;
-import 'package:psn.hotels.hub/data/models/response_models/base_model.dart' as prefix3;
+import 'package:psn.hotels.hub/data/models/response_models/base_model.dart'
+    as prefix3;
 import 'package:psn.hotels.hub/data/models/response_models/base_model_response.dart'
     as prefix2;
 import 'package:psn.hotels.hub/data/models/response_models/file_model_response.dart'
     as prefix4;
 import 'package:psn.hotels.hub/data/models/response_models/sign_in_response.dart'
     as prefix5;
-import 'package:psn.hotels.hub/data/models/response_models/user_model.dart' as prefix6;
+import 'package:psn.hotels.hub/data/models/response_models/user_model.dart'
+    as prefix6;
 
 // ignore_for_file: camel_case_types
 // ignore_for_file: implementation_imports

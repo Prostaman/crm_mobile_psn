@@ -89,7 +89,7 @@ class _PaginationListViewState<Model> extends State<PaginationListView<Model>> {
             if (state is LoadingState)
               LoadingIndicatorWidget()
             else if (state is LoadingMoreState)
-              LoadingMoreInsicator(
+              LoadingMoreIndicator(
                   alignment: widget.reverse == false
                       ? Alignment.bottomCenter
                       : Alignment.topCenter)

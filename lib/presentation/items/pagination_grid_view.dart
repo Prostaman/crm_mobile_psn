@@ -74,7 +74,7 @@ class PaginationGridView<Model> extends StatelessWidget {
                       height: 200,
                       child: Center(child: LoadingIndicatorWidget())))
             else if (state is LoadingMoreState)
-              LoadingMoreInsicator(
+              LoadingMoreIndicator(
                   alignment: reverse == false
                       ? Alignment.bottomCenter
                       : Alignment.topCenter)

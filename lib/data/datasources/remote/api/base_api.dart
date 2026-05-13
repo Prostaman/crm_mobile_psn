@@ -3,7 +3,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 class BaseApi {
-
   late Dio client;
 
   BaseApi();
@@ -32,7 +31,8 @@ class BaseApi {
       return response;
     } catch (e) {
       debugPrint("HTTP post $url\nError: $e\nparameters: $parameters");
-      FirebaseCrashlytics.instance.log("HTTP post $url\nError: $e\nparameters: $parameters");
+      FirebaseCrashlytics.instance
+          .log("HTTP post $url\nError: $e\nparameters: $parameters");
       throw e;
     }
   }
@@ -54,7 +54,8 @@ class BaseApi {
       return response;
     } catch (e) {
       debugPrint("HTTP put $url\nError: $e\nparameters: $parameters");
-      FirebaseCrashlytics.instance.log("HTTP put $url\nError: $e\nparameters: $parameters");
+      FirebaseCrashlytics.instance
+          .log("HTTP put $url\nError: $e\nparameters: $parameters");
       throw e;
     }
   }
@@ -65,8 +66,9 @@ class BaseApi {
 
       return response;
     } catch (e) {
-       print("HTTP delete $url\nError: $e\nparameters: $parameters");
-      FirebaseCrashlytics.instance.log("HTTP delete $url\nError: $e\nparameters: $parameters");
+      print("HTTP delete $url\nError: $e\nparameters: $parameters");
+      FirebaseCrashlytics.instance
+          .log("HTTP delete $url\nError: $e\nparameters: $parameters");
       throw e;
     }
   }
@@ -74,12 +76,13 @@ class BaseApi {
   sendFile(String url, FormData data) async {
     try {
       //client.options..headers["Content-Type"] = "multipart/form-data";
-           // client.options..headers.remove("Content-Type");
+      // client.options..headers.remove("Content-Type");
       var response = await client.post(url, data: data);
       return response;
     } catch (e) {
       print("HTTP sendFile $url\nError: $e\ndata: $data");
-      FirebaseCrashlytics.instance.log("HTTP sendFile $url\nError: $e\ndata: $data");
+      FirebaseCrashlytics.instance
+          .log("HTTP sendFile $url\nError: $e\ndata: $data");
       //throw e;
     }
   }

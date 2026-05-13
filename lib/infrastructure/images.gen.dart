@@ -41,18 +41,24 @@ class _Icons {
   String get iconLocation => 'assets/icons/icon_location.svg';
   String get iconArrowRight => 'assets/icons/icon_arrow_right.svg';
   String get iconArrowLeft => 'assets/icons/icon_arrow_left.svg';
-  String get iconProfilePhotoOfLocation => 'assets/icons/icon_profile_photo_of_location.svg';
-  String get iconProfilePhotoOfMyHotel => 'assets/icons/icon_profile_photo_of_my_hotel.svg';
+  String get iconProfilePhotoOfLocation =>
+      'assets/icons/icon_profile_photo_of_location.svg';
+  String get iconProfilePhotoOfMyHotel =>
+      'assets/icons/icon_profile_photo_of_my_hotel.svg';
 
   String get iconCategoryHotel => 'assets/icons/category_hotel.svg';
   String get iconCategoryRooms => 'assets/icons/category_rooms.svg';
   String get iconCategoryRestaurants => 'assets/icons/category_rooms.svg';
-  String get iconCategoryConferenceRooms => 'assets/icons/category_conference_rooms.svg';
-  String get iconCategorySwimmingPools => 'assets/icons/category_swimming_pools.svg';
+  String get iconCategoryConferenceRooms =>
+      'assets/icons/category_conference_rooms.svg';
+  String get iconCategorySwimmingPools =>
+      'assets/icons/category_swimming_pools.svg';
   String get iconCategorySeaBeach => 'assets/icons/category_sea_beach.svg';
   String get iconCategorySportSpa => 'assets/icons/category_sport_spa.svg';
-  String get iconCategoryEntertainment => 'assets/icons/category_entertainment.svg';
+  String get iconCategoryEntertainment =>
+      'assets/icons/category_entertainment.svg';
   String get iconCategoryAnother => 'assets/icons/category_another.svg';
-  String get iconMapChooseCategory => 'assets/icons/icon_map_choose_category.svg';
+  String get iconMapChooseCategory =>
+      'assets/icons/icon_map_choose_category.svg';
   String get iconTriangleDown => 'assets/icons/triangle_down.svg';
 }

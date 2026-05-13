@@ -16,7 +16,8 @@ class FileUtility {
       }
     } catch (e) {
       await FirebaseCrashlytics.instance.log("deleteFile $e");
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
       //throw e;
     }
   }
@@ -24,15 +25,17 @@ class FileUtility {
   static Future<String> moveFile(File file, String newLocalPath) async {
     String oldPath = file.path;
     // Формируем новый путь файла, включая новую директорию
-    String newFilePath = newLocalPath + '/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}_' + file.path.split('/').last;
+    String newFilePath = newLocalPath +
+        '/${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}_' +
+        file.path.split('/').last;
 
     try {
       // Получаем новый файл
-       final newFile = File(newFilePath);
+      final newFile = File(newFilePath);
 
       // // Создаем родительскую директорию, если она не существует
-       await newFile.create(recursive: true);
-     
+      await newFile.create(recursive: true);
+
       // Копируем файл в новый путь
       await file.copy(newFilePath);
 
@@ -43,8 +46,10 @@ class FileUtility {
       return newFilePath;
     } catch (e) {
       debugPrint('Ошибка при перемещении файла: $e');
-      await FirebaseCrashlytics.instance.log("Ошибка при перемещении файла: $e");
-      await FirebaseCrashlytics.instance.recordFlutterError(FlutterErrorDetails(exception: e));
+      await FirebaseCrashlytics.instance
+          .log("Ошибка при перемещении файла: $e");
+      await FirebaseCrashlytics.instance
+          .recordFlutterError(FlutterErrorDetails(exception: e));
       return oldPath;
     }
   }
@@ -105,7 +110,8 @@ class FileUtility {
       File file = File(filePath);
       if (await file.exists()) {
         FileStat fileStat = await file.stat();
-        return fileStat.changed; // You can also use .accessed or .modified for different timestamps
+        return fileStat
+            .changed; // You can also use .accessed or .modified for different timestamps
       } else {
         debugPrint('getFileCreationDate File not found');
         return null;

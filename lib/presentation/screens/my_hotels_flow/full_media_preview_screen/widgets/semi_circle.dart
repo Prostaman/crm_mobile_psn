@@ -5,11 +5,8 @@ class SemiCirclePainter extends CustomPainter {
   final double sweepAngle;
   double? center = 0;
 
-  SemiCirclePainter({
-    required this.startAngle,
-    required this.sweepAngle,
-    this.center
-  });
+  SemiCirclePainter(
+      {required this.startAngle, required this.sweepAngle, this.center});
 
   @override
   void paint(Canvas canvas, Size size) {

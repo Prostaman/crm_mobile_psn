@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/presentation/ui_helper.dart';
 
-import 'loading_indicator.dart';
-
-class LoadingMoreInsicator extends StatelessWidget {
+class LoadingMoreIndicator extends StatelessWidget {
   final Alignment alignment;
-  const LoadingMoreInsicator({Key? key, required this.alignment})
+  const LoadingMoreIndicator({Key? key, required this.alignment})
       : super(key: key);
 
   @override
@@ -28,7 +26,11 @@ class LoadingMoreInsicator extends StatelessWidget {
               ]),
           width: 40,
           height: 40,
-          child: LoadingIndicatorWidget(),
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+                ColorOrange), // Используем основной цвет приложения
+          ),
         ),
       ),
     );

@@ -15,9 +15,7 @@ pushTo({required Widget screen, String? name, required BuildContext context}) {
 pushTReplacement({required Widget screen, required BuildContext context}) {
   Navigator.pushReplacement(
     context,
-    MaterialPageRoute(
-      builder: (c) => screen
-    ),
+    MaterialPageRoute(builder: (c) => screen),
   );
 }
 

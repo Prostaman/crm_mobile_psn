@@ -20,7 +20,7 @@ class FirebaseHelper {
   }
 
   static Future<void> disableCrashlyticsAndAnalytics() async {
-     debugPrint('disableCrashlyticsAndAnalytics');
+    debugPrint('disableCrashlyticsAndAnalytics');
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }
