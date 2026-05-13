@@ -2,7 +2,7 @@ name: psn.hotels.hub
 description: The PSN Hotels application is your indispensable tool for working with hotel photos. Designed specifically for managers of the “Come with us” travel network, this application allows you not only to conveniently store all the necessary photos and video materials in one place, but also to effectively share them through social networks and instant messengers.
 
 publish_to: 'none'
-version: 1.26.2+53
+version: 1.26.2+54
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
