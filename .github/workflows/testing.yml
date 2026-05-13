@@ -39,7 +39,9 @@ jobs:
         run: keytool -list -v -keystore android/app/upload-keystore.jks -storepass ${{ secrets.ANDROID_STORE_PASSWORD }} | grep Alias
 
       - name: Build Android AppBundle
-        run: flutter build appbundle --release --build-number ${{ github.run_number }}
+        run: |
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          flutter build appbundle --release --build-number $NEW_BUILD_NUMBER
 
       - name: Create Service Account Key
         run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > service_account.json
@@ -88,10 +90,10 @@ jobs:
 
       - name: Build iOS IPA
         run: |
-          flutter build ipa --release --build-number ${{ github.run_number }} \
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          flutter build ipa --release --build-number $NEW_BUILD_NUMBER \
           --export-options-plist=ios/ExportOptions.plist \
-          --build-name=1.26.2 \
-          --provisioning-profile="HotelsHub_AppStore_CI"
+          --build-name=1.26.2
 
       - name: Upload to TestFlight
         uses: Apple-Actions/upload-testflight-build@v1
