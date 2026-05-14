@@ -56,6 +56,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Set Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
@@ -65,7 +68,7 @@ jobs:
       - name: Install dependencies
         run: |
           flutter pub get
-          cd ios && pod install && cd ..
+          cd ios && pod update && pod install && cd ..
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
