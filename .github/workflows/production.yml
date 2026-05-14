@@ -105,11 +105,6 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
-      - name: Install FlutterFire CLI
-        run: |
-          dart pub global activate flutterfire_cli
-          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
-
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
@@ -118,11 +113,13 @@ jobs:
           cd ios
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0
           xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ../build/ios/ipa
+          cd ..
+          find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
 
       - name: Upload to App Store
         uses: Apple-Actions/upload-testflight-build@v1
         with:
-          app-path: build/ios/ipa/*.ipa
+          app-path: build/ios/ipa/app.ipa
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
