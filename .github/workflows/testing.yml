@@ -76,13 +76,7 @@ jobs:
       - name: Install dependencies
         run: |
           flutter pub get
-          cd ios
-          rm -rf Pods
-          rm -rf Podfile.lock
-          pod deintegrate
-          pod cache clean --all
-          pod install --repo-update
-          cd ..
+          cd ios && pod install && cd ..
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
@@ -103,21 +97,15 @@ jobs:
       - name: Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-
-      - name: Install FlutterFire CLI
-        run: |
-          dart pub global activate flutterfire_cli
-          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
 
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER --build-name=1.26.2
-          mkdir -p build/ios/ipa
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0
-          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ../build/ios/ipa
+          flutter build ipa --release \
+            --build-number $NEW_BUILD_NUMBER \
+            --build-name 1.26.2 \
+            --export-options-plist ios/ExportOptions.plist
 
       - name: Upload to TestFlight
         uses: Apple-Actions/upload-testflight-build@v1
