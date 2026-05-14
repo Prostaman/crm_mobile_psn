@@ -22,9 +22,6 @@ jobs:
       - name: Create Firebase Config (Android)
         run: echo '${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
 
-      - name: Create Firebase Config (iOS)
-        run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
-
       - name: Create firebase.json
         run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
 
@@ -76,6 +73,7 @@ jobs:
       - name: Install dependencies
         run: |
           flutter pub get
+          echo '#include "CI.xcconfig"' >> ios/Flutter/Release.xcconfig
           cd ios && pod install && cd ..
 
       - name: Create Firebase Config (iOS)
