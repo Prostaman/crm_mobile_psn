@@ -52,14 +52,14 @@ jobs:
           track: production
 
   deploy-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '15.3'
+          xcode-version: '26.3'
       
       - uses: subosito/flutter-action@v2
         with:
