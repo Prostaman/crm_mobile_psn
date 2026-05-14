@@ -102,7 +102,7 @@ jobs:
           flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER --build-name=1.26.2
           mkdir -p build/ios/ipa
           cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0
           xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ../build/ios/ipa
 
       - name: Upload to App Store
