@@ -56,6 +56,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.3'
+      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
