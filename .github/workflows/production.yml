@@ -22,9 +22,6 @@ jobs:
       - name: Create Firebase Config (Android)
         run: echo '${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
 
-      - name: Create Firebase Config (iOS)
-        run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
-
       - name: Create firebase.json
         run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
 
@@ -70,9 +67,15 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Install FlutterFire CLI
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
       - name: Install dependencies
         run: |
           flutter pub get
+          echo '#include "CI.xcconfig"' >> ios/Flutter/Release.xcconfig
           cd ios
           rm -rf Pods
           rm -rf Podfile.lock
@@ -122,4 +125,4 @@ jobs:
           app-path: build/ios/ipa/*.ipa
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-          api-key-content: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
