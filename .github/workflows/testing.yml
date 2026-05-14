@@ -91,9 +91,11 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ipa --release --build-number $NEW_BUILD_NUMBER \
-          --export-options-plist=ios/ExportOptions.plist \
-          --build-name=1.26.2
+          flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER --build-name=1.26.2
+          mkdir -p build/ios/ipa
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ../build/ios/ipa
 
       - name: Upload to TestFlight
         uses: Apple-Actions/upload-testflight-build@v1

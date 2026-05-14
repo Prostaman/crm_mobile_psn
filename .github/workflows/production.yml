@@ -40,10 +40,13 @@ jobs:
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
           flutter build appbundle --release --build-number $NEW_BUILD_NUMBER
 
+      - name: Create Service Account Key
+        run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > service_account.json
+
       - name: Upload to Play Store (Production)
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
+          serviceAccountJson: service_account.json
           packageName: psn.hotels.app
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: production
@@ -68,10 +71,14 @@ jobs:
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
 
       - name: Install Apple Certificate
-        uses: Apple-Actions/import-codesigning-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE }}
-          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+        run: |
+          echo "${{ secrets.IOS_P12_CERTIFICATE }}" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_P12_PASSWORD }}" -A
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
       - name: Install Provisioning Profile
         run: |
@@ -81,9 +88,16 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ipa --release --build-number $NEW_BUILD_NUMBER \
-          --export-options-plist=ios/ExportOptions.plist \
-          --build-name=1.26.2
+          flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER --build-name=1.26.2
+          mkdir -p build/ios/ipa
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ../build/ios/ipa
 
       - name: Upload to App Store
         uses: Apple-Actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/ipa/*.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+          api-key-content: ${{ secrets.APPSTORE_PRIVATE_KEY }}
