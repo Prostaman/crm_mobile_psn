@@ -112,7 +112,6 @@ jobs:
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
           flutter build ipa --release \
             --build-number $NEW_BUILD_NUMBER \
-            --build-name 1.26.2 \
             --export-options-plist ios/ExportOptions.plist
 
       - name: Upload to TestFlight
