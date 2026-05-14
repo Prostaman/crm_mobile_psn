@@ -25,6 +25,9 @@ jobs:
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
 
+      - name: Create firebase.json
+        run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
+
       - name: Decode Android Keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
 
@@ -83,6 +86,9 @@ jobs:
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase.json
+        run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
 
       - name: Install Apple Certificate
         run: |
