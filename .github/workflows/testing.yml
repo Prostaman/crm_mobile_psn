@@ -4,6 +4,10 @@ on:
   push:
     branches: [ testing ]
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   deploy-android:
     runs-on: ubuntu-latest
@@ -121,7 +125,7 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ipa --release --no-use-spm \
+          flutter build ipa --release \
             --build-number $NEW_BUILD_NUMBER \
             --export-options-plist ios/ExportOptions.plist
           find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
