@@ -140,10 +140,11 @@ jobs:
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
           
-          # Inject provisioning profile name into xcconfig
-          echo "PROVISIONING_PROFILE_SPECIFIER=HotelsHub_AppStore_CI" >> ios/Flutter/Release.xcconfig
-          echo "DEVELOPMENT_TEAM=RZAJCU5G78" >> ios/Flutter/Release.xcconfig
+          # Inject signing settings into xcconfig
           echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
+          echo "DEVELOPMENT_TEAM=RZAJCU5G78" >> ios/Flutter/Release.xcconfig
+          echo "PROVISIONING_PROFILE_SPECIFIER=HotelsHub_AppStore_CI" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY=Apple Distribution" >> ios/Flutter/Release.xcconfig
 
           flutter build ipa --release \
             --build-number $NEW_BUILD_NUMBER \
