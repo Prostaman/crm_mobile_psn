@@ -22,7 +22,7 @@ jobs:
 
       - name: Install FlutterFire CLI
         run: |
-          dart pub global activate flutterfire_cli
+          dart pub global activate flutterfire_cli latest
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
@@ -87,8 +87,11 @@ jobs:
 
       - name: Install FlutterFire CLI
         run: |
-          dart pub global activate flutterfire_cli
+          dart pub global activate flutterfire_cli latest
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Check FlutterFire version
+        run: flutterfire --version
 
       - name: Install dependencies
         run: |
