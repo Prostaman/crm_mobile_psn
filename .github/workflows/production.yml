@@ -139,13 +139,15 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          
+          # Inject provisioning profile name into xcconfig
+          echo "PROVISIONING_PROFILE_SPECIFIER=HotelsHub_AppStore_CI" >> ios/Flutter/Release.xcconfig
+          echo "DEVELOPMENT_TEAM=RZAJCU5G78" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
 
           flutter build ipa --release \
             --build-number $NEW_BUILD_NUMBER \
-            --export-options-plist ios/ExportOptions.plist \
-            --code-sign-style=Manual \
-            --certificate-identity="Apple Distribution" \
-            --provisioning-profile="HotelsHub_AppStore_CI"
+            --export-options-plist ios/ExportOptions.plist
 
           find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
 
