@@ -51,6 +51,12 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: production
 
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   deploy-ios:
     runs-on: macos-15
     steps:
@@ -103,12 +109,12 @@ jobs:
       - name: Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
 
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER
+          flutter build ios --release --no-codesign --no-use-spm --build-number $NEW_BUILD_NUMBER
           mkdir -p build/ios/ipa
           cd ios
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0
@@ -123,3 +129,9 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -59,6 +59,12 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
 
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   deploy-ios:
     runs-on: macos-15
     steps:
@@ -84,7 +90,12 @@ jobs:
         run: |
           flutter pub get
           echo '#include "CI.xcconfig"' >> ios/Flutter/Release.xcconfig
-          cd ios && pod install && cd ..
+          cd ios
+          rm -rf Pods
+          rm -rf Podfile.lock
+          pod deintegrate
+          pod install --repo-update
+          cd ..
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
@@ -110,7 +121,7 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ipa --release \
+          flutter build ipa --release --no-use-spm \
             --build-number $NEW_BUILD_NUMBER \
             --export-options-plist ios/ExportOptions.plist
           find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
@@ -122,3 +133,9 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
