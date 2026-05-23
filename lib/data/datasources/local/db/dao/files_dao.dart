@@ -119,6 +119,7 @@ class FilesDao {
         tableName,
         where: 'localLocationId = ? AND deleted = 0',
         whereArgs: [localLocationId],
+        orderBy: 'localId ASC',
       );
       return mapList.map((map) => FileModel.fromMap(map)).toList();
     } catch (e) {
@@ -134,6 +135,7 @@ class FilesDao {
         tableName,
         where: 'hotelId = ? AND deleted = 0',
         whereArgs: [hotelId],
+        orderBy: 'localId ASC',
       );
       return mapList.map((map) => FileModel.fromMap(map)).toList();
     } catch (e) {

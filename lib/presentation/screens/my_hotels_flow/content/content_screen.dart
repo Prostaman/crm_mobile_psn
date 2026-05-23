@@ -23,7 +23,7 @@ import 'package:psn.hotels.hub/presentation/items/permission_denied_dialog.dart'
 import 'choose_category_bottom_sheet.dart';
 
 class ContentScreen extends StatefulWidget {
-  final VoidCallback saveCallback;
+  final Future<void> Function() saveCallback;
 
   ContentScreen({Key? key, required this.saveCallback}) : super(key: key);
 
@@ -174,11 +174,11 @@ class _ContentScreenState extends State<ContentScreen> {
                         currentName: _nameController.text,
                         currentDescription: _descriptionController.text,
                       );
-                      widget.saveCallback();
+                      await widget.saveCallback();
                       Navigator.pop(contextAlertDialog, true);
                     }
                   },
-                  child: Text("Cохранить",
+                  child: Text("Сохранить",
                       style: textStyle(
                           size: 18,
                           weight: FontWeight.w400,
@@ -192,7 +192,7 @@ class _ContentScreenState extends State<ContentScreen> {
       }
     } else {
       _cubit.resetInitialState();
-      widget.saveCallback();
+      await widget.saveCallback();
       Navigator.of(context).pop();
     }
   }
@@ -474,7 +474,7 @@ class _ContentScreenState extends State<ContentScreen> {
                     await _cubit.save(
                         currentName: _nameController.text,
                         currentDescription: _descriptionController.text);
-                    widget.saveCallback();
+                    await widget.saveCallback();
                     if (mounted) Navigator.pop(context);
                   }
                 },

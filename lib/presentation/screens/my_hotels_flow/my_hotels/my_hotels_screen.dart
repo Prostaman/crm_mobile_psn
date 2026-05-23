@@ -10,13 +10,13 @@ import 'package:psn.hotels.hub/presentation/items/pagination_list_view.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/drawer/default_drawer.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/profile_image_of_my_hotel_widget.dart';
 import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/delete_hotel_dialog.dart';
 
 import '../../../../presentation/blocks/base_cubit/base_cubit.dart';
 import '../../../items/indicator_of_uploading.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../items/profile_image_widget.dart';
 import 'add_search_hotel/show_add_hotels_bottom_sheet.dart';
 
 class MyHotelsScreen extends StatefulWidget {
@@ -189,8 +189,10 @@ class _MyHotelsScreenState extends State<MyHotelsScreen>
                             color: applyOpacity(ColorLightGrey, 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child:
-                              profileImageOMyfHotel(state.base, state.files)),
+                          child: ProfileImageWidget(
+                            pathOfProfilePhoto: state.base.pathOfProfilePhoto,
+                            files: state.files,
+                          )),
                       Expanded(
                           child: Padding(
                               padding: EdgeInsets.only(left: 18),

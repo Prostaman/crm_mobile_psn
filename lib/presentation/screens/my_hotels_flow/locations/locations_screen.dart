@@ -18,11 +18,11 @@ import 'package:psn.hotels.hub/presentation/items/indicator_of_uploading.dart';
 import 'package:psn.hotels.hub/presentation/items/pagination_list_view.dart';
 import 'package:psn.hotels.hub/presentation/routes/hotel_routes.dart';
 import '../../../../../presentation/blocks/base_cubit/base_cubit.dart';
-import 'profile_image_of_location_widget.dart';
+import '../../../items/profile_image_widget.dart';
 import 'edit_description_bottom_sheet.dart';
 
 class LocationsScreen extends StatefulWidget {
-  final VoidCallback updateCallback;
+  final Future<void> Function() updateCallback;
   LocationsScreen({
     Key? key,
     required this.updateCallback,
@@ -102,9 +102,9 @@ class _LocationsScreenState extends State<LocationsScreen>
           pushToCreateLocationWithContentScreen(
             context: context,
             hotel: hotel,
-            saveCallback: () {
-              _cubit.refresh();
-              widget.updateCallback();
+            saveCallback: () async {
+              await _cubit.refresh();
+              await widget.updateCallback();
             },
           );
         },
@@ -198,9 +198,10 @@ class _LocationsScreenState extends State<LocationsScreen>
           saveCallback: () async {
             // ВАЖНО: т.к. в LocationContent могли измениться файлы,
             // нужно обновить и общую статистику отеля в Cubit
-            _cubit.updateHotelSummary();
-            _cubit.updateSingleLocation(location.localId);
-            widget.updateCallback();
+            debugPrint('calling callback updateSingleLocation');
+            await _cubit.updateHotelSummary();
+            await _cubit.updateSingleLocation(location.localId);
+            await widget.updateCallback();
           },
         );
       },
@@ -234,8 +235,10 @@ class _LocationsScreenState extends State<LocationsScreen>
                 color: applyOpacity(ColorLightGrey, 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: profileImageOfLocation(
-                  index, location, models.map((m) => m.files).toList()),
+              child: ProfileImageWidget(
+                pathOfProfilePhoto: location.pathOfProfilePhoto,
+                files: (models.map((m) => m.files).toList())[index],
+              ),
             ),
             Expanded(
               child: Padding(
@@ -382,7 +385,7 @@ class _LocationsScreenState extends State<LocationsScreen>
                           await _cubit.deleteLocation(locationModel: location);
                           controllers.removeAt(index);
                           Navigator.pop(context);
-                          widget.updateCallback();
+                          await widget.updateCallback();
                         } catch (e) {
                           FirebaseCrashlytics.instance
                               .log("presentation deleting location $e");

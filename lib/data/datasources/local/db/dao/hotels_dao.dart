@@ -123,18 +123,23 @@ class HotelsDao {
       }
 
       if (Platform.isIOS && hasCyrillic(searchText)) {
-        List<Map<String, dynamic>> mapListAllHotels =
-            await _database.query(tableName);
-
-        List<HotelModel> allHotels =
-            mapListAllHotels.map((map) => HotelModel.fromMap(map)).toList();
+        // Оптимизация: запрашиваем только необходимые поля для фильтрации и сортировки
+        List<Map<String, dynamic>> mapListAllHotels = await _database.query(
+          tableName,
+          columns: ['id', 'name', 'lat', 'long', 'country', 'resort'],
+        );
 
         List<String> searchWords =
             searchText.trim().toLowerCase().split(RegExp(r'\s+'));
-        List<HotelModel> filteredHotels = allHotels.where((hotel) {
-          String name = hotel.name.toLowerCase();
+
+        // Сначала фильтруем Map-ы, чтобы не создавать лишние объекты HotelModel
+        var filteredMaps = mapListAllHotels.where((hotelMap) {
+          String name = (hotelMap['name'] ?? "").toString().toLowerCase();
           return searchWords.every((word) => name.contains(word));
-        }).toList();
+        });
+
+        List<HotelModel> filteredHotels =
+            filteredMaps.map((map) => HotelModel.fromMap(map)).toList();
 
         filteredHotels.sort((a, b) {
           double distanceA = (a.lat - userLat) * (a.lat - userLat) +
