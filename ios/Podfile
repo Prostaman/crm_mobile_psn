@@ -1,5 +1,7 @@
 platform :ios, '15.0'
 
+install! 'cocoapods', :disable_input_output_paths => true
+
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -25,8 +27,13 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks! :linkage => :static
-  use_modular_headers!
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    next unless pod.name == 'FirebaseCrashlytics'
+  end
 end
 
 post_install do |installer|
@@ -37,6 +44,9 @@ post_install do |installer|
       config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', 'PERMISSION_CAMERA=1', 'PERMISSION_MICROPHONE=1', 'PERMISSION_PHOTOS=1', 'PERMISSION_LOCATION=1']
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
 end
+
+
