@@ -92,16 +92,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          flutter pub get
-          echo '#include "CI.xcconfig"' >> ios/Flutter/Release.xcconfig
-          cd ios
-          rm -rf Pods
-          rm -rf Podfile.lock
-          rm -rf .symlinks
-          pod setup
-          pod repo update
-          pod install --repo-update
-          cd ..
+         flutter pub get
+         cd ios
+         rm -rf Pods Podfile.lock .symlinks
+         pod repo update 
+         pod install --repo-update
+         cd ..
+
+      - name: Debug Pods
+        run: |
+         ls ios/Pods | grep Firebase || true
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
@@ -119,17 +119,25 @@ jobs:
           security unlock-keychain -p "" build.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
+
+
       - name: Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
+
+      - name: Force CocoaPods only mode
+        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
+
+      - name: Clean Derived Data
+        run: |
+         rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
 
           flutter build ipa --release \
-            --no-swift-package-manager \
             --build-number $NEW_BUILD_NUMBER \
             --export-options-plist ios/ExportOptions.plist
 
