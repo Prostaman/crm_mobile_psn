@@ -124,7 +124,10 @@ jobs:
       - name: Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
+          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
+          UUID=$(grep -aA1 "UUID" profile.mobileprovision | grep -o "[-A-Z0-9]\{36\}" | head -n 1)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
 
       - name: Force CocoaPods only mode
         run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
@@ -139,7 +142,10 @@ jobs:
 
           flutter build ipa --release \
             --build-number $NEW_BUILD_NUMBER \
-            --export-options-plist ios/ExportOptions.plist
+            --export-options-plist ios/ExportOptions.plist \
+            --code-sign-style=Manual \
+            --certificate-identity="Apple Distribution" \
+            --provisioning-profile="HotelsHub_AppStore_CI"
 
           find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
 
