@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
@@ -22,7 +22,7 @@ jobs:
 
       - name: Install FlutterFire CLI
         run: |
-          dart pub global activate flutterfire_cli 
+          dart pub global activate flutterfire_cli
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
@@ -71,14 +71,15 @@ jobs:
 
   deploy-ios:
     runs-on: macos-15
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '26.3'
-      
+          xcode-version: '16.4'
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
@@ -93,18 +94,20 @@ jobs:
       - name: Check FlutterFire version
         run: flutterfire --version
 
-      - name: Install dependencies
+      - name: Install dependencies (clean iOS)
         run: |
-         flutter pub get
-         cd ios
-         rm -rf Pods Podfile.lock .symlinks
-         pod repo update 
-         pod install --repo-update
-         cd ..
+          flutter pub get
+
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
+
+          pod repo update
+          pod install --repo-update
+          cd ..
 
       - name: Debug Pods
         run: |
-         ls ios/Pods | grep Firebase || true
+          ls ios/Pods | grep Firebase || true
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
@@ -122,8 +125,6 @@ jobs:
           security unlock-keychain -p "" build.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-
-
       - name: Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -136,14 +137,12 @@ jobs:
         run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
 
       - name: Clean Derived Data
-        run: |
-         rm -rf ~/Library/Developer/Xcode/DerivedData
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          
-          # Inject signing settings into xcconfig
+
           echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
           echo "DEVELOPMENT_TEAM=RZAJCU5G78" >> ios/Flutter/Release.xcconfig
           echo "PROVISIONING_PROFILE_SPECIFIER=HotelsHub_AppStore_CI" >> ios/Flutter/Release.xcconfig
