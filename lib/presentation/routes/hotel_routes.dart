@@ -18,7 +18,7 @@ pushToHotelSettings(
 pushToLocationsScreen({
   required BuildContext context,
   required MyHotelModel model,
-  required VoidCallback updateCallback,
+  required Future<void> Function() updateCallback,
 }) {
   pushTo(
     screen: BlocProvider(
@@ -32,7 +32,7 @@ pushToLocationsScreen({
 pushToCreateLocationWithContentScreen(
     {required BuildContext context,
     required MyHotelModel hotel,
-    required VoidCallback saveCallback}) {
+    required Future<void> Function() saveCallback}) {
   pushTo(
     screen: BlocProvider(
       create: (context) => ContentCubit(myHotel: hotel)..init(),
@@ -46,7 +46,7 @@ pushToEditLocationContent(
     {required BuildContext context,
     required MyHotelModel hotel,
     required LocationModel location,
-    required VoidCallback saveCallback}) {
+    required Future<void> Function() saveCallback}) {
   pushTo(
     screen: BlocProvider(
       create: (context) =>

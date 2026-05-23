@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:psn.hotels.hub/presentation/blocks/base_cubit/base_cubit.dart';
 import 'package:psn.hotels.hub/presentation/blocks/list_cubit.dart';
 import 'package:psn.hotels.hub/presentation/blocks/locations/states/location_state.dart';
@@ -53,6 +54,8 @@ class LocationsCubit extends ListCubit<BaseQuery, LocationState> {
 
   @override
   Future<void> updateList(List<LocationState> newList) async {
+    debugPrint('LocationsList updateList');
+    await updateHotelSummary();
     emit(LocationsListSuccessState(
       models: List.from(newList),
       myHotel: myHotel,

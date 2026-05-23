@@ -64,8 +64,8 @@ class HotelListRepository {
 
       position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.bestForNavigation,
-        ),
+            accuracy: LocationAccuracy.bestForNavigation,
+            timeLimit: Duration(seconds: 3)),
       );
     } catch (e) {
       position = Position(

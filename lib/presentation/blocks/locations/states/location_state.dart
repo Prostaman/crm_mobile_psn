@@ -28,7 +28,7 @@ class LocationState extends BaseModel with EquatableMixin {
         location.idCategory,
         location.pathOfProfilePhoto,
         location.profilePhotoIsChanged,
-        files.length,
+        ...files.map((f) => [f.localId, f.localPath, f.synced, f.isEdited]),
         percentLoaded,
       ];
 }

@@ -18,7 +18,7 @@ class MyHotelState extends BaseModel with EquatableMixin {
   @override
   List<Object?> get props => [
         base.id,
-        files.length,
+        ...files.map((f) => [f.localId, f.localPath, f.synced, f.isEdited]),
         percentUploaded,
         base.country,
         base.resort,
