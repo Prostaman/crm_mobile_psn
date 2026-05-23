@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   deploy-android:
     runs-on: ubuntu-latest
@@ -114,7 +118,7 @@ jobs:
       - name: Build iOS IPA
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build ios --release --no-codesign --no-use-spm --build-number $NEW_BUILD_NUMBER
+          flutter build ios --release --no-codesign --build-number $NEW_BUILD_NUMBER
           mkdir -p build/ios/ipa
           cd ios
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0
