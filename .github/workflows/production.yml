@@ -26,7 +26,9 @@ jobs:
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter clean
+          flutter pub get
 
       - name: Create Firebase Config (Android)
         run: echo '${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
@@ -50,7 +52,7 @@ jobs:
       - name: Build Android AppBundle
         run: |
           NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
-          flutter build appbundle --release --build-number $NEW_BUILD_NUMBER
+          flutter build appbundle --release --build-number $NEW_BUILD_NUMBER --target-platform android-arm,android-arm64,android-x64
 
       - name: Create Service Account Key
         run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > service_account.json

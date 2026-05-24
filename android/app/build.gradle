@@ -51,8 +51,8 @@ android {
 
     defaultConfig {
         applicationId "psn.hotels.app"
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 34
+        minSdk = 24
+        targetSdk = 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled = true
