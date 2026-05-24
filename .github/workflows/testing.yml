@@ -99,7 +99,7 @@ jobs:
           flutter pub get
 
           cd ios
-          //rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
+#          rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
 
           pod repo update
           pod install --repo-update
