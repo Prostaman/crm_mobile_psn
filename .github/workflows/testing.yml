@@ -99,7 +99,7 @@ jobs:
           flutter pub get
 
           cd ios
-          # rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
+          rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
 
           pod repo update
           pod install --repo-update
@@ -129,11 +129,11 @@ jobs:
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
 
-#      - name: Force CocoaPods only mode
-#        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
-#
-#      - name: Clean Derived Data
-#        run: rm -rf ~/Library/Developer/Xcode/DerivedData
+      - name: Force CocoaPods only mode
+        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
+
+      - name: Clean Derived Data
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Build iOS IPA
         run: |
