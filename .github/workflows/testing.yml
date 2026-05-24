@@ -16,7 +16,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          flutter-version: '3.41.9'
           channel: 'stable'
           cache: true
 
@@ -99,15 +99,11 @@ jobs:
           flutter pub get
 
           cd ios
-          rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
+          //rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
 
           pod repo update
           pod install --repo-update
           cd ..
-
-      - name: Debug Pods
-        run: |
-          ls ios/Pods | grep Firebase || true
 
       - name: Create Firebase Config (iOS)
         run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
@@ -133,11 +129,11 @@ jobs:
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
 
-      - name: Force CocoaPods only mode
-        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
-
-      - name: Clean Derived Data
-        run: rm -rf ~/Library/Developer/Xcode/DerivedData
+#      - name: Force CocoaPods only mode
+#        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
+#
+#      - name: Clean Derived Data
+#        run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Build iOS IPA
         run: |
