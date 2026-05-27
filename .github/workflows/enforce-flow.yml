@@ -1,10 +1,6 @@
 name: Enforce Branch Flow
 
 on:
-  push:
-    branches:
-      - main
-      - testing
   pull_request:
     branches:
       - main
@@ -17,14 +13,16 @@ jobs:
       - name: Verify source branch for main
         if: github.base_ref == 'main' && github.head_ref != 'testing'
         run: |
-          echo "Error: You can only merge into 'main' from the 'testing' branch."
+          echo "Error: Merging into 'main' is only allowed from the 'testing' branch."
+          echo "Current source branch: ${{ github.head_ref }}"
           exit 1
 
       - name: Verify source branch for testing
         if: github.base_ref == 'testing' && github.head_ref != 'development'
         run: |
-          echo "Error: You can only merge into 'testing' from the 'development' branch."
+          echo "Error: Merging into 'testing' is only allowed from the 'development' branch."
+          echo "Current source branch: ${{ github.head_ref }}"
           exit 1
 
       - name: Flow is correct
-        run: echo "Branch flow is valid."
+        run: echo "Branch flow sequence is correct."

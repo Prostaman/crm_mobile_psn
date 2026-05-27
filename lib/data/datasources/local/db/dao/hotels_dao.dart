@@ -118,21 +118,17 @@ class HotelsDao {
       double userLong, int limit, int offset, String searchText) async {
     try {
       bool hasCyrillic(String text) {
-        RegExp regex = RegExp(r'[а-яА-Я]');
+        RegExp regex = RegExp(r'[а-яА-ЯёЁ]');
         return regex.hasMatch(text);
       }
 
       if (Platform.isIOS && hasCyrillic(searchText)) {
-        // Оптимизация: запрашиваем только необходимые поля для фильтрации и сортировки
-        List<Map<String, dynamic>> mapListAllHotels = await _database.query(
-          tableName,
-          columns: ['id', 'name', 'lat', 'long', 'country', 'resort'],
-        );
-
+        List<Map<String, dynamic>> mapListAllHotels =
+            await _database.query(tableName);
         List<String> searchWords =
             searchText.trim().toLowerCase().split(RegExp(r'\s+'));
 
-        // Сначала фильтруем Map-ы, чтобы не создавать лишние объекты HotelModel
+        // Сначала фильтруем Map-ы
         var filteredMaps = mapListAllHotels.where((hotelMap) {
           String name = (hotelMap['name'] ?? "").toString().toLowerCase();
           return searchWords.every((word) => name.contains(word));
@@ -183,15 +179,39 @@ class HotelsDao {
 
   Future<int> getHotelsCount({String? search}) async {
     try {
-      String sql = 'SELECT COUNT(*) FROM $tableName';
-      List<dynamic> args = [];
-      if (search != null && search.trim().isNotEmpty) {
-        List<String> words = search.trim().split(RegExp(r'\s+'));
-        sql += ' WHERE ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
-        args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
+      bool hasCyrillic(String text) {
+        RegExp regex = RegExp(r'[а-яА-ЯёЁ]');
+        return regex.hasMatch(text);
       }
-      var result = await _database.rawQuery(sql, args);
-      return Sqflite.firstIntValue(result) ?? 0;
+
+      if (search != null &&
+          search.trim().isNotEmpty &&
+          Platform.isIOS &&
+          hasCyrillic(search)) {
+        List<Map<String, dynamic>> mapListAllHotels = await _database.query(
+          tableName,
+          columns: ['name'],
+        );
+
+        List<String> searchWords =
+            search.trim().toLowerCase().split(RegExp(r'\s+'));
+
+        return mapListAllHotels.where((hotelMap) {
+          String name = (hotelMap['name'] ?? "").toString().toLowerCase();
+          return searchWords.every((word) => name.contains(word));
+        }).length;
+      } else {
+        String sql = 'SELECT COUNT(*) FROM $tableName';
+        List<dynamic> args = [];
+        if (search != null && search.trim().isNotEmpty) {
+          List<String> words = search.trim().split(RegExp(r'\s+'));
+          sql +=
+              ' WHERE ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
+          args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
+        }
+        var result = await _database.rawQuery(sql, args);
+        return Sqflite.firstIntValue(result) ?? 0;
+      }
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "getHotelsCount");

@@ -1,5 +1,4 @@
 platform :ios, '15.0'
-$FirebaseSDKVersion = '10.25.0'
 
 install! 'cocoapods', :disable_input_output_paths => true
 
