@@ -7,7 +7,7 @@ on:
       - testing
 
 jobs:
-  check-flow:
+  check-branch-flow:
     runs-on: ubuntu-latest
     steps:
       - name: Verify source branch for main
