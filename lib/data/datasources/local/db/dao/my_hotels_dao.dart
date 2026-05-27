@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:psn.hotels.hub/data/datasources/local/db/dao/hotels_dao.dart';
 import 'package:psn.hotels.hub/infrastructure/firebase/firebase_crashlytics_helper.dart';
@@ -44,7 +46,6 @@ class MyHotelsDao {
 
   Future<Map<String, dynamic>?> findMyHotelById(int id) async {
     try {
-      //Database db = await database;
       List<Map<String, dynamic>> hotels = await _database.query(
         tableName,
         where: 'id = ?',
@@ -105,26 +106,59 @@ class MyHotelsDao {
       {int? limit, int? offset, String? search}) async {
     debugPrint('getAllMyHotelsForUI');
     try {
-      String? where;
-      List<dynamic>? whereArgs;
-
-      if (search != null && search.trim().isNotEmpty) {
-        List<String> words = search.trim().split(RegExp(r'\s+'));
-        where = words.map((w) => 'LOWER(name) LIKE ?').join(' AND ') +
-            ' AND deleted = 0';
-        whereArgs = words.map((w) => '%${w.toLowerCase()}%').toList();
-      } else {
-        where = 'deleted = 0';
+      bool hasCyrillic(String text) {
+        RegExp regex = RegExp(r'[а-яА-ЯёЁ]');
+        return regex.hasMatch(text);
       }
 
-      return await _database.query(
-        tableName,
-        limit: limit,
-        offset: offset,
-        where: where,
-        whereArgs: whereArgs,
-        orderBy: 'createdAt DESC',
-      );
+      if (search != null &&
+          search.trim().isNotEmpty &&
+          Platform.isIOS &&
+          hasCyrillic(search)) {
+        List<Map<String, dynamic>> allMyHotels = await _database.query(
+          tableName,
+          where: 'deleted = 0',
+          orderBy: 'createdAt DESC',
+        );
+
+        List<String> searchWords =
+            search.trim().toLowerCase().split(RegExp(r'\s+'));
+
+        var filtered = allMyHotels.where((hotelMap) {
+          String name = (hotelMap['name'] ?? "").toString().toLowerCase();
+          return searchWords.every((word) => name.contains(word));
+        }).toList();
+
+        if (offset != null || limit != null) {
+          int start = offset ?? 0;
+          int end = (limit != null) ? start + limit : filtered.length;
+          if (start > filtered.length) return [];
+          if (end > filtered.length) end = filtered.length;
+          return filtered.sublist(start, end);
+        }
+        return filtered;
+      } else {
+        String? where;
+        List<dynamic>? whereArgs;
+
+        if (search != null && search.trim().isNotEmpty) {
+          List<String> words = search.trim().split(RegExp(r'\s+'));
+          where = words.map((w) => 'LOWER(name) LIKE ?').join(' AND ') +
+              ' AND deleted = 0';
+          whereArgs = words.map((w) => '%${w.toLowerCase()}%').toList();
+        } else {
+          where = 'deleted = 0';
+        }
+
+        return await _database.query(
+          tableName,
+          limit: limit,
+          offset: offset,
+          where: where,
+          whereArgs: whereArgs,
+          orderBy: 'createdAt DESC',
+        );
+      }
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "getAllMyHotelsUI");
@@ -148,15 +182,39 @@ class MyHotelsDao {
 
   Future<int> getMyHotelsCount({String? search}) async {
     try {
-      String sql = 'SELECT COUNT(*) FROM $tableName WHERE deleted = 0';
-      List<dynamic> args = [];
-      if (search != null && search.trim().isNotEmpty) {
-        List<String> words = search.trim().split(RegExp(r'\s+'));
-        sql += ' AND ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
-        args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
+      bool hasCyrillic(String text) {
+        RegExp regex = RegExp(r'[а-яА-ЯёЁ]');
+        return regex.hasMatch(text);
       }
-      var result = await _database.rawQuery(sql, args);
-      return Sqflite.firstIntValue(result) ?? 0;
+
+      if (search != null &&
+          search.trim().isNotEmpty &&
+          Platform.isIOS &&
+          hasCyrillic(search)) {
+        List<Map<String, dynamic>> allMyHotels = await _database.query(
+          tableName,
+          where: 'deleted = 0',
+          columns: ['name'],
+        );
+
+        List<String> searchWords =
+            search.trim().toLowerCase().split(RegExp(r'\s+'));
+
+        return allMyHotels.where((hotelMap) {
+          String name = (hotelMap['name'] ?? "").toString().toLowerCase();
+          return searchWords.every((word) => name.contains(word));
+        }).length;
+      } else {
+        String sql = 'SELECT COUNT(*) FROM $tableName WHERE deleted = 0';
+        List<dynamic> args = [];
+        if (search != null && search.trim().isNotEmpty) {
+          List<String> words = search.trim().split(RegExp(r'\s+'));
+          sql += ' AND ' + words.map((w) => 'LOWER(name) LIKE ?').join(' AND ');
+          args.addAll(words.map((w) => '%${w.toLowerCase()}%'));
+        }
+        var result = await _database.rawQuery(sql, args);
+        return Sqflite.firstIntValue(result) ?? 0;
+      }
     } catch (e) {
       FirebaseCrashlyticsHelper.recordDaoLocalDBError(
           e.toString(), "getMyHotelsCount");
