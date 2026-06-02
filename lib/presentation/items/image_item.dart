@@ -28,74 +28,53 @@ class ImageItem extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    // Create a File object with the specified path
-    File file = File(imagePath);
+    return Image.file(
+      File(imagePath),
+      fit: fit,
+      width: double.infinity,
+      height: double.infinity,
+      filterQuality: filterQuality,
+      errorBuilder: (context, error, stackTrace) {
+        String errorMessage =
+            "Showing image, File not exists or error: $imagePath";
+        debugPrint(errorMessage);
+        FirebaseCrashlytics.instance
+            .recordFlutterError(FlutterErrorDetails(exception: errorMessage));
 
-    // Check if the file exists
-    return FutureBuilder<bool>(
-      future: file.exists(),
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // While waiting for the future to complete, display a progress indicator
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        } else if (snapshot.hasError || !snapshot.hasData) {
-          String error = "Showing image error: ${snapshot.error}";
-          debugPrint(error);
-          FirebaseCrashlytics.instance
-              .recordFlutterError(FlutterErrorDetails(exception: error));
-          // If there's an error, display an error message
-          return Container(
-            color: Colors.grey, // Placeholder color
-            width: 100, // Placeholder width
-            height: 100, // Placeholder height
-            child: Center(
-              child: Text(
-                snapshot.hasError ? "Error: ${snapshot.error}" : "Error",
-                textAlign: TextAlign.center,
-                style: textStyle(color: Colors.red),
-              ),
-            ),
-          );
-        } else if (snapshot.data == true) {
-          // File exists, return the Image widget
-          return Image.file(
-            File(imagePath),
-            fit: fit,
-            filterQuality: filterQuality,
-          );
-        } else if (snapshot.data == false) {
-          String error = "Showing image, File not exists: $imagePath";
-          debugPrint(error);
-          FirebaseCrashlytics.instance
-              .recordFlutterError(FlutterErrorDetails(exception: error));
-          // File does not exist, return a placeholder container
-          return Container(
-            color: Color.fromRGBO(255, 244, 244, 1), // Placeholder color
-            width: 100, // Placeholder width
-            height: 100, // Placeholder height
-            child: Center(
-                child: Wrap(
+        return Container(
+          color: const Color.fromRGBO(255, 244, 244, 1), // Placeholder color
+          width: double.infinity,
+          height: double.infinity,
+          child: Center(
+            child: Wrap(
               children: [
-                Column(children: [
-                  SvgPicture.asset(IMG.icons.noImageError,
-                      fit: BoxFit.scaleDown),
-                  SizedBox(height: 6),
-                  Text(
-                    "Файл не найден",
-                    textAlign: TextAlign.center,
-                    style: textStyle(color: Colors.black, size: 10.0),
-                  )
-                ])
+                Column(
+                  children: [
+                    SvgPicture.asset(IMG.icons.noImageError,
+                        fit: BoxFit.scaleDown),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Файл не найден",
+                      textAlign: TextAlign.center,
+                      style: textStyle(color: Colors.black, size: 10.0),
+                    )
+                  ],
+                )
               ],
-            )),
-          );
-        } else {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+            ),
+          ),
+        );
+      },
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: frame != null
+              ? SizedBox.expand(child: child)
+              : const SizedBox.expand(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+        );
       },
     );
   }

@@ -349,7 +349,7 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   _buildBody(ContentState state) {
-    var width = MediaQuery.of(context).size.width - 24 - 32;
+    var width = MediaQuery.sizeOf(context).width - 24 - 32;
     var oneItemWidth = width / 3;
     var gridHeight = oneItemWidth - (oneItemWidth - (oneItemWidth / 1.05));
 
