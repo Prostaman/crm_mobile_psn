@@ -12,7 +12,7 @@ class SettingsService {
   static SharedPrefUtils sharedPrefUtils = SharedPrefUtils();
 
   int get qualityOfFiles {
-    return sharedPrefUtils.getValue("quality", 2) as int;
+    return sharedPrefUtils.getValue("quality", 3) as int;
   }
 
   set qualityOfFiles(int value) {
