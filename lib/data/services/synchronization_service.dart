@@ -88,11 +88,10 @@ class SinkService {
   }
 
   Future<void> startDownloadHotels() async {
-    var typeOfConnectionWithInternet =
-        await (Connectivity().checkConnectivity());
-    if (typeOfConnectionWithInternet != ConnectivityResult.none) {
+    var connectivityResults = await (Connectivity().checkConnectivity());
+    if (!connectivityResults.contains(ConnectivityResult.none)) {
       if (ServiceContainer().settingsService.uploadIfWiFiEnable == true) {
-        if (typeOfConnectionWithInternet != ConnectivityResult.wifi) {
+        if (!connectivityResults.contains(ConnectivityResult.wifi)) {
           return;
         }
       }
@@ -112,11 +111,10 @@ class SinkService {
       isSyncing = true;
       isSyncingObserver.add(isSyncing);
 
-      var typeOfConnectionWithInternet =
-          await (Connectivity().checkConnectivity());
-      if (typeOfConnectionWithInternet != ConnectivityResult.none) {
+      var connectivityResults = await (Connectivity().checkConnectivity());
+      if (!connectivityResults.contains(ConnectivityResult.none)) {
         if (ServiceContainer().settingsService.uploadIfWiFiEnable == true) {
-          if (typeOfConnectionWithInternet != ConnectivityResult.wifi) {
+          if (!connectivityResults.contains(ConnectivityResult.wifi)) {
             isSyncing = false;
             isSyncingObserver.add(isSyncing);
             return;
