@@ -3,26 +3,25 @@ import 'package:app_version_update/app_version_update.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:psn.hotels.hub/blocks/authentication/sign_in_cubit.dart';
-import 'package:psn.hotels.hub/blocks/base_cubit/base_cubit.dart';
-import 'package:psn.hotels.hub/blocks/flow_cubit/flow_cubit.dart';
-import 'package:psn.hotels.hub/blocks/hotels/hotels_dialog_cubit.dart';
-import 'package:psn.hotels.hub/blocks/my_hotels/my_hotels_cubit.dart';
-import 'package:psn.hotels.hub/blocks/permissions_cubit/permissions_cubit.dart';
-import 'package:psn.hotels.hub/blocks/splash/splash_cubit.dart';
-import 'package:psn.hotels.hub/helpers/workmanager/workmanger_sync.dart';
-import 'package:psn.hotels.hub/services/service_container.dart';
-import 'package:psn.hotels.hub/ui/screens/auth_flow/sign_in_screen.dart';
-import 'package:psn.hotels.hub/ui/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
-import 'package:psn.hotels.hub/ui/screens/permission_flow/permission_screen.dart';
-import 'package:psn.hotels.hub/ui/screens/splash_screen.dart';
-import 'helpers/firebase/firebase_initialization.dart';
-import 'helpers/location_helper.dart';
-import 'helpers/shared_preferences_utils.dart';
+import 'package:psn.hotels.hub/presentation/blocks/authentication/sign_in_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/flow_cubit/flow_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/hotels_search/hotels_dialog_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/my_hotels/my_hotels_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/permissions_cubit/permissions_cubit.dart';
+import 'package:psn.hotels.hub/presentation/blocks/splash/splash_cubit.dart';
+import 'package:psn.hotels.hub/infrastructure/workmanager/workmanger_sync.dart';
+import 'package:psn.hotels.hub/di/service_container.dart';
+import 'package:psn.hotels.hub/presentation/screens/auth_flow/sign_in_screen.dart';
+import 'package:psn.hotels.hub/presentation/screens/my_hotels_flow/my_hotels/my_hotels_screen.dart';
+import 'package:psn.hotels.hub/presentation/screens/permission_flow/permission_screen.dart';
+import 'package:psn.hotels.hub/presentation/screens/splash_screen.dart';
+import 'infrastructure/firebase/firebase_initialization.dart';
+import 'infrastructure/location_helper.dart';
+import 'infrastructure/shared_preferences_utils.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'helpers/ui_helper.dart';
+import 'presentation/ui_helper.dart';
 import 'main.reflectable.dart';
-import 'ui/theme/color_schemes.g.dart';
+import 'presentation/theme/color_schemes.g.dart';
 
 void main() async {
   initializeReflectable();
@@ -142,7 +141,7 @@ class PoehalisnamiApp extends StatelessWidget {
       );
     } else if (state == FlowState.Home) {
       return BlocProvider(
-        create: (context) => MyHotelsCubit()..initial(query: BaseQuery()),
+        create: (context) => MyHotelsCubit(),
         child: MyHotelsScreen(),
       );
     } else if (state == FlowState.Onboarding) {
@@ -165,14 +164,7 @@ class PoehalisnamiApp extends StatelessWidget {
     return true;
   }
 
-  _listener(context, state) {
-    if (state == FlowState.Home) {
-      BlocProvider.of<HotelsDialogCubit>(context).initial(query: BaseQuery());
-    }
-    if (state == FlowState.Onboarding) {
-      BlocProvider.of<HotelsDialogCubit>(context).initial(query: BaseQuery());
-    }
-  }
+  _listener(context, state) {}
 }
 
 class MainBlocDelegate extends BlocObserver {

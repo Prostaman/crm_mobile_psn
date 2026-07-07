@@ -1,0 +1,38 @@
+import 'package:flutter/material.dart';
+import 'package:psn.hotels.hub/presentation/ui_helper.dart';
+
+class LoadingMoreIndicator extends StatelessWidget {
+  final Alignment alignment;
+  const LoadingMoreIndicator({Key? key, required this.alignment})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Align(
+        alignment: alignment,
+        child: Container(
+          margin: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15.0),
+              boxShadow: [
+                BoxShadow(
+                  color: applyOpacity(Colors.grey, 0.2),
+                  blurRadius: 5.0,
+                  offset: Offset(0.0, 0.0),
+                ),
+              ]),
+          width: 40,
+          height: 40,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+                ColorOrange), // Используем основной цвет приложения
+          ),
+        ),
+      ),
+    );
+  }
+}

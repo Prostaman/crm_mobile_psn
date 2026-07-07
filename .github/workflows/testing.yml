@@ -1,0 +1,167 @@
+name: Testing CD (TestFlight & Play Console)
+
+on:
+  push:
+    branches: [ testing ]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  deploy-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+
+      - name: Install FlutterFire CLI
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Create Firebase Config (Android)
+        run: echo '${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
+
+      - name: Create firebase.json
+        run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
+
+      - name: Decode Android Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        run: |
+          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+      - name: List Keystore Aliases (Debug)
+        run: keytool -list -v -keystore android/app/upload-keystore.jks -storepass ${{ secrets.ANDROID_STORE_PASSWORD }} | grep Alias
+
+      - name: Build Android AppBundle
+        run: |
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+          flutter build appbundle --release --build-number $NEW_BUILD_NUMBER --target-platform android-arm,android-arm64,android-x64
+
+      - name: Create Service Account Key
+        run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > service_account.json
+
+      - name: Upload to Play Store (Internal)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: service_account.json
+          packageName: psn.hotels.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-ios:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.3'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+          cache: true
+
+      - name: Install FlutterFire CLI
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Check FlutterFire version
+        run: flutterfire --version
+
+      - name: Install dependencies (clean iOS)
+        run: |
+          flutter pub get
+
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks ~/Library/Developer/Xcode/DerivedData
+
+          pod repo update
+          pod install --repo-update
+          cd ..
+
+      - name: Create Firebase Config (iOS)
+        run: echo '${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}' > ios/Runner/GoogleService-Info.plist
+
+      - name: Create firebase.json
+        run: echo '${{ secrets.FIREBASE_JSON }}' > firebase.json
+
+      - name: Install Apple Certificate
+        run: |
+          echo "${{ secrets.IOS_P12_CERTIFICATE }}" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_P12_PASSWORD }}" -A
+          security list-keychains -d user -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Install Provisioning Profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
+          UUID=$(grep -aA1 "UUID" profile.mobileprovision | grep -o "[-A-Z0-9]\{36\}" | head -n 1)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/HotelsHub_AppStore_CI.mobileprovision
+
+      - name: Force CocoaPods only mode
+        run: echo "COCOAPODS_DISABLE_STATS=true" >> $GITHUB_ENV
+
+      - name: Clean Derived Data
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
+
+      - name: Build iOS IPA
+        run: |
+          NEW_BUILD_NUMBER=$((55 + ${{ github.run_number }}))
+
+          echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
+          echo "DEVELOPMENT_TEAM=RZAJCU5G78" >> ios/Flutter/Release.xcconfig
+          echo "PROVISIONING_PROFILE_SPECIFIER=HotelsHub_AppStore_CI" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY=Apple Distribution" >> ios/Flutter/Release.xcconfig
+
+          flutter build ipa --release \
+            --build-number $NEW_BUILD_NUMBER \
+            --export-options-plist ios/ExportOptions.plist
+
+          find build/ios/ipa -name "*.ipa" -exec mv {} build/ios/ipa/app.ipa \;
+
+      - name: Upload to TestFlight
+        uses: Apple-Actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/ipa/app.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+      - name: Cancel workflow on failure
+        if: failure()
+        uses: andymckay/cancel-action@0.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
